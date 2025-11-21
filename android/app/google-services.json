@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161556229278",
+    "project_id": "abastecacomzeca",
+    "storage_bucket": "abastecacomzeca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161556229278:android:6af0450e4cc96f2d51df8f",
+        "android_client_info": {
+          "package_name": "com.zeca.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSNBUxiZrDHf2P5KS7XLO2nQ8qWNlINL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

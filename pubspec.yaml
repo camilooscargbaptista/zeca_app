@@ -1,0 +1,130 @@
+name: zeca_app
+description: Sistema de abastecimento corporativo ZECA - white-label
+publish_to: 'none'
+version: 1.0.1+31
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_bloc: ^8.1.3
+  equatable: ^2.0.5
+  
+  # Dependency Injection
+  get_it: ^7.6.4
+  injectable: ^2.3.2
+  
+  # Network
+  dio: ^5.3.3
+  retrofit: ^4.0.3
+  pretty_dio_logger: ^1.3.1
+  connectivity_plus: ^5.0.1
+  
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  
+  # Navigation
+  go_router: ^12.1.1
+  
+  # UI
+  cached_network_image: ^3.3.0
+  flutter_svg: ^2.0.9
+  shimmer: ^3.0.0
+  
+  # Camera & Images
+  image_picker: ^1.0.4
+  camera: ^0.10.5+5
+  image_cropper: ^8.0.0
+  
+  # Permissions
+  permission_handler: ^11.0.1
+  
+  # Location
+  geolocator: ^10.1.0  # Manter por enquanto (fallback)
+  geocoding: ^2.1.1
+  flutter_background_geolocation: ^4.16.2  # Tracking robusto em background
+  
+  # Device Info (para JWT Sliding Window)
+  device_info_plus: ^10.1.0
+  package_info_plus: ^8.0.0
+  uuid: ^4.5.1
+  
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^3.5.2
+  
+  # Validação e Formatação
+  mask_text_input_formatter: ^2.5.0
+  cpf_cnpj_validator: ^2.0.0
+  
+  # Utils
+  intl: ^0.18.1
+  logger: ^2.0.2+1
+  dartz: ^0.10.1
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Code Generation
+  build_runner: ^2.4.6
+  injectable_generator: ^2.4.1
+  hive_generator: ^2.0.1
+  retrofit_generator: ^8.0.0
+  json_serializable: ^6.7.1
+  freezed: ^2.4.5
+  
+  # Testing
+  mockito: ^5.4.4
+  bloc_test: ^9.1.5
+  
+  # Linting
+  flutter_lints: ^3.0.1
+  
+  # Icons
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/common/
+    - assets/images/brand_a/
+    - assets/images/brand_b/
+    - assets/icons/
+    - assets/images/common/zeca_logo.png
+  
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/common/zeca_logo.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  # Configuração para Android Adaptive Icon
+  adaptive_icon_background: "#FFFFFF" # Fundo branco
+  adaptive_icon_foreground: "assets/images/common/zeca_logo.png" # Logo maior no foreground
+  # Garantir fundo branco e logo maior
+  android_adaptive_icon_background: "#FFFFFF"
+  android_adaptive_icon_foreground: "assets/images/common/zeca_logo.png"
+  # iOS - remover transparência e garantir fundo branco
+  remove_alpha_ios: true
+  ios_background_color: "#FFFFFF" # Fundo branco para iOS
