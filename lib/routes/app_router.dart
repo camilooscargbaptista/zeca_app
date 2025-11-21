@@ -5,6 +5,8 @@ import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/login_page_simple.dart';
 import '../features/home/presentation/pages/home_page_simple.dart';
 import '../features/refueling/presentation/pages/refueling_code_page_simple.dart';
+import '../features/refueling/presentation/pages/refueling_waiting_page.dart';
+import '../features/refueling/presentation/pages/pending_refuelings_page.dart';
 import '../features/journey/presentation/pages/journey_page.dart';
 import '../features/journey/presentation/bloc/journey_bloc.dart';
 import '../features/journey/presentation/bloc/journey_event.dart';
@@ -39,6 +41,24 @@ class AppRouter {
         path: '/refueling-code',
         name: 'refueling-code',
         builder: (context, state) => const RefuelingCodePageSimple(),
+      ),
+      GoRoute(
+        path: '/refueling-waiting',
+        name: 'refueling-waiting',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return RefuelingWaitingPage(
+            refuelingId: extra?['refueling_id'] ?? '',
+            refuelingCode: extra?['refueling_code'] ?? '',
+            vehicleData: extra?['vehicle_data'],
+            stationData: extra?['station_data'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/pending-refuelings',
+        name: 'pending-refuelings',
+        builder: (context, state) => const PendingRefuelingsPage(),
       ),
       GoRoute(
         path: '/journey-start',

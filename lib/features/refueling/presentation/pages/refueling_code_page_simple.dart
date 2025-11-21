@@ -154,8 +154,10 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Código de Abastecimento'),
-        // Removido o botão de voltar - só pode sair via finalizar ou cancelar
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _onBackPressed,
+        ),
       ),
       body: _isLoading
         ? const Center(child: CircularProgressIndicator())
@@ -1021,6 +1023,55 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
     }
   }
 
+  /// Método chamado ao pressionar o botão voltar
+  Future<void> _onBackPressed() async {
+    // Parar polling antes de mostrar o diálogo
+    _pollingService.stopPolling();
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar Código'),
+        content: const Text(
+          'Tem certeza que deseja cancelar este código de abastecimento?\n\n'
+          'Ao cancelar, você precisará gerar um novo código para abastecer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Reiniciar polling se o usuário cancelar o diálogo
+              if (_refuelingCode.isNotEmpty) {
+                _startPolling();
+              }
+              Navigator.of(context).pop(false);
+            },
+            child: const Text('Não'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sim, Cancelar'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Parar polling definitivamente
+      _pollingService.stopPolling();
+      
+      // Navegar de volta para home (reinicia o processo de geração)
+      context.go('/home');
+    } else if (mounted) {
+      // Se não confirmou, reiniciar polling
+      if (_refuelingCode.isNotEmpty) {
+        _startPolling();
+      }
+    }
+  }
+
   Future<void> _cancelRefueling() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1046,26 +1097,33 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
       });
 
       try {
+        // Parar polling
+        _pollingService.stopPolling();
+        
         // Simular cancelamento via API
         await Future.delayed(const Duration(seconds: 1));
         
-        SuccessDialog.show(
-          context,
-          title: 'Código Cancelado',
-          message: 'Código de abastecimento cancelado',
-        );
-        
-        // Navegar de volta para home
-        context.go('/home');
+        if (mounted) {
+          SuccessDialog.show(
+            context,
+            title: 'Código Cancelado',
+            message: 'Código de abastecimento cancelado',
+          );
+          
+          // Navegar de volta para home
+          context.go('/home');
+        }
       } catch (e) {
-        setState(() {
-          _isLoading = false;
-        });
-        ErrorDialog.show(
-          context,
-          title: 'Erro ao Cancelar',
-          message: 'Erro ao cancelar: $e',
-        );
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ErrorDialog.show(
+            context,
+            title: 'Erro ao Cancelar',
+            message: 'Erro ao cancelar: $e',
+          );
+        }
       }
     }
   }

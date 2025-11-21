@@ -84,21 +84,72 @@ class _ChecklistPageState extends State<ChecklistPage> {
       final apiService = ApiService();
       final plate = _vehicleData!['placa'];
       
-      final response = await apiService.getChecklistByPlate(
-        plate: plate,
+      // Remover hífens da placa para garantir formato correto
+      final cleanPlate = plate?.toString().replaceAll('-', '').replaceAll(' ', '').toUpperCase() ?? '';
+      
+      debugPrint('🔍 Buscando checklist para placa: $plate (limpa: $cleanPlate)');
+      debugPrint('📦 Dados do veículo: $_vehicleData');
+      
+      // Tentar primeiro com pre_trip
+      var response = await apiService.getChecklistByPlate(
+        plate: cleanPlate, // Usar placa sem hífens
         executionType: 'pre_trip', // Pré-viagem por padrão
       );
       
+      // Se não encontrar com pre_trip, tentar sem filtro de execution_type
       if (response['success'] == true) {
         final data = response['data'];
+        List<dynamic> checklists = [];
+        if (data is Map<String, dynamic>) {
+          checklists = data['checklists'] as List<dynamic>? ?? [];
+        } else if (data is List) {
+          checklists = data;
+        }
+        
+        if (checklists.isEmpty) {
+          debugPrint('⚠️ Nenhum checklist encontrado com pre_trip, tentando sem filtro...');
+          response = await apiService.getChecklistByPlate(
+            plate: cleanPlate,
+            executionType: null, // Sem filtro
+          );
+        }
+      }
+      
+      debugPrint('📥 Resposta da API: ${response.toString()}');
+      
+      if (response['success'] == true) {
+        final data = response['data'];
+        debugPrint('📦 Data recebida: ${data.toString()}');
+        debugPrint('📦 Tipo de data: ${data.runtimeType}');
+        
+        // Verificar se data é um Map ou List
+        List<dynamic> checklists = [];
+        if (data is Map<String, dynamic>) {
+          checklists = data['checklists'] as List<dynamic>? ?? [];
+          debugPrint('📋 Checklists do Map: ${checklists.length}');
+        } else if (data is List) {
+          checklists = data;
+          debugPrint('📋 Checklists da List: ${checklists.length}');
+        }
+        
+        debugPrint('✅ Total de checklists encontrados: ${checklists.length}');
         
         setState(() {
-          _checklistData = data;
+          // Garantir que o formato está correto
+          if (data is Map<String, dynamic>) {
+            _checklistData = data;
+          } else {
+            _checklistData = {
+              'vehicle': _vehicleData,
+              'checklists': checklists,
+            };
+          }
           _isLoading = false;
         });
         
-        debugPrint('✅ Checklist carregado: ${data['checklists']?.length ?? 0} template(s)');
+        debugPrint('✅ Checklist carregado: ${checklists.length} template(s)');
       } else {
+        debugPrint('⚠️ Erro na resposta: ${response['error']}');
         setState(() {
           _isLoading = false;
           // Definir checklistData como vazio para mostrar mensagem de "nenhum checklist"
@@ -109,7 +160,9 @@ class _ChecklistPageState extends State<ChecklistPage> {
         });
         debugPrint('⚠️ Nenhum checklist encontrado para o veículo');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ Erro ao buscar checklist: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
       setState(() {
         _isLoading = false;
         // Definir checklistData como vazio para mostrar mensagem de erro

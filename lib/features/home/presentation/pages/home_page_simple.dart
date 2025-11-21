@@ -40,6 +40,10 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   bool _isStationValidated = false;
   Map<String, dynamic>? _stationData;
   
+  // Contador de abastecimentos pendentes
+  int _pendingRefuelingsCount = 0;
+  bool _isLoadingPendingCount = false;
+  
   // Máscara para placa (formato antigo e Mercosul)
   final _placaMaskFormatter = MaskTextInputFormatter(
     mask: 'AAA-####',
@@ -58,6 +62,14 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   void initState() {
     super.initState();
     _loadUserData();
+    _loadPendingRefuelingsCount();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarregar contador quando voltar para a tela
+    _loadPendingRefuelingsCount();
   }
 
 
@@ -82,6 +94,51 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         'email': 'pedro@abc.com',
       };
     });
+  }
+  
+  /// Carregar contador de abastecimentos pendentes
+  Future<void> _loadPendingRefuelingsCount() async {
+    if (_isLoadingPendingCount) return;
+    
+    setState(() {
+      _isLoadingPendingCount = true;
+    });
+    
+    try {
+      final apiService = ApiService();
+      final response = await apiService.getPendingRefuelings();
+      
+      if (response['success'] == true) {
+        final data = response['data'];
+        List<dynamic> refuelings = [];
+        
+        if (data is Map<String, dynamic>) {
+          refuelings = data['data'] as List<dynamic>? ?? [];
+        } else if (data is List) {
+          refuelings = data;
+        }
+        
+        if (mounted) {
+          setState(() {
+            _pendingRefuelingsCount = refuelings.length;
+            _isLoadingPendingCount = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingPendingCount = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar contador de pendentes: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingPendingCount = false;
+        });
+      }
+    }
   }
 
   /// Métodos de navegação do menu sanduíche
@@ -547,6 +604,49 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          // Botão para abastecimentos pendentes com badge
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.pending_actions, color: Colors.white),
+                onPressed: () async {
+                  await context.push('/pending-refuelings');
+                  // Recarregar contador ao voltar
+                  _loadPendingRefuelingsCount();
+                },
+                tooltip: 'Abastecimentos Pendentes',
+              ),
+              if (_pendingRefuelingsCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      _pendingRefuelingsCount > 99 ? '99+' : '$_pendingRefuelingsCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: _dismissKeyboard,
@@ -560,6 +660,73 @@ class _HomePageSimpleState extends State<HomePageSimple> {
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Banner de alerta para abastecimentos pendentes
+            if (_pendingRefuelingsCount > 0) ...[
+              Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                elevation: 4,
+                color: Colors.orange[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.orange[300]!, width: 2),
+                ),
+                child: InkWell(
+                  onTap: () async {
+                    await context.push('/pending-refuelings');
+                    _loadPendingRefuelingsCount();
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange[100],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orange[800],
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Abastecimentos Pendentes',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange[900],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _pendingRefuelingsCount == 1
+                                    ? 'Você tem 1 abastecimento aguardando validação'
+                                    : 'Você tem $_pendingRefuelingsCount abastecimentos aguardando validação',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.orange[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.orange[800],
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
             // Card de Boas-vindas
             Card(
               child: Padding(
@@ -585,7 +752,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                         ),
                       ),
                       Text('CPF: ${_userData!['cpf']}'),
-                      Text('Empresa: ${_userData!['empresa']}'),
+                      Text(_userData!['empresa']),
                       Text('CNPJ: ${_userData!['cnpj']}'),
                     ],
                   ],
@@ -605,7 +772,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                         Icon(Icons.directions_car, color: Colors.red),
                         SizedBox(width: 8),
                         Text(
-                          'Veículo',
+                          'CONFIRME A PLACA',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

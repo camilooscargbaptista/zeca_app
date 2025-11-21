@@ -12,10 +12,19 @@ buildscript {
     }
 }
 
+ext {
+    appCompatVersion    = "1.4.2"
+    playServicesLocationVersion = "21.3.0"
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        // [required] flutter_background_geolocation
+        maven { url "${project(':flutter_background_geolocation').projectDir}/libs" }
+        // [required] background_fetch
+        maven { url "${project(':background_fetch').projectDir}/libs" }
     }
 }
 

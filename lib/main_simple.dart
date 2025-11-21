@@ -9,6 +9,7 @@ import 'features/home/presentation/pages/home_page_simple.dart';
 import 'features/refueling/presentation/pages/refueling_code_page_simple.dart';
 import 'features/refueling/presentation/pages/refueling_waiting_page.dart';
 import 'features/refueling/presentation/pages/refueling_validation_page.dart';
+import 'features/refueling/presentation/pages/pending_refuelings_page.dart';
 import 'features/history/presentation/pages/history_page_simple.dart';
 import 'core/services/app_initialization_service.dart';
 import 'core/services/api_service.dart';
@@ -233,6 +234,11 @@ final GoRouter _router = GoRouter(
         final refuelingId = state.pathParameters['id'] ?? '';
         return RefuelingValidationPage(refuelingId: refuelingId);
       },
+    ),
+    GoRoute(
+      path: '/pending-refuelings',
+      name: 'pending-refuelings',
+      builder: (context, state) => const PendingRefuelingsPage(),
     ),
     GoRoute(
       path: '/history',

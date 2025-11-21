@@ -170,6 +170,8 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
   Future<void> _confirmValidation() async {
     final refuelingId = _getRefuelingId();
     
+    debugPrint('🚀 [VALIDATION] Iniciando validação para refuelingId: $refuelingId');
+    
     if (refuelingId.isEmpty) {
       ErrorDialog.show(
         context,
@@ -184,10 +186,16 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     });
 
     try {
+      debugPrint('🔐 [VALIDATION] Verificando permissão de localização...');
       // Verificar e solicitar permissão de localização
       bool hasPermission = await _locationService.checkPermission();
+      debugPrint('🔐 [VALIDATION] Permissão atual: $hasPermission');
+      
       if (!hasPermission) {
+        debugPrint('🔐 [VALIDATION] Solicitando permissão...');
         hasPermission = await _locationService.requestPermission();
+        debugPrint('🔐 [VALIDATION] Permissão após solicitação: $hasPermission');
+        
         if (!hasPermission) {
           setState(() {
             _isSubmitting = false;
@@ -205,10 +213,20 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       }
 
       // Obter localização atual
-      debugPrint('📍 Obtendo localização para validação...');
-      final locationData = await _locationService.getCurrentLocation();
+      debugPrint('📍 [VALIDATION] Obtendo localização para validação...');
+      
+      // Adicionar timeout para evitar travamento
+      final locationData = await _locationService.getCurrentLocation()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              debugPrint('⏱️ [VALIDATION] Timeout ao obter localização (15s)');
+              return null;
+            },
+          );
       
       if (locationData == null) {
+        debugPrint('❌ [VALIDATION] Localização não obtida');
         setState(() {
           _isSubmitting = false;
         });
@@ -222,19 +240,37 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         }
         return;
       }
+      
+      debugPrint('✅ [VALIDATION] Localização obtida: ${locationData['latitude']}, ${locationData['longitude']}');
 
       // Obter nome do dispositivo
       final deviceName = _locationService.getDeviceName();
+      debugPrint('📱 [VALIDATION] Device: $deviceName');
 
       // Chamar API de validação
-      debugPrint('✅ Enviando validação com localização: ${locationData['latitude']}, ${locationData['longitude']}');
+      debugPrint('📤 [VALIDATION] Enviando validação para API...');
+      debugPrint('📤 [VALIDATION] RefuelingId: $refuelingId');
+      debugPrint('📤 [VALIDATION] Latitude: ${locationData['latitude']}');
+      debugPrint('📤 [VALIDATION] Longitude: ${locationData['longitude']}');
+      
       final response = await _apiService.validateRefueling(
         refuelingId: refuelingId,
         device: deviceName,
         latitude: locationData['latitude'] as double,
         longitude: locationData['longitude'] as double,
         address: locationData['address'] as String?,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('⏱️ [VALIDATION] Timeout na chamada da API (30s)');
+          return {
+            'success': false,
+            'error': 'Timeout ao validar abastecimento. Tente novamente.',
+          };
+        },
       );
+      
+      debugPrint('📥 [VALIDATION] Resposta da API: ${response.toString()}');
       
       if (response['success'] == true) {
         setState(() {

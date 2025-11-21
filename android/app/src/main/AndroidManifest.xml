@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.zeca.app">
     <!-- Permissões necessárias -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -25,7 +26,8 @@
     <application
         android:label="ZECA App"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        tools:replace="android:label">
         <activity
             android:name="com.zeca.app.MainActivity"
             android:exported="true"

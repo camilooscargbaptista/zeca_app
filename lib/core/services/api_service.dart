@@ -731,10 +731,16 @@ class ApiService {
         if (address != null && address.isNotEmpty) 'address': address,
       };
 
+      debugPrint('📤 [API] POST /refueling/$refuelingId/validate');
+      debugPrint('📤 [API] Request data: $requestData');
+
       final response = await _dio.post(
         '/refueling/$refuelingId/validate',
         data: requestData,
       );
+
+      debugPrint('📥 [API] Status code: ${response.statusCode}');
+      debugPrint('📥 [API] Response data: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {
@@ -748,8 +754,12 @@ class ApiService {
         };
       }
     } on DioException catch (e) {
+      debugPrint('❌ [API] DioException: ${e.message}');
+      debugPrint('❌ [API] Status code: ${e.response?.statusCode}');
+      debugPrint('❌ [API] Response: ${e.response?.data}');
       return _handleDioError(e);
     } catch (e) {
+      debugPrint('❌ [API] Erro inesperado: $e');
       return {
         'success': false,
         'error': 'Erro inesperado: $e',
@@ -780,6 +790,41 @@ class ApiService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Buscar abastecimentos pendentes de validação do motorista
+  /// GET /api/v1/refueling?status=AGUARDANDO_VALIDACAO_MOTORISTA
+  Future<Map<String, dynamic>> getPendingRefuelings() async {
+    try {
+      final response = await _dio.get(
+        '/refueling',
+        queryParameters: {
+          'status': 'AGUARDANDO_VALIDACAO_MOTORISTA',
+          'limit': 100, // Limite alto para pegar todos os pendentes
+          'sortBy': 'created_at',
+          'sortOrder': 'DESC',
+        },
+      );
+
+      if (response.statusCode == 200) {
         return {
           'success': true,
           'data': response.data,
@@ -1307,21 +1352,50 @@ class ApiService {
     String? executionType, // 'pre_trip' ou 'post_trip'
   }) async {
     try {
+      // Remover hífens e espaços, converter para maiúsculas
+      final cleanPlate = plate.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
+      
+      debugPrint('🔍 [API] Buscando checklist para placa: $plate (limpa: $cleanPlate)');
+      debugPrint('🔍 [API] Execution type: $executionType');
+      
       final queryParams = <String, dynamic>{};
       if (executionType != null) {
         queryParams['execution_type'] = executionType;
       }
 
+      final url = '/checklists/by-plate/$cleanPlate';
+      debugPrint('🔍 [API] URL: $url');
+      debugPrint('🔍 [API] Query params: $queryParams');
+
       final response = await _dio.get(
-        '/checklists/by-plate/$plate',
+        url,
         queryParameters: queryParams,
       );
 
+      debugPrint('📥 [API] Status code: ${response.statusCode}');
+      debugPrint('📥 [API] Response data: ${response.data}');
+
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': response.data,
-        };
+        final data = response.data;
+        // Verificar se a resposta tem o formato esperado
+        if (data is Map && data.containsKey('success') && data['success'] == true) {
+          return {
+            'success': true,
+            'data': data['data'],
+          };
+        } else if (data is Map && data.containsKey('checklists')) {
+          // Formato direto com checklists
+          return {
+            'success': true,
+            'data': data,
+          };
+        } else {
+          // Formato direto
+          return {
+            'success': true,
+            'data': data,
+          };
+        }
       } else {
         return {
           'success': false,
@@ -1329,6 +1403,10 @@ class ApiService {
         };
       }
     } on DioException catch (e) {
+      debugPrint('❌ [API] DioException: ${e.message}');
+      debugPrint('❌ [API] Status code: ${e.response?.statusCode}');
+      debugPrint('❌ [API] Response: ${e.response?.data}');
+      
       if (e.response?.statusCode == 404) {
         return {
           'success': false,
@@ -1337,6 +1415,7 @@ class ApiService {
       }
       return _handleDioError(e);
     } catch (e) {
+      debugPrint('❌ [API] Erro inesperado: $e');
       return {
         'success': false,
         'error': 'Erro inesperado: $e',
