@@ -469,6 +469,55 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     context.go('/home');
   }
 
+  /// Método chamado ao pressionar o botão voltar
+  Future<void> _onBackPressed() async {
+    // Parar polling antes de mostrar o diálogo
+    _pollingService.stopPolling();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair da Validação'),
+        content: const Text(
+          'Tem certeza que deseja sair desta tela?\n\n'
+          'Você poderá retornar para validar este abastecimento através da tela de abastecimentos pendentes.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Reiniciar polling se o usuário cancelar o diálogo
+              if (widget.refuelingId.isNotEmpty || widget.refuelingCode.isNotEmpty) {
+                _startPolling();
+              }
+              Navigator.of(context).pop(false);
+            },
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Parar polling definitivamente
+      _pollingService.stopPolling();
+
+      // Navegar de volta para home
+      context.go('/home');
+    } else if (mounted) {
+      // Se não confirmou, reiniciar polling
+      if (widget.refuelingId.isNotEmpty || widget.refuelingCode.isNotEmpty) {
+        _startPolling();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasData = _refuelingData != null && !_isLoading;
@@ -476,7 +525,10 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(hasData ? 'Dados Recebidos' : 'Aguardando Confirmação'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => _onBackPressed(),
+        ),
       ),
       body: SafeArea(
         child: Column(
