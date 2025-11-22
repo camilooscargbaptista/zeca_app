@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+41
+version: 1.0.3+43
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -54,6 +54,9 @@ dependencies:
   geolocator: ^10.1.0  # Manter por enquanto (fallback)
   geocoding: ^2.1.1
   flutter_background_geolocation: ^4.18.1  # Tracking robusto em background
+  
+  # Maps
+  google_maps_flutter: ^2.5.0
   
   # Device Info (para JWT Sliding Window)
   device_info_plus: ^10.1.0

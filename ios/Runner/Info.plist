@@ -75,5 +75,7 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>GMSApiKey</key>
+	<string>AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q</string>
 </dict>
 </plist>

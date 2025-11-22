@@ -60,52 +60,73 @@ class OdometerOcrService {
     if (results.isEmpty) return null;
     if (results.length == 1) return results.values.first;
 
-    // Priorizar resultados com 5-7 dígitos (mais comum em odômetros)
-    final optimalResults = results.values.where((r) {
-      if (r == null) return false;
-      final len = r.length;
-      return len >= 5 && len <= 7;
-    }).toList();
+    // Remover nulls
+    final validResults = results.values.where((r) => r != null).cast<String>().toList();
+    if (validResults.isEmpty) return null;
 
-    if (optimalResults.isNotEmpty) {
-      // Se houver múltiplos resultados ótimos, escolher o mais frequente
-      final frequency = <String, int>{};
-      for (final result in optimalResults) {
-        frequency[result!] = (frequency[result] ?? 0) + 1;
-      }
-      
-      // Ordenar por frequência e comprimento
-      final sorted = frequency.entries.toList()
-        ..sort((a, b) {
-          if (a.value != b.value) return b.value.compareTo(a.value);
-          return b.key.length.compareTo(a.key.length);
-        });
-      
-      return sorted.first.key;
+    debugPrint('📊 [OCR] Resultados de todas as estratégias: $validResults');
+
+    // Contar frequência de cada resultado
+    final frequency = <String, int>{};
+    for (final result in validResults) {
+      frequency[result] = (frequency[result] ?? 0) + 1;
     }
 
-    // Se não houver resultados ótimos, escolher o mais frequente entre todos
-    final allFrequency = <String, int>{};
-    for (final result in results.values) {
-      if (result != null) {
-        allFrequency[result] = (allFrequency[result] ?? 0) + 1;
-      }
-    }
+    debugPrint('📊 [OCR] Frequência: $frequency');
 
-    if (allFrequency.isEmpty) return null;
-
-    final sorted = allFrequency.entries.toList()
-      ..sort((a, b) {
+    // Se um resultado apareceu em pelo menos 3 estratégias diferentes, usar ele
+    final highConfidence = frequency.entries.where((e) => e.value >= 3).toList();
+    if (highConfidence.isNotEmpty) {
+      highConfidence.sort((a, b) {
         if (a.value != b.value) return b.value.compareTo(a.value);
-        // Preferir números com 4-8 dígitos
+        return b.key.length.compareTo(a.key.length);
+      });
+      debugPrint('✅ [OCR] Resultado de alta confiança: ${highConfidence.first.key} (${highConfidence.first.value} estratégias)');
+      return highConfidence.first.key;
+    }
+
+    // Se um resultado apareceu em 2 estratégias, considerar
+    final mediumConfidence = frequency.entries.where((e) => e.value >= 2).toList();
+    if (mediumConfidence.isNotEmpty) {
+      mediumConfidence.sort((a, b) {
+        if (a.value != b.value) return b.value.compareTo(a.value);
+        // Preferir números com 5-7 dígitos
         final aLen = a.key.length;
         final bLen = b.key.length;
-        if ((aLen >= 4 && aLen <= 8) && !(bLen >= 4 && bLen <= 8)) return -1;
-        if (!(aLen >= 4 && aLen <= 8) && (bLen >= 4 && bLen <= 8)) return 1;
+        final aOptimal = aLen >= 5 && aLen <= 7;
+        final bOptimal = bLen >= 5 && bLen <= 7;
+        if (aOptimal && !bOptimal) return -1;
+        if (!aOptimal && bOptimal) return 1;
         return bLen.compareTo(aLen);
       });
+      debugPrint('✅ [OCR] Resultado de média confiança: ${mediumConfidence.first.key} (${mediumConfidence.first.value} estratégias)');
+      return mediumConfidence.first.key;
+    }
 
-    return sorted.first.key;
+    // Se nenhum resultado apareceu múltiplas vezes, usar heurística
+    final sorted = frequency.entries.toList()
+      ..sort((a, b) {
+        // Priorizar números com 5-7 dígitos
+        final aLen = a.key.length;
+        final bLen = b.key.length;
+        final aOptimal = aLen >= 5 && aLen <= 7;
+        final bOptimal = bLen >= 5 && bLen <= 7;
+        
+        if (aOptimal && !bOptimal) return -1;
+        if (!aOptimal && bOptimal) return 1;
+        
+        // Se ambos são ótimos ou ambos não são, preferir o mais longo
+        if (aLen != bLen) {
+          return bLen.compareTo(aLen);
+        }
+        
+        // Se mesmo comprimento, preferir frequência
+        return b.value.compareTo(a.value);
+      });
+
+    final best = sorted.first.key;
+    debugPrint('✅ [OCR] Melhor resultado selecionado: $best (frequência: ${sorted.first.value}, comprimento: ${best.length})');
+    return best;
   }
 
   /// Tenta extrair valor usando uma estratégia específica de processamento
@@ -203,6 +224,19 @@ class OdometerOcrService {
             debugPrint('   → Número do elemento: $cleanedElement');
           }
         }
+
+        // Tentar extrair número completo da linha inteira (para odômetros digitais)
+        // Remover espaços e caracteres especiais, manter apenas dígitos
+        final fullLineCleaned = lineText.replaceAll(RegExp(r'[^0-9]'), '');
+        if (fullLineCleaned.length >= 4 && fullLineCleaned.length <= 10 && !numbers.contains(fullLineCleaned)) {
+          numbers.add(fullLineCleaned);
+          numberData.add({
+            'number': fullLineCleaned,
+            'length': fullLineCleaned.length,
+            'source': 'full_line',
+          });
+          debugPrint('   → Número da linha completa: $fullLineCleaned');
+        }
       }
     }
 
@@ -236,15 +270,45 @@ class OdometerOcrService {
       return null;
     }
 
-    // Se houver apenas um, retornar
-    if (validNumbers.length == 1) {
-      return validNumbers.first;
+    // Contar frequência de cada número
+    final frequency = <String, int>{};
+    for (final num in validNumbers) {
+      frequency[num] = (frequency[num] ?? 0) + 1;
     }
 
-    // Se houver múltiplos, preferir:
-    // 1. Números com 5-7 dígitos (mais comum para odômetros)
-    // 2. O mais longo (mais completo)
-    validNumbers.sort((a, b) {
+    debugPrint('📊 [OCR] Frequência dos números: $frequency');
+
+    // Se houver apenas um número único, retornar
+    if (frequency.length == 1) {
+      return frequency.keys.first;
+    }
+
+    // Encontrar o número mais frequente
+    final sortedByFrequency = frequency.entries.toList()
+      ..sort((a, b) {
+        // Primeiro por frequência (mais frequente primeiro)
+        if (a.value != b.value) {
+          return b.value.compareTo(a.value);
+        }
+        // Se mesma frequência, preferir o mais longo (mais completo)
+        return b.key.length.compareTo(a.key.length);
+      });
+
+    final mostFrequent = sortedByFrequency.first;
+    debugPrint('🏆 [OCR] Número mais frequente: ${mostFrequent.key} (apareceu ${mostFrequent.value} vez(es))');
+
+    // Se o número mais frequente apareceu pelo menos 2 vezes, usar ele
+    if (mostFrequent.value >= 2) {
+      debugPrint('✅ [OCR] Usando número mais frequente: ${mostFrequent.key}');
+      return mostFrequent.key;
+    }
+
+    // Se nenhum número apareceu múltiplas vezes, usar heurística:
+    // 1. Preferir números com 5-7 dígitos (mais comum para odômetros)
+    // 2. Preferir o mais longo (mais completo)
+    // 3. Preferir números que começam com dígitos comuns (1-9, não 0)
+    final uniqueNumbers = frequency.keys.toList();
+    uniqueNumbers.sort((a, b) {
       final aLength = a.length;
       final bLength = b.length;
 
@@ -256,11 +320,21 @@ class OdometerOcrService {
       if (!aIsOptimal && bIsOptimal) return 1;
 
       // Se ambos são ótimos ou ambos não são, preferir o mais longo
-      return bLength.compareTo(aLength);
+      if (aLength != bLength) {
+        return bLength.compareTo(aLength);
+      }
+
+      // Se mesmo comprimento, preferir o que não começa com 0
+      final aStartsWithZero = a.isNotEmpty && a[0] == '0';
+      final bStartsWithZero = b.isNotEmpty && b[0] == '0';
+      if (aStartsWithZero && !bStartsWithZero) return 1;
+      if (!aStartsWithZero && bStartsWithZero) return -1;
+
+      return 0;
     });
 
-    final best = validNumbers.first;
-    debugPrint('✅ [OCR] Melhor candidato selecionado: $best (de ${validNumbers.length} opções)');
+    final best = uniqueNumbers.first;
+    debugPrint('✅ [OCR] Melhor candidato selecionado: $best (de ${uniqueNumbers.length} opções)');
     return best;
   }
 

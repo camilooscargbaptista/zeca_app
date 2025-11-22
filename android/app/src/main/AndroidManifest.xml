@@ -63,5 +63,10 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q" />
     </application>
 </manifest>

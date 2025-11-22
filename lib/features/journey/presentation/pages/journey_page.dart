@@ -20,6 +20,7 @@ import '../../data/services/journey_storage_service.dart';
 import '../../domain/entities/journey_entity.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
+import '../../../../shared/widgets/route_map_view.dart';
 
 class JourneyPage extends StatefulWidget {
   const JourneyPage({Key? key}) : super(key: key);
@@ -50,6 +51,14 @@ class _JourneyPageState extends State<JourneyPage> {
   
   // Estado para cálculo de rota
   bool _isCalculatingRoute = false;
+  
+  // Dados da rota calculada (para exibir no mapa)
+  double? _routeOriginLat;
+  double? _routeOriginLng;
+  double? _routeDestLat;
+  double? _routeDestLng;
+  String? _routePolyline;
+  String? _routeDestinationName;
 
   @override
   void initState() {
@@ -159,6 +168,16 @@ class _JourneyPageState extends State<JourneyPage> {
         if (routeResult != null) {
           // Preencher campo de previsão de KM automaticamente
           _previsaoKmController.text = routeResult.distanceKm.round().toString();
+          
+          // Salvar dados da rota para exibir no mapa
+          setState(() {
+            _routeOriginLat = currentLocation.latitude;
+            _routeOriginLng = currentLocation.longitude;
+            _routeDestLat = place.latitude;
+            _routeDestLng = place.longitude;
+            _routePolyline = routeResult.polyline;
+            _routeDestinationName = place.description;
+          });
           
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -598,378 +617,288 @@ class _JourneyPageState extends State<JourneyPage> {
     return Container(
       color: Colors.white,
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: AppColors.zecaBlue,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+            // Mapa ocupando toda a tela
+            if (_routeOriginLat != null && _routeDestLat != null)
+              RouteMapView(
+                originLat: _routeOriginLat!,
+                originLng: _routeOriginLng!,
+                destLat: _routeDestLat!,
+                destLng: _routeDestLng!,
+                polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+              )
+            else
+              // Se não houver rota, mostrar mapa com localização atual
+              FutureBuilder(
+                future: _locationService.getCurrentPosition(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final position = snapshot.data!;
+                    return RouteMapView(
+                      originLat: position.latitude,
+                      originLng: position.longitude,
+                      destLat: position.latitude,
+                      destLng: position.longitude,
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
               ),
-              child: Row(
+
+            // Header compacto no topo
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.zecaBlue.withOpacity(0.95),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_shipping, size: 24, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            journey.placa,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            tempoFormatado,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Indicador de descanso (se aplicável)
+                    if (state.emDescanso)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.coffee, size: 14, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Descanso',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Cards flutuantes com informações (canto superior direito)
+            Positioned(
+              top: 60,
+              right: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Icon(
-                    Icons.local_shipping,
-                    size: 32,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  // Card de KM percorridos
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Jornada',
+                        const Text(
+                          'KM',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          kmFormatado,
+                          style: const TextStyle(
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.green,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        _formatBrazilDate(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                  const SizedBox(height: 8),
+                  // Card de odômetro inicial
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      Text(
-                        _formatBrazilTime(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Odômetro',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          OdometerFormatter.formatValue(journey.odometroInicial),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.zecaBlue,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Conteúdo Principal
-            Expanded(
-              child: Card(
-                margin: const EdgeInsets.all(16),
-                elevation: 4,
-                shadowColor: Colors.black.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    left: 24.0,
-                    right: 24.0,
-                    top: 24.0,
-                    bottom: 24.0 + MediaQuery.of(context).viewPadding.bottom,
+            // Botões de controle no canto inferior direito (menores)
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Botão Finalizar (vermelho)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showFinishConfirmation(),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.stop, color: Colors.white, size: 20),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Finalizar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Informações do Veículo
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                  const SizedBox(height: 8),
+                  // Botão Descanso/Retomar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: state.emDescanso ? AppColors.zecaBlue : Colors.orange,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Placa',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    journey.placa,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Odômetro Inicial',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${OdometerFormatter.formatValue(journey.odometroInicial)} km',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Cronômetro Principal
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.zecaBlue.withOpacity(0.1),
-                              AppColors.zecaBlue.withOpacity(0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Tempo de Direção',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              tempoFormatado,
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.zecaBlue,
-                                fontFeatures: [const FontFeature.tabularFigures()],
-                              ),
-                            ),
-                            if (state.emDescanso) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.coffee, size: 16, color: Colors.orange[700]),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Em Descanso',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Dados da Jornada
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Início',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatBrazilDate(journey.dataInicio),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    _formatBrazilTime(journey.dataInicio),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.zecaBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Km Percorridos',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    kmFormatado,
-                                    style: const TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Botões de Controle
-                      if (!state.emDescanso)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<JourneyBloc>().add(
-                                  const ToggleRest(isStartingRest: true),
-                                );
-                          },
-                          icon: const Icon(Icons.pause),
-                          label: const Text('Iniciar Descanso'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        )
-                      else
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<JourneyBloc>().add(
-                                  const ToggleRest(isStartingRest: false),
-                                );
-                          },
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Retomar Direção'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.zecaBlue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _showFinishConfirmation();
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          context.read<JourneyBloc>().add(
+                                ToggleRest(isStartingRest: !state.emDescanso),
+                              );
                         },
-                        icon: const Icon(Icons.stop),
-                        label: const Text('Finalizar Jornada'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                state.emDescanso ? Icons.play_arrow : Icons.pause,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                state.emDescanso ? 'Retomar' : 'Descanso',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-
-            // Footer
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Mantenha-se seguro nas estradas 🚛',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.zecaBlue,
-                ),
-                textAlign: TextAlign.center,
+                ],
               ),
             ),
           ],
