@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'dart:convert';
 import '../../../../firebase_options.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/firebase_service.dart';
 import '../../../../core/services/deep_link_service.dart';
+import '../../../../core/services/user_service.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
@@ -84,17 +88,99 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   }
 
 
-  void _loadUserData() {
-    setState(() {
-      _userData = {
-        'nome': 'Pedro Oliveira',
-        'cpf': '555.666.777-88', // CPF real da resposta de login
-        'empresa': 'Transportadora ABC Ltda',
-        'cnpj': '98.765.432/0001-10',
-        'telefone': '(11) 99999-9999', // Phone not provided in login response, keeping placeholder
-        'email': 'pedro@abc.com',
-      };
-    });
+  /// Carregar dados do usuário logado do token JWT e UserService
+  Future<void> _loadUserData() async {
+    try {
+      final userService = UserService();
+      final storageService = getIt<StorageService>();
+      final storedUserData = storageService.getUserData();
+      
+      // Tentar obter CNPJ do token JWT
+      String? cnpjFromToken;
+      try {
+        final token = await storageService.getAccessToken();
+        if (token != null) {
+          final decoded = _decodeJwtToken(token);
+          cnpjFromToken = decoded['company_cnpj'] as String?;
+          debugPrint('🔍 CNPJ do token JWT: $cnpjFromToken');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Erro ao decodificar token JWT: $e');
+      }
+      
+      // Priorizar UserService (dados do login), depois token JWT, depois storage
+      if (userService.isLoggedIn) {
+        setState(() {
+          _userData = {
+            'nome': userService.userName ?? storedUserData?['name'] ?? storedUserData?['nome'] ?? 'Motorista',
+            'cpf': userService.driverCpf ?? storedUserData?['cpf'] ?? '---',
+            'empresa': storedUserData?['company']?['name'] ?? storedUserData?['empresa'] ?? 'Transportadora',
+            'cnpj': userService.transporterCnpj ?? cnpjFromToken ?? storedUserData?['company']?['cnpj'] ?? storedUserData?['cnpj'] ?? '---',
+            'telefone': storedUserData?['phone'] ?? storedUserData?['telefone'] ?? '---',
+            'email': storedUserData?['email'] ?? '---',
+          };
+        });
+        debugPrint('✅ Dados do usuário carregados do UserService');
+      } else if (storedUserData != null && storedUserData.isNotEmpty) {
+        setState(() {
+          _userData = {
+            'nome': storedUserData['name'] ?? storedUserData['nome'] ?? 'Motorista',
+            'cpf': storedUserData['cpf'] ?? '---',
+            'empresa': storedUserData['company']?['name'] ?? storedUserData['empresa'] ?? 'Transportadora',
+            'cnpj': cnpjFromToken ?? storedUserData['company']?['cnpj'] ?? storedUserData['cnpj'] ?? '---',
+            'telefone': storedUserData['phone'] ?? storedUserData['telefone'] ?? '---',
+            'email': storedUserData['email'] ?? '---',
+          };
+        });
+        debugPrint('✅ Dados do usuário carregados do storage');
+      } else {
+        // Fallback: tentar apenas do token JWT
+        if (cnpjFromToken != null) {
+          setState(() {
+            _userData = {
+              'nome': 'Motorista',
+              'cpf': '---',
+              'empresa': 'Transportadora',
+              'cnpj': cnpjFromToken,
+              'telefone': '---',
+              'email': '---',
+            };
+          });
+          debugPrint('✅ CNPJ carregado do token JWT');
+        } else {
+          debugPrint('⚠️ Nenhum dado do usuário encontrado');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Erro ao carregar dados do usuário: $e');
+    }
+  }
+
+  /// Decodificar token JWT e extrair payload
+  Map<String, dynamic> _decodeJwtToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return {};
+      }
+
+      // Decodificar payload (parte 2 do JWT)
+      final payload = parts[1];
+      // Adicionar padding se necessário
+      final normalizedPayload = payload.padRight(
+        (payload.length + 3) ~/ 4 * 4,
+        '=',
+      );
+      
+      final decodedBytes = base64Url.decode(normalizedPayload);
+      final decodedString = utf8.decode(decodedBytes);
+      final payloadMap = jsonDecode(decodedString) as Map<String, dynamic>;
+      
+      return payloadMap;
+    } catch (e) {
+      debugPrint('⚠️ Erro ao decodificar token JWT: $e');
+      return {};
+    }
   }
   
   /// Carregar contador de abastecimentos pendentes
