@@ -1,6 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+// Import do arquivo local (não commitado)
+// Descomente a linha abaixo quando criar api_keys.local.dart
+// import 'api_keys.local.dart' as local;
+
 /// Configuração de chaves de API
 /// 
 /// IMPORTANTE: Este arquivo NÃO deve conter chaves reais.
@@ -12,9 +16,9 @@ class ApiKeys {
   /// 
   /// Prioridade:
   /// 1. Variável de ambiente GOOGLE_MAPS_API_KEY
-  /// 2. Arquivo api_keys.local.dart (não commitado)
+  /// 2. Arquivo api_keys.local.dart (não commitado) - descomente o import acima
   /// 
-  /// Se nenhuma for encontrada, lança exceção.
+  /// Se nenhuma for encontrada, lança exceção em produção.
   static String get googleMapsApiKey {
     if (_cachedKey != null) {
       return _cachedKey!;
@@ -28,20 +32,34 @@ class ApiKeys {
     }
 
     // Tentar arquivo local (não commitado)
-    // Para desenvolvimento local, crie lib/core/config/api_keys.local.dart:
-    // class LocalApiKeys {
-    //   static const String googleMapsApiKey = 'SUA_CHAVE_AQUI';
-    // }
-    // E descomente as linhas abaixo:
+    // Descomente o import no topo do arquivo e use:
     // try {
-    //   return LocalApiKeys.googleMapsApiKey;
+    //   return local.LocalApiKeys.googleMapsApiKey;
     // } catch (e) {
     //   debugPrint('⚠️ [ApiKeys] Arquivo local não encontrado: $e');
     // }
-
-    // Se chegou aqui, a chave não foi configurada
-    // Em modo debug, mostrar aviso mas permitir continuar (apenas para desenvolvimento)
+    
+    // Por enquanto, usar fallback temporário para desenvolvimento
+    // TODO: Remover este fallback após configurar corretamente
     if (kDebugMode) {
+      // Tentar ler do arquivo local diretamente (se existir)
+      try {
+        final localFile = File('lib/core/config/api_keys.local.dart');
+        if (localFile.existsSync()) {
+          final content = localFile.readAsStringSync();
+          final match = RegExp(r"googleMapsApiKey = '([^']+)'").firstMatch(content);
+          if (match != null && match.group(1) != null) {
+            final key = match.group(1)!;
+            if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
+              _cachedKey = key;
+              return _cachedKey!;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ [ApiKeys] Erro ao ler arquivo local: $e');
+      }
+      
       debugPrint('⚠️⚠️⚠️ [ApiKeys] ATENÇÃO: GOOGLE_MAPS_API_KEY não configurada!');
       debugPrint('⚠️ Configure a variável de ambiente ou crie api_keys.local.dart');
       debugPrint('⚠️ Para produção, isso NÃO deve acontecer!');
@@ -59,4 +77,3 @@ class ApiKeys {
     );
   }
 }
-
