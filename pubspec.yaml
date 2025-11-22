@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+33
+version: 1.0.3+41
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -42,6 +42,10 @@ dependencies:
   image_picker: ^1.0.4
   camera: ^0.10.5+5
   image_cropper: ^8.0.0
+  
+  # OCR - Google ML Kit
+  google_mlkit_text_recognition: ^0.11.0
+  image: ^4.1.7  # Para pré-processamento de imagens
   
   # Permissions
   permission_handler: ^11.0.1

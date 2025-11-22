@@ -14,8 +14,12 @@ import '../bloc/journey_event.dart';
 import '../bloc/journey_state.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/services/places_service.dart';
+import '../../../../core/services/directions_service.dart';
 import '../../data/services/journey_storage_service.dart';
 import '../../domain/entities/journey_entity.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+import '../../../../shared/widgets/places_autocomplete_field.dart';
 
 class JourneyPage extends StatefulWidget {
   const JourneyPage({Key? key}) : super(key: key);
@@ -31,13 +35,21 @@ class _JourneyPageState extends State<JourneyPage> {
   final _observacoesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Formatter para odômetro (formato brasileiro: 123.456,789)
+  // Formatter para odômetro (formato brasileiro: 123.456 - apenas inteiros)
   final _odometroFormatter = OdometerFormatter();
 
   // Dados do veículo e usuário (carregados do storage)
   String? _placa;
   String? _nomeMotorista;
   String? _nomeTransportadora;
+
+  // Serviços para Places e Directions
+  final _placesService = PlacesService();
+  final _directionsService = DirectionsService();
+  final _locationService = LocationService();
+  
+  // Estado para cálculo de rota
+  bool _isCalculatingRoute = false;
 
   @override
   void initState() {
@@ -57,6 +69,133 @@ class _JourneyPageState extends State<JourneyPage> {
       _nomeMotorista = userData?['motorista']?['nome'] ?? userData?['nome'] ?? '';
       _nomeTransportadora = userData?['transportadora']?['nome'] ?? '';
     });
+  }
+
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
+
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
+      setState(() {
+        _odometroController.text = result;
+      });
+    }
+  }
+
+  /// Chamado quando um lugar é selecionado no autocomplete
+  /// Calcula automaticamente a rota e preenche o campo de KM
+  Future<void> _onPlaceSelected(Place place) async {
+    if (place.latitude == null || place.longitude == null) {
+      debugPrint('⚠️ [Journey] Lugar selecionado sem coordenadas');
+      return;
+    }
+
+    setState(() {
+      _isCalculatingRoute = true;
+    });
+
+    try {
+      // Obter localização atual do GPS
+      final currentLocation = await _locationService.getCurrentPosition();
+      
+      if (currentLocation == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Não foi possível obter sua localização atual. Verifique as permissões de GPS.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+        return;
+      }
+
+      // Detectar tipo de veículo baseado no modelo (se disponível)
+      // Por padrão, assume 'car'. Se o modelo contém palavras-chave de caminhão, usa 'truck'
+      String vehicleType = 'car'; // Padrão: carro
+      if (_placa != null) {
+        final storageService = getIt<StorageService>();
+        final vehicleData = await storageService.getJourneyVehicleData();
+        final model = vehicleData?['modelo']?.toString().toLowerCase() ?? '';
+        final brand = vehicleData?['marca']?.toString().toLowerCase() ?? '';
+        final combined = '$model $brand';
+        
+        // Palavras-chave que indicam caminhão
+        if (combined.contains('caminhão') || 
+            combined.contains('caminhao') ||
+            combined.contains('truck') ||
+            combined.contains('onibus') ||
+            combined.contains('ônibus') ||
+            combined.contains('van') ||
+            model.contains('350') || // Modelos comuns de caminhão
+            model.contains('450') ||
+            model.contains('550')) {
+          vehicleType = 'truck';
+        }
+      }
+
+      // Calcular rota
+      final routeResult = await _directionsService.calculateRoute(
+        originLat: currentLocation.latitude,
+        originLng: currentLocation.longitude,
+        destLat: place.latitude!,
+        destLng: place.longitude!,
+        vehicleType: vehicleType,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+
+        if (routeResult != null) {
+          // Preencher campo de previsão de KM automaticamente
+          _previsaoKmController.text = routeResult.distanceKm.round().toString();
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Rota calculada: ${routeResult.distanceKm.toStringAsFixed(1)} km (${routeResult.formattedDuration})',
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Não foi possível calcular a rota. Você pode digitar o KM manualmente.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao calcular rota: $e');
+      if (mounted) {
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao calcular rota: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -269,11 +408,16 @@ class _JourneyPageState extends State<JourneyPage> {
                         inputFormatters: [_odometroFormatter],
                         decoration: InputDecoration(
                           labelText: 'Odômetro Inicial (km) *',
-                          hintText: '0,000',
+                          hintText: '0',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.speed, color: AppColors.zecaBlue),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.camera_alt, color: AppColors.zecaBlue),
+                            onPressed: _openOdometerCamera,
+                            tooltip: 'Capturar odômetro com câmera',
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -290,34 +434,69 @@ class _JourneyPageState extends State<JourneyPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo Destino (OPCIONAL)
-                      TextFormField(
-                        controller: _destinoController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Destino (opcional)',
-                          hintText: 'Ex: São Paulo - SP',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      // Campo Destino (OPCIONAL) com Autocomplete
+                      Stack(
+                        children: [
+                          PlacesAutocompleteField(
+                            controller: _destinoController,
+                            labelText: 'Destino (opcional)',
+                            hintText: 'Ex: São Paulo - SP',
+                            prefixIcon: Icons.location_on,
+                            onPlaceSelected: _onPlaceSelected,
+                            decoration: InputDecoration(
+                              labelText: 'Destino (opcional)',
+                              hintText: 'Ex: São Paulo - SP',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                            ),
                           ),
-                          prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
-                        ),
+                          if (_isCalculatingRoute)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo Previsão de KM (OPCIONAL)
+                      // Campo Previsão de KM (OPCIONAL) - Preenchido automaticamente
                       TextFormField(
                         controller: _previsaoKmController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        readOnly: _isCalculatingRoute,
                         decoration: InputDecoration(
                           labelText: 'Previsão de KM (opcional)',
-                          hintText: 'Ex: 500',
+                          hintText: _isCalculatingRoute ? 'Calculando rota...' : 'Ex: 500',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.route, color: Colors.grey),
                           suffixText: 'km',
+                          suffixIcon: _isCalculatingRoute
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 16),

@@ -11,6 +11,7 @@ import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 
 class HomePageSimple extends StatefulWidget {
   const HomePageSimple({Key? key}) : super(key: key);
@@ -302,6 +303,22 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     _kmController.dispose();
     _cnpjPostoController.dispose();
     super.dispose();
+  }
+
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
+
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
+      setState(() {
+        _kmController.text = result;
+      });
+    }
   }
 
 
@@ -1114,11 +1131,16 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                         inputFormatters: [
                           OdometerFormatter(),
                         ],
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'KM Atual',
-                          border: OutlineInputBorder(),
-                          hintText: '0,000',
-                          helperText: 'Digite apenas números (ex: 123456789 = 123.456,789)',
+                          border: const OutlineInputBorder(),
+                          hintText: '0',
+                          helperText: 'Digite apenas números (ex: 123456 = 123.456)',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.camera_alt, color: Colors.red),
+                            onPressed: _openOdometerCamera,
+                            tooltip: 'Capturar odômetro com câmera',
+                          ),
                         ),
                       ),
                       if (_vehicleData != null)
