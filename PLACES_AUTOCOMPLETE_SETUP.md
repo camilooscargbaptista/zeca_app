@@ -45,19 +45,27 @@ Acesse: https://console.cloud.google.com/
 - Procure por "Places API" e clique em "Enable"
 - Procure por "Directions API" e clique em "Enable"
 
-### 2. Configurar Restrições da API Key
+### 2. Configurar API Key
 
-A API key configurada é: `AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q`
+⚠️ **IMPORTANTE**: A API key NÃO deve estar exposta no código.
+
+**Configuração segura:**
+1. Crie o arquivo `lib/core/config/api_keys.local.dart` (não commitado)
+2. Ou configure a variável de ambiente `GOOGLE_MAPS_API_KEY`
+3. Para Android/iOS, substitua `GOOGLE_MAPS_API_KEY_PLACEHOLDER` nos arquivos nativos
 
 **Localização no código:**
-- `lib/core/services/places_service.dart` (linha 12)
-- `lib/core/services/directions_service.dart` (linha 12)
+- `lib/core/config/api_keys.dart` - Gerenciador de chaves
+- `lib/core/services/places_service.dart` - Usa ApiKeys.googleMapsApiKey
+- `lib/core/services/directions_service.dart` - Usa ApiKeys.googleMapsApiKey
+- `android/app/src/main/AndroidManifest.xml` - Substituir placeholder
+- `ios/Runner/Info.plist` - Substituir placeholder
 
 **Recomendações de segurança:**
 
 1. **Configurar restrições da API Key**:
    - Vá em "APIs & Services" > "Credentials"
-   - Encontre a chave `AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q`
+   - Encontre sua chave de API
    - Clique em "Edit" e configure:
    
 2. **Application restrictions**: 
@@ -128,11 +136,14 @@ Se exceder, será necessário configurar billing no Google Cloud Console.
 
 ## 🔒 Segurança
 
-⚠️ **IMPORTANTE**: A API key atual está exposta no código. Para produção:
+⚠️ **IMPORTANTE**: A API key NÃO deve estar exposta no código.
 
-1. **Mover API key para variáveis de ambiente** (recomendado)
-2. **Usar restrições de API Key** (Android/iOS)
-3. **Considerar usar proxy backend** para esconder a chave
+**Solução implementada:**
+1. ✅ Chave movida para `ApiKeys` (lê de variável de ambiente ou arquivo local)
+2. ✅ Arquivos sensíveis adicionados ao `.gitignore`
+3. ⚠️ **Ação necessária**: Substituir placeholders nos arquivos nativos antes de fazer build
+4. **Recomendado**: Usar restrições de API Key no Google Cloud Console
+5. **Para produção**: Considerar usar proxy backend para esconder a chave completamente
 
 ## 📝 Notas
 

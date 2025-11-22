@@ -76,6 +76,8 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>GMSApiKey</key>
-	<string>AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q</string>
+	<!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
+	<!-- Ou configure via script de build usando sed/xcodebuild -->
+	<string>GOOGLE_MAPS_API_KEY_PLACEHOLDER</string>
 </dict>
 </plist>

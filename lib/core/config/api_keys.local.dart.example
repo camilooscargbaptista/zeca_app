@@ -1,0 +1,11 @@
+/// Arquivo de exemplo para configuração de chaves de API
+/// 
+/// INSTRUÇÕES:
+/// 1. Copie este arquivo para api_keys.local.dart
+/// 2. Substitua YOUR_API_KEY_HERE pela sua chave real
+/// 3. O arquivo api_keys.local.dart está no .gitignore e NÃO será commitado
+/// 
+/// class LocalApiKeys {
+///   static const String googleMapsApiKey = 'YOUR_API_KEY_HERE';
+/// }
+

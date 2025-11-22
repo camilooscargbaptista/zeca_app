@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../config/api_keys.dart';
 
 /// Modelo para um lugar retornado pela API
 class Place {
@@ -25,9 +26,8 @@ class Place {
 
 /// Serviço para buscar lugares usando Google Places API
 class PlacesService {
-  // API Key do Google Maps (Places e Directions)
-  // Esta chave precisa ter as APIs Places e Directions habilitadas no Google Cloud Console
-  static const String _apiKey = 'AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q';
+  // API Key obtida de forma segura via ApiKeys
+  String get _apiKey => ApiKeys.googleMapsApiKey;
   
   final Dio _dio = Dio();
 
