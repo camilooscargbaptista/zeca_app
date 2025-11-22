@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:convert';
+import 'dart:math' as math;
 
 /// Widget para exibir mapa com rota traçada
 class RouteMapView extends StatefulWidget {
@@ -123,29 +123,76 @@ class _RouteMapViewState extends State<RouteMapView> {
   Future<void> _fitBounds() async {
     if (_mapController == null) return;
 
-    // Calcular bounds para incluir origem e destino
-    double minLat = widget.originLat < widget.destLat ? widget.originLat : widget.destLat;
-    double maxLat = widget.originLat > widget.destLat ? widget.originLat : widget.destLat;
-    double minLng = widget.originLng < widget.destLng ? widget.originLng : widget.destLng;
-    double maxLng = widget.originLng > widget.destLng ? widget.originLng : widget.destLng;
+    try {
+      // Calcular bounds para incluir origem e destino
+      double minLat = widget.originLat < widget.destLat ? widget.originLat : widget.destLat;
+      double maxLat = widget.originLat > widget.destLat ? widget.originLat : widget.destLat;
+      double minLng = widget.originLng < widget.destLng ? widget.originLng : widget.destLng;
+      double maxLng = widget.originLng > widget.destLng ? widget.originLng : widget.destLng;
 
-    // Adicionar padding
-    final latPadding = (maxLat - minLat) * 0.2;
-    final lngPadding = (maxLng - minLng) * 0.2;
+      // Se origem e destino são muito próximos (mesmo ponto), usar zoom fixo
+      final latDiff = maxLat - minLat;
+      final lngDiff = maxLng - minLng;
+      
+      if (latDiff < 0.001 && lngDiff < 0.001) {
+        // Mesmo ponto ou muito próximos - apenas centralizar
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(widget.originLat, widget.originLng),
+            15.0,
+          ),
+        );
+        return;
+      }
 
-    await _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat - latPadding, minLng - lngPadding),
-          northeast: LatLng(maxLat + latPadding, maxLng + lngPadding),
+      // Adicionar padding mínimo para evitar bounds muito pequenos
+      final latPadding = math.max((maxLat - minLat) * 0.2, 0.01);
+      final lngPadding = math.max((maxLng - minLng) * 0.2, 0.01);
+
+      await _mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat - latPadding, minLng - lngPadding),
+            northeast: LatLng(maxLat + latPadding, maxLng + lngPadding),
+          ),
+          100.0, // Padding em pixels
         ),
-        100.0, // Padding em pixels
-      ),
-    );
+      );
+    } catch (e) {
+      debugPrint('❌ [Map] Erro ao ajustar bounds: $e');
+      // Fallback: apenas centralizar na origem
+      try {
+        await _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(widget.originLat, widget.originLng),
+            15.0,
+          ),
+        );
+      } catch (e2) {
+        debugPrint('❌ [Map] Erro no fallback: $e2');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Validar coordenadas
+    if (!_isValidCoordinate(widget.originLat, widget.originLng) ||
+        !_isValidCoordinate(widget.destLat, widget.destLng)) {
+      debugPrint('❌ [Map] Coordenadas inválidas: origin(${widget.originLat}, ${widget.originLng}), dest(${widget.destLat}, ${widget.destLng})');
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red),
+            SizedBox(height: 16),
+            Text('Erro ao carregar mapa'),
+            Text('Coordenadas inválidas', style: TextStyle(fontSize: 12)),
+          ],
+        ),
+      );
+    }
+
     return GoogleMap(
       initialCameraPosition: CameraPosition(
         target: LatLng(
@@ -164,10 +211,24 @@ class _RouteMapViewState extends State<RouteMapView> {
         _mapController = controller;
         // Ajustar bounds após o mapa ser criado
         Future.delayed(const Duration(milliseconds: 500), () {
-          _fitBounds();
+          if (mounted) {
+            _fitBounds();
+          }
         });
       },
+      onCameraMoveStarted: () {
+        debugPrint('🗺️ [Map] Câmera começou a se mover');
+      },
+      onCameraIdle: () {
+        debugPrint('🗺️ [Map] Câmera parou');
+      },
     );
+  }
+
+  /// Valida se as coordenadas são válidas
+  bool _isValidCoordinate(double lat, double lng) {
+    return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+           !lat.isNaN && !lng.isNaN && lat.isFinite && lng.isFinite;
   }
 
   @override

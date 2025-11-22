@@ -78,6 +78,6 @@
 	<key>GMSApiKey</key>
 	<!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
 	<!-- Ou configure via script de build usando sed/xcodebuild -->
-	<string>GOOGLE_MAPS_API_KEY_PLACEHOLDER</string>
+	<string>AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q</string>
 </dict>
 </plist>

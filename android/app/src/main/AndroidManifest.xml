@@ -69,6 +69,6 @@
         <!-- Ou configure via build.gradle usando resValue ou manifestPlaceholders -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="GOOGLE_MAPS_API_KEY_PLACEHOLDER" />
+            android:value="AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q" />
     </application>
 </manifest>
