@@ -518,16 +518,99 @@ class ApiService {
         };
       }
 
-      final response = await _dio.post('/codes/generate', data: {
-        'vehicle_plate': vehiclePlate,
-        'driver_cpf': userService.driverCpf!,
+      // Normalizar formatos conforme validações do backend
+      // Placa: remover hífens e converter para maiúsculas
+      final normalizedPlate = vehiclePlate.replaceAll('-', '').replaceAll(' ', '').toUpperCase();
+      
+      // Formatar placa conforme regex do backend: /^[A-Z]{3}-?[0-9A-Z]{4}$/
+      // Aceita: ABC-1234, ABC1234, ABC1D23 (Mercosul)
+      // O backend aceita com ou sem hífen, então manter sem hífen é mais seguro
+      final formattedPlate = normalizedPlate;
+      
+      // Validar CNPJ e CPF antes de formatar
+      if (userService.transporterCnpj == null || userService.transporterCnpj!.isEmpty) {
+        debugPrint('❌ [API] CNPJ da transportadora está vazio');
+        return {
+          'success': false,
+          'error': 'CNPJ da transportadora não encontrado. Faça login novamente.',
+        };
+      }
+      
+      if (userService.driverCpf == null || userService.driverCpf!.isEmpty) {
+        debugPrint('❌ [API] CPF do motorista está vazio');
+        return {
+          'success': false,
+          'error': 'CPF do motorista não encontrado. Faça login novamente.',
+        };
+      }
+      
+      if (stationCnpj.isEmpty) {
+        debugPrint('❌ [API] CNPJ do posto está vazio');
+        return {
+          'success': false,
+          'error': 'CNPJ do posto é obrigatório',
+        };
+      }
+      
+      // CNPJ: remover formatação (pontos, barras, hífens) e depois formatar
+      final normalizedTransporterCnpj = userService.transporterCnpj!.replaceAll(RegExp(r'[^\d]'), '');
+      final normalizedStationCnpj = stationCnpj.replaceAll(RegExp(r'[^\d]'), '');
+      
+      // CPF: remover formatação (pontos, hífens) e depois formatar
+      final normalizedDriverCpf = userService.driverCpf!.replaceAll(RegExp(r'[^\d]'), '');
+      
+      // Validar comprimentos
+      if (normalizedTransporterCnpj.length != 14) {
+        debugPrint('❌ [API] CNPJ da transportadora inválido: ${normalizedTransporterCnpj.length} dígitos');
+        return {
+          'success': false,
+          'error': 'CNPJ da transportadora inválido',
+        };
+      }
+      
+      if (normalizedStationCnpj.length != 14) {
+        debugPrint('❌ [API] CNPJ do posto inválido: ${normalizedStationCnpj.length} dígitos');
+        return {
+          'success': false,
+          'error': 'CNPJ do posto inválido',
+        };
+      }
+      
+      if (normalizedDriverCpf.length != 11) {
+        debugPrint('❌ [API] CPF do motorista inválido: ${normalizedDriverCpf.length} dígitos');
+        return {
+          'success': false,
+          'error': 'CPF do motorista inválido',
+        };
+      }
+      
+      // Formatar CNPJ e CPF para o formato esperado pelo backend (com formatação)
+      // Backend aceita ambos os formatos, mas vamos enviar formatado para garantir
+      final formattedTransporterCnpj = _formatCnpj(normalizedTransporterCnpj);
+      final formattedStationCnpj = _formatCnpj(normalizedStationCnpj);
+      final formattedDriverCpf = _formatCpf(normalizedDriverCpf);
+
+      final requestData = {
+        'vehicle_plate': formattedPlate,
+        'driver_cpf': formattedDriverCpf,
         'fuel_type': fuelType,
-        'transporter_cnpj': userService.transporterCnpj!,
-        'station_cnpj': stationCnpj,
+        'transporter_cnpj': formattedTransporterCnpj,
+        'station_cnpj': formattedStationCnpj,
         'abastecer_arla': abastecerArla,
         'date_time': (dateTime ?? DateTime.now()).toIso8601String(),
         'platform': PlatformService.platformForApi,
-      });
+      };
+
+      debugPrint('📤 [API] Gerando código de abastecimento:');
+      debugPrint('   Placa: $vehiclePlate -> $formattedPlate');
+      debugPrint('   CPF: ${userService.driverCpf} -> $formattedDriverCpf');
+      debugPrint('   CNPJ Transportadora: ${userService.transporterCnpj} -> $formattedTransporterCnpj');
+      debugPrint('   CNPJ Posto: $stationCnpj -> $formattedStationCnpj');
+      debugPrint('   Combustível: $fuelType');
+      debugPrint('   Plataforma: ${PlatformService.platformForApi}');
+      debugPrint('   Data completa: $requestData');
+
+      final response = await _dio.post('/codes/generate', data: requestData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {
@@ -547,13 +630,54 @@ class ApiService {
           'error': 'Já existe um código ativo para este veículo/motorista',
         };
       }
+      
+      // Log detalhado para erro 400
+      if (e.response?.statusCode == 400) {
+        debugPrint('❌ [API] Erro 400 - Bad Request:');
+        debugPrint('   Status: ${e.response?.statusCode}');
+        debugPrint('   Data enviada: ${e.requestOptions.data}');
+        debugPrint('   Resposta: ${e.response?.data}');
+        debugPrint('   Mensagem: ${e.message}');
+        
+        // Extrair mensagens de validação do backend
+        final errorData = e.response?.data;
+        if (errorData is Map) {
+          final message = errorData['message'] ?? errorData['error'] ?? 'Erro de validação';
+          final errors = errorData['errors'] as List?;
+          if (errors != null && errors.isNotEmpty) {
+            final errorMessages = errors.map((e) => e.toString()).join(', ');
+            return {
+              'success': false,
+              'error': 'Erro de validação: $errorMessages',
+            };
+          }
+          return {
+            'success': false,
+            'error': message.toString(),
+          };
+        }
+      }
+      
       return _handleDioError(e);
     } catch (e) {
+      debugPrint('❌ [API] Erro inesperado ao gerar código: $e');
       return {
         'success': false,
         'error': 'Erro inesperado: $e',
       };
     }
+  }
+
+  /// Formata CNPJ para o formato esperado pelo backend (XX.XXX.XXX/XXXX-XX)
+  String _formatCnpj(String cnpj) {
+    if (cnpj.length != 14) return cnpj; // Se não tiver 14 dígitos, retornar como está
+    return '${cnpj.substring(0, 2)}.${cnpj.substring(2, 5)}.${cnpj.substring(5, 8)}/${cnpj.substring(8, 12)}-${cnpj.substring(12)}';
+  }
+
+  /// Formata CPF para o formato esperado pelo backend (XXX.XXX.XXX-XX)
+  String _formatCpf(String cpf) {
+    if (cpf.length != 11) return cpf; // Se não tiver 11 dígitos, retornar como está
+    return '${cpf.substring(0, 3)}.${cpf.substring(3, 6)}.${cpf.substring(6, 9)}-${cpf.substring(9)}';
   }
 
   /// Buscar postos próximos
