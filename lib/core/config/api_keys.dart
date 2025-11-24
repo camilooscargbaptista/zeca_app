@@ -2,8 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 // Import do arquivo local (não commitado)
-// Descomente a linha abaixo quando criar api_keys.local.dart
-// import 'api_keys.local.dart' as local;
+import 'api_keys.local.dart' as local;
 
 /// Configuração de chaves de API
 /// 
@@ -32,17 +31,19 @@ class ApiKeys {
     }
 
     // Tentar arquivo local (não commitado)
-    // Descomente o import no topo do arquivo e use:
-    // try {
-    //   return local.LocalApiKeys.googleMapsApiKey;
-    // } catch (e) {
-    //   debugPrint('⚠️ [ApiKeys] Arquivo local não encontrado: $e');
-    // }
+    try {
+      final key = local.LocalApiKeys.googleMapsApiKey;
+      if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
+        _cachedKey = key;
+        debugPrint('✅ [ApiKeys] API Key carregada do arquivo local');
+        return _cachedKey!;
+      }
+    } catch (e) {
+      debugPrint('⚠️ [ApiKeys] Arquivo local não encontrado ou inválido: $e');
+    }
     
-    // Por enquanto, usar fallback temporário para desenvolvimento
-    // TODO: Remover este fallback após configurar corretamente
+    // Fallback: tentar ler do arquivo local diretamente (se o import falhou)
     if (kDebugMode) {
-      // Tentar ler do arquivo local diretamente (se existir)
       try {
         final localFile = File('lib/core/config/api_keys.local.dart');
         if (localFile.existsSync()) {
@@ -52,12 +53,13 @@ class ApiKeys {
             final key = match.group(1)!;
             if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
               _cachedKey = key;
+              debugPrint('✅ [ApiKeys] API Key carregada via fallback (leitura direta)');
               return _cachedKey!;
             }
           }
         }
       } catch (e) {
-        debugPrint('⚠️ [ApiKeys] Erro ao ler arquivo local: $e');
+        debugPrint('⚠️ [ApiKeys] Erro ao ler arquivo local via fallback: $e');
       }
       
       debugPrint('⚠️⚠️⚠️ [ApiKeys] ATENÇÃO: GOOGLE_MAPS_API_KEY não configurada!');

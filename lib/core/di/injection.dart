@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/storage_service.dart';
+import '../services/geocoding_service.dart';
 import '../network/dio_client.dart';
 import '../../routes/app_router.dart';
 import 'injection.config.dart';
@@ -42,6 +43,10 @@ Future<void> configureDependencies() async {
   // Register AppRouter manually
   print('🔧 [DI] Registrando AppRouter...');
   getIt.registerLazySingleton<AppRouter>(() => AppRouter());
+  
+  // Register GeocodingService manually
+  print('🔧 [DI] Registrando GeocodingService...');
+  getIt.registerLazySingleton<GeocodingService>(() => GeocodingService());
   
   // Initialize injectable
   print('🔧 [DI] Inicializando injectable...');

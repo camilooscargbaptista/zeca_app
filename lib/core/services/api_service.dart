@@ -800,28 +800,16 @@ class ApiService {
   /// Obter dados pendentes de validação
   Future<Map<String, dynamic>> getPendingValidation(String refuelingId) async {
     try {
-      // TODO: Implementar endpoint real quando backend estiver pronto
-      // GET /refueling/{id}/pending-validation
-      // Por enquanto, usar endpoint de status
-      final response = await _dio.get('/refueling/$refuelingId');
+      // Usar endpoint específico para dados pendentes de validação
+      final response = await _dio.get('/refueling/$refuelingId/pending-validation');
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final status = data['status'] as String?;
         
-        // Verificar se status é de validação pendente
-        if (status == 'AGUARDANDO_VALIDACAO_MOTORISTA' || 
-            status == 'aguardando_validacao_motorista') {
-          return {
-            'success': true,
-            'data': data,
-          };
-        } else {
-          return {
-            'success': true,
-            'data': null, // Sem dados pendentes
-          };
-        }
+        return {
+          'success': true,
+          'data': data,
+        };
       } else {
         return {
           'success': false,

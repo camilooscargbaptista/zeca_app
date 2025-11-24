@@ -101,12 +101,9 @@ class AppDrawer extends StatelessWidget {
                 selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
                 onTap: () {
                   Navigator.of(context).pop(); // Fechar o drawer
-                  // TODO: Implementar tela de checklist
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Funcionalidade em desenvolvimento'),
-                    ),
-                  );
+                  if (currentRoute != '/checklist') {
+                    context.go('/checklist');
+                  }
                 },
               ),
               const Divider(),

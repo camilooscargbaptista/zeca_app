@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/services/storage_service.dart';
+import'../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../bloc/journey_bloc.dart';
 import '../bloc/journey_event.dart';
@@ -21,6 +24,9 @@ import '../../domain/entities/journey_entity.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
 import '../../../../shared/widgets/route_map_view.dart';
+import '../../widgets/navigation_info_card.dart';
+import '../../widgets/speed_card.dart';
+import '../../../../core/services/geocoding_service.dart';
 
 class JourneyPage extends StatefulWidget {
   const JourneyPage({Key? key}) : super(key: key);
@@ -59,13 +65,143 @@ class _JourneyPageState extends State<JourneyPage> {
   double? _routeDestLng;
   String? _routePolyline;
   String? _routeDestinationName;
+  
+  // Estado de navegação
+  bool _isNavigationMode = false;
+  Position? _currentLocation;
+  StreamSubscription<Position>? _locationSubscription;
+  
+  // Serviço de geocoding (lazy initialization)
+  GeocodingService? _geocodingService;
+  GeocodingService get geocodingService {
+    _geocodingService ??= getIt<GeocodingService>();
+    return _geocodingService!;
+  }
+  
+  // Dados de navegação (atualizados em tempo real)
+  String? _currentStreetName;
+  double _currentSpeed = 0; // km/h
+  int? _speedLimit; // km/h
 
   @override
   void initState() {
     super.initState();
     _loadVehicleData();
-    // Carregar jornada ativa ao iniciar
-    context.read<JourneyBloc>().add(const LoadActiveJourney());
+    // Verificar se há jornada ativa e perguntar ao usuário
+    // Usar um delay maior para garantir que tudo está inicializado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _checkActiveJourney();
+        }
+      });
+    });
+  }
+
+  /// Verifica se há jornada ativa e pergunta ao usuário o que fazer
+  Future<void> _checkActiveJourney() async {
+    if (!mounted) {
+      debugPrint('⚠️ [Journey] Widget não está mais montado, cancelando verificação');
+      return;
+    }
+
+    try {
+      final journeyStorageService = JourneyStorageService();
+      
+      // Tentar inicializar se necessário (pode já estar inicializado)
+      try {
+        await journeyStorageService.init();
+      } catch (e) {
+        debugPrint('⚠️ [Journey] Erro ao inicializar storage: $e');
+        // Continuar mesmo se houver erro na inicialização
+      }
+      
+      if (!mounted) return;
+      
+      final activeJourney = journeyStorageService.getActiveJourney();
+      
+      if (activeJourney != null && activeJourney.isActive) {
+        // Carregar dados da rota se existirem
+        final routeData = journeyStorageService.getRouteData(activeJourney.id);
+        if (routeData != null) {
+          setState(() {
+            _routeOriginLat = (routeData['origin_lat'] as num?)?.toDouble();
+            _routeOriginLng = (routeData['origin_lng'] as num?)?.toDouble();
+            _routeDestLat = (routeData['dest_lat'] as num?)?.toDouble();
+            _routeDestLng = (routeData['dest_lng'] as num?)?.toDouble();
+            _routePolyline = routeData['polyline'] as String?;
+            _routeDestinationName = routeData['destination_name'] as String?;
+          });
+          debugPrint('✅ [Journey] Dados da rota carregados da jornada ativa');
+        }
+        
+        // Há jornada ativa - perguntar ao usuário
+        if (!mounted) return;
+        
+        final shouldContinue = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Viagem Ativa Encontrada'),
+            content: Text(
+              'Existe uma viagem ativa para o veículo ${activeJourney.placa}.\\n\\n'
+              'O que deseja fazer?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Iniciar Nova'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.zecaBlue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Continuar Viagem'),
+              ),
+            ],
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (shouldContinue == true) {
+          // Continuar viagem ativa
+          context.read<JourneyBloc>().add(const LoadActiveJourney());
+        } else {
+          // Limpar jornada ativa - o estado inicial já é JourneyInitial
+          try {
+            await journeyStorageService.setActiveJourney(null);
+            // Limpar dados da rota também
+            await journeyStorageService.clearRouteData(activeJourney.id);
+            setState(() {
+              _routeOriginLat = null;
+              _routeOriginLng = null;
+              _routeDestLat = null;
+              _routeDestLng = null;
+              _routePolyline = null;
+              _routeDestinationName = null;
+            });
+          } catch (e) {
+            debugPrint('⚠️ [Journey] Erro ao limpar jornada ativa: $e');
+          }
+          // Não precisa fazer nada, o estado já é JourneyInitial por padrão
+        }
+      } else {
+        // Não há jornada ativa - o estado inicial já é JourneyInitial
+        // Não precisa fazer nada
+        debugPrint('ℹ️ [Journey] Nenhuma jornada ativa encontrada');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Journey] Erro ao verificar jornada ativa: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
+      // Em caso de erro, o estado inicial já é JourneyInitial por padrão
+      // Não precisa fazer nada
+    }
   }
 
   Future<void> _loadVehicleData() async {
@@ -78,6 +214,27 @@ class _JourneyPageState extends State<JourneyPage> {
       _nomeMotorista = userData?['motorista']?['nome'] ?? userData?['nome'] ?? '';
       _nomeTransportadora = userData?['transportadora']?['nome'] ?? '';
     });
+  }
+
+  /// Carrega dados da rota para uma jornada
+  Future<void> _loadRouteDataForJourney(JourneyEntity journey) async {
+    try {
+      final journeyStorageService = JourneyStorageService();
+      final routeData = journeyStorageService.getRouteData(journey.id);
+      if (routeData != null && mounted) {
+        setState(() {
+          _routeOriginLat = (routeData['origin_lat'] as num?)?.toDouble();
+          _routeOriginLng = (routeData['origin_lng'] as num?)?.toDouble();
+          _routeDestLat = (routeData['dest_lat'] as num?)?.toDouble();
+          _routeDestLng = (routeData['dest_lng'] as num?)?.toDouble();
+          _routePolyline = routeData['polyline'] as String?;
+          _routeDestinationName = routeData['destination_name'] as String?;
+        });
+        debugPrint('✅ [Journey] Dados da rota carregados para jornada: ${journey.id}');
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao carregar dados da rota: $e');
+    }
   }
 
   /// Abre a tela de câmera para capturar odômetro
@@ -179,6 +336,21 @@ class _JourneyPageState extends State<JourneyPage> {
             _routeDestinationName = place.description;
           });
           
+          // Salvar dados da rota no storage (se houver jornada ativa)
+          final journeyStorageService = JourneyStorageService();
+          final activeJourney = journeyStorageService.getActiveJourney();
+          if (activeJourney != null) {
+            await journeyStorageService.saveRouteData(
+              activeJourney.id,
+              originLat: currentLocation.latitude,
+              originLng: currentLocation.longitude,
+              destLat: place.latitude!,
+              destLng: place.longitude!,
+              polyline: routeResult.polyline,
+              destinationName: place.description,
+            );
+          }
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -223,6 +395,7 @@ class _JourneyPageState extends State<JourneyPage> {
     _destinoController.dispose();
     _previsaoKmController.dispose();
     _observacoesController.dispose();
+    _locationSubscription?.cancel();
     super.dispose();
   }
 
@@ -282,6 +455,46 @@ class _JourneyPageState extends State<JourneyPage> {
             );
           } else if (state is JourneyFinished) {
             _showFinishDialog(state.journey);
+            // Parar navegação quando jornada termina
+            _stopNavigation();
+          } else if (state is JourneyLoaded) {
+            // Salvar dados da rota quando a jornada é carregada (após iniciar ou continuar)
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null) {
+              final journeyStorageService = JourneyStorageService();
+              journeyStorageService.saveRouteData(
+                state.journey.id,
+                originLat: _routeOriginLat!,
+                originLng: _routeOriginLng!,
+                destLat: _routeDestLat!,
+                destLng: _routeDestLng!,
+                polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+              ).then((_) {
+                debugPrint('✅ [Journey] Dados da rota salvos após jornada ser iniciada/carregada');
+              });
+            }
+            
+            // Iniciar tracking de localização
+            _startLocationTracking();
+            
+            // Se houver rota, iniciar navegação automaticamente
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null) {
+              // Iniciar navegação automaticamente quando jornada começa com rota
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && !_isNavigationMode) {
+                  setState(() {
+                    _isNavigationMode = true;
+                  });
+                  _startNavigation();
+                }
+              });
+            }
           }
         },
         builder: (context, state) {
@@ -290,6 +503,10 @@ class _JourneyPageState extends State<JourneyPage> {
           }
 
           if (state is JourneyLoaded) {
+            // Carregar dados da rota quando a jornada é carregada
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _loadRouteDataForJourney(state.journey);
+            });
             return _buildActiveJourneyView(state);
           }
 
@@ -572,6 +789,7 @@ class _JourneyPageState extends State<JourneyPage> {
                                     observacoes: observacoes.isNotEmpty ? observacoes : null,
                                   ),
                                 );
+                            // Os dados da rota serão salvos no listener quando JourneyLoaded for emitido
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -614,13 +832,21 @@ class _JourneyPageState extends State<JourneyPage> {
     final kmFormatado = state.kmPercorridos.toStringAsFixed(1);
     final odometroFinal = journey.odometroInicial + state.kmPercorridos.round();
 
+    debugPrint('🗺️ [Journey] Construindo view de jornada ativa');
+    debugPrint('   - Rota disponível: ${_routeOriginLat != null && _routeOriginLng != null && _routeDestLat != null && _routeDestLng != null}');
+    debugPrint('   - Origin: ($_routeOriginLat, $_routeOriginLng)');
+    debugPrint('   - Dest: ($_routeDestLat, $_routeDestLng)');
+
     return Container(
       color: Colors.white,
       child: SafeArea(
         child: Stack(
           children: [
             // Mapa ocupando toda a tela
-            if (_routeOriginLat != null && _routeDestLat != null)
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null)
               RouteMapView(
                 originLat: _routeOriginLat!,
                 originLng: _routeOriginLng!,
@@ -628,12 +854,43 @@ class _JourneyPageState extends State<JourneyPage> {
                 destLng: _routeDestLng!,
                 polyline: _routePolyline,
                 destinationName: _routeDestinationName,
+                isNavigationMode: _isNavigationMode,
+                currentPosition: _currentLocation != null 
+                    ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
+                    : null,
               )
             else
               // Se não houver rota, mostrar mapa com localização atual
-              FutureBuilder(
+              FutureBuilder<Position?>(
                 future: _locationService.getCurrentPosition(),
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      color: Colors.white,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Obtendo localização...'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  if (snapshot.hasError) {
+                    debugPrint('❌ [Journey] Erro ao obter localização: ${snapshot.error}');
+                    // Tentar usar uma localização padrão (centro do Brasil) se houver erro
+                    return RouteMapView(
+                      originLat: -14.2350, // Centro do Brasil
+                      originLng: -51.9253,
+                      destLat: -14.2350,
+                      destLng: -51.9253,
+                    );
+                  }
+                  
                   if (snapshot.hasData && snapshot.data != null) {
                     final position = snapshot.data!;
                     return RouteMapView(
@@ -643,7 +900,14 @@ class _JourneyPageState extends State<JourneyPage> {
                       destLng: position.longitude,
                     );
                   }
-                  return const Center(child: CircularProgressIndicator());
+                  
+                  // Fallback: mostrar mapa com localização padrão
+                  return RouteMapView(
+                    originLat: -14.2350, // Centro do Brasil
+                    originLng: -51.9253,
+                    destLat: -14.2350,
+                    destLng: -51.9253,
+                  );
                 },
               ),
 
@@ -804,100 +1068,186 @@ class _JourneyPageState extends State<JourneyPage> {
               ),
             ),
 
-            // Botões de controle no canto inferior direito (menores)
+            // NAVIGATION OVERLAYS (apenas em modo navegação E quando houver dados)
+            if (_isNavigationMode && _currentStreetName != null) ...[
+              // Card de informações de navegação abaixo do header
+              Positioned(
+                top: 80, // Abaixo do header compacto
+                left: 16,
+                right: 16,
+                child: NavigationInfoCard(
+                  currentStreet: _currentStreetName,
+                  destinationName: _routeDestinationName,
+                  // TODO: Adicionar cálculo de tempo estimado e distância restante
+                ),
+              ),
+
+              // Card de velocidade no canto inferior esquerdo
+              Positioned(
+                left: 16,
+                bottom: 100,
+                child: SpeedCard(
+                  currentSpeed: _currentSpeed,
+                  speedLimit: _speedLimit,
+                ),
+              ),
+            ],
+
+            // Botões de ação - lado direito
             Positioned(
-              bottom: 16,
               right: 16,
+              bottom: 90,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Botão Finalizar (vermelho)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+            // Botão Finalizar
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showFinishConfirmation(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stop, color: Colors.white, size: 20),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Finalizar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _showFinishConfirmation(),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.stop, color: Colors.white, size: 20),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Finalizar',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
-                  const SizedBox(height: 8),
-                  // Botão Descanso/Retomar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: state.emDescanso ? AppColors.zecaBlue : Colors.orange,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Botão Navegação (estilo Waze)
+            Container(
+              width: 160,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _isNavigationMode 
+                    ? [Colors.green.shade400, Colors.green.shade700]
+                    : [Colors.blue.shade400, Colors.blue.shade700],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_isNavigationMode ? Colors.green : Colors.blue).withOpacity(0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isNavigationMode = !_isNavigationMode;
+                    });
+                    if (_isNavigationMode) {
+                      _startNavigation();
+                    } else {
+                      _stopNavigation();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isNavigationMode ? Icons.stop : Icons.navigation,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isNavigationMode ? 'Parar' : 'Navegar',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          context.read<JourneyBloc>().add(
-                                ToggleRest(isStartingRest: !state.emDescanso),
-                              );
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                state.emDescanso ? Icons.play_arrow : Icons.pause,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                state.emDescanso ? 'Retomar' : 'Descanso',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Botão Descanso - agora do lado direito, não sobreposto
+            Container(
+              decoration: BoxDecoration(
+                color: state.emDescanso ? AppColors.zecaBlue : Colors.orange,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    context.read<JourneyBloc>().add(
+                      ToggleRest(isStartingRest: !state.emDescanso),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          state.emDescanso ? Icons.play_arrow : Icons.pause,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          state.emDescanso ? 'Retomar' : 'Descanso',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
+                ),
+              ),
+            ),
                 ],
               ),
             ),
@@ -1027,6 +1377,92 @@ class _JourneyPageState extends State<JourneyPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Inicia navegação estilo Waze
+  void _startNavigation() async {
+    try {
+      // Obter posição atual
+      final position = await _locationService.getCurrentPosition();
+      if (position != null) {
+        setState(() {
+          _currentLocation = position;
+          _currentSpeed = position.speed * 3.6; // m/s para km/h
+        });
+        
+        // Obter nome da rua atual
+        try {
+          final streetName = await geocodingService.getStreetName(
+            LatLng(position.latitude, position.longitude),
+          );
+          if (mounted && streetName != null) {
+            setState(() {
+              _currentStreetName = streetName;
+            });
+          }
+        } catch (e) {
+          debugPrint('❌ [Navigation] Erro ao obter nome da rua inicial: $e');
+        }
+        
+        debugPrint('✅ [Navigation] Navegação iniciada na posição: ${position.latitude}, ${position.longitude}');
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao iniciar navegação: $e');
+    }
+  }
+
+  void _stopNavigation() {
+    debugPrint('🛑 [Journey] Parando navegação');
+    _locationSubscription?.cancel();
+    _locationSubscription = null;
+    
+    setState(() {
+      _currentStreetName = null;
+      _currentSpeed = 0;
+      _speedLimit = null;
+    });
+  }
+
+  /// Inicia tracking de localização para atualizar o mapa
+  void _startLocationTracking() {
+    if (_locationSubscription != null) return; // Já está ativo
+    
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Atualizar a cada 10 metros
+      ),
+    ).listen(
+      (Position position) async {
+        if (mounted) {
+          setState(() {
+            _currentLocation = position;
+            _currentSpeed = position.speed * 3.6; // m/s para km/h
+          });
+          
+          // Atualizar nome da rua se estiver em modo navegação
+          if (_isNavigationMode) {
+            try {
+              final streetName = await geocodingService.getStreetName(
+                LatLng(position.latitude, position.longitude),
+              );
+              if (mounted && streetName != null) {
+                setState(() {
+                  _currentStreetName = streetName;
+                });
+              }
+            } catch (e) {
+              debugPrint('❌ [Navigation] Erro ao obter nome da rua: $e');
+            }
+          }
+          
+          debugPrint('📍 [Navigation] Nova posição: ${position.latitude}, ${position.longitude}, ${_currentSpeed.toStringAsFixed(1)} km/h');
+        }
+      },
+      onError: (error) {
+        debugPrint('❌ [Navigation] Erro no tracking: $error');
+      },
     );
   }
 
