@@ -26,6 +26,9 @@ import '../../../../shared/widgets/places_autocomplete_field.dart';
 import '../../../../shared/widgets/route_map_view.dart';
 import '../../widgets/navigation_info_card.dart';
 import '../../widgets/speed_card.dart';
+import '../../widgets/route_summary_card.dart';
+import '../../widgets/navigation_bottom_sheet.dart';
+import '../../widgets/navigation_countdown_dialog.dart';
 import '../../../../core/services/geocoding_service.dart';
 
 class JourneyPage extends StatefulWidget {
@@ -65,6 +68,9 @@ class _JourneyPageState extends State<JourneyPage> {
   double? _routeDestLng;
   String? _routePolyline;
   String? _routeDestinationName;
+  String? _routeEstimatedTime;
+  double? _routeDistanceKm;
+  String? _routeOriginName;
   
   // Estado de navegação
   bool _isNavigationMode = false;
@@ -326,6 +332,21 @@ class _JourneyPageState extends State<JourneyPage> {
           // Preencher campo de previsão de KM automaticamente
           _previsaoKmController.text = routeResult.distanceKm.round().toString();
           
+          // Obter nome da origem (rua atual)
+          String? originName;
+          try {
+            originName = await geocodingService.getStreetName(
+              LatLng(currentLocation.latitude, currentLocation.longitude),
+            );
+          } catch (e) {
+            debugPrint('⚠️ [Journey] Erro ao obter nome da origem: $e');
+          }
+          
+          // Calcular hora de chegada estimada
+          final now = DateTime.now();
+          final arrivalTime = now.add(Duration(minutes: routeResult.durationMinutes));
+          final arrivalTimeStr = DateFormat('HH:mm').format(arrivalTime);
+          
           // Salvar dados da rota para exibir no mapa
           setState(() {
             _routeOriginLat = currentLocation.latitude;
@@ -334,6 +355,9 @@ class _JourneyPageState extends State<JourneyPage> {
             _routeDestLng = place.longitude;
             _routePolyline = routeResult.polyline;
             _routeDestinationName = place.description;
+            _routeEstimatedTime = routeResult.formattedDuration;
+            _routeDistanceKm = routeResult.distanceKm;
+            _routeOriginName = originName ?? 'Seu local';
           });
           
           // Salvar dados da rota no storage (se houver jornada ativa)
@@ -1068,27 +1092,83 @@ class _JourneyPageState extends State<JourneyPage> {
               ),
             ),
 
-            // NAVIGATION OVERLAYS (apenas em modo navegação E quando houver dados)
-            if (_isNavigationMode && _currentStreetName != null) ...[
-              // Card de informações de navegação abaixo do header
+            // CARD DE ROTA (antes da navegação) - estilo Google Maps
+            if (!_isNavigationMode && 
+                _routeOriginLat != null && 
+                _routeDestLat != null &&
+                _routeDestinationName != null) ...[
               Positioned(
-                top: 80, // Abaixo do header compacto
-                left: 16,
-                right: 16,
-                child: NavigationInfoCard(
-                  currentStreet: _currentStreetName,
+                top: 60, // Abaixo do header
+                left: 0,
+                right: 0,
+                child: RouteSummaryCard(
+                  originName: _routeOriginName,
                   destinationName: _routeDestinationName,
-                  // TODO: Adicionar cálculo de tempo estimado e distância restante
+                  estimatedTime: _routeEstimatedTime,
+                  distanceKm: _routeDistanceKm,
+                  arrivalTime: _routeEstimatedTime != null 
+                      ? _calculateArrivalTime(_routeEstimatedTime!)
+                      : null,
+                  onStart: () {
+                    // Mostrar diálogo de contagem regressiva
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => NavigationCountdownDialog(
+                        onComplete: () {
+                          setState(() {
+                            _isNavigationMode = true;
+                          });
+                          _startNavigation();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
+            // NAVIGATION OVERLAYS (durante navegação) - estilo Google Maps
+            if (_isNavigationMode) ...[
+              // Card verde de navegação no topo
+              Positioned(
+                top: 60, // Abaixo do header
+                left: 0,
+                right: 80, // ✅ Espaço para botões do lado direito
+                child: NavigationInfoCard(
+                  currentStreet: _currentStreetName ?? 'Carregando...',
+                  nextStreet: _routeDestinationName,
+                  nextInstruction: null, // TODO: Calcular próxima instrução baseada na rota
+                  onNextInstruction: () {
+                    // TODO: Mostrar próxima instrução
+                  },
                 ),
               ),
 
               // Card de velocidade no canto inferior esquerdo
               Positioned(
                 left: 16,
-                bottom: 100,
+                bottom: 80, // Acima do bottom sheet
                 child: SpeedCard(
                   currentSpeed: _currentSpeed,
                   speedLimit: _speedLimit,
+                ),
+              ),
+              
+              // Bottom sheet com informações de chegada
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: NavigationBottomSheet(
+                  estimatedTime: _routeEstimatedTime,
+                  distanceRemaining: _routeDistanceKm,
+                  arrivalTime: _routeEstimatedTime != null 
+                      ? _calculateArrivalTime(_routeEstimatedTime!)
+                      : null,
+                  onExit: () {
+                    _showStopNavigationDialog();
+                  },
                 ),
               ),
             ],
@@ -1163,13 +1243,15 @@ class _JourneyPageState extends State<JourneyPage> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    setState(() {
-                      _isNavigationMode = !_isNavigationMode;
-                    });
                     if (_isNavigationMode) {
-                      _startNavigation();
+                      // Parar navegação
+                      _showStopNavigationDialog();
                     } else {
-                      _stopNavigation();
+                      // Iniciar navegação
+                      setState(() {
+                        _isNavigationMode = true;
+                      });
+                      _startNavigation();
                     }
                   },
                   borderRadius: BorderRadius.circular(16),
@@ -1412,6 +1494,36 @@ class _JourneyPageState extends State<JourneyPage> {
     }
   }
 
+  /// Mostra diálogo para parar navegação
+  void _showStopNavigationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Parar Navegação?'),
+        content: const Text('Deseja parar a navegação? Você poderá retomá-la depois.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              // ✅ Primeiro fechar o diálogo
+              Navigator.of(context).pop();
+              // ✅ Depois parar navegação (já inclui setState)
+              _stopNavigation();
+              // ✅ Forçar atualização do estado
+              setState(() {
+                _isNavigationMode = false;
+              });
+            },
+            child: const Text('Parar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _stopNavigation() {
     debugPrint('🛑 [Journey] Parando navegação');
     _locationSubscription?.cancel();
@@ -1422,6 +1534,34 @@ class _JourneyPageState extends State<JourneyPage> {
       _currentSpeed = 0;
       _speedLimit = null;
     });
+  }
+
+  /// Calcula hora de chegada baseado no tempo estimado
+  String? _calculateArrivalTime(String estimatedTime) {
+    try {
+      // Parse do tempo estimado (ex: "24 min", "1h 30min", "3h")
+      int minutes = 0;
+      if (estimatedTime.contains('h')) {
+        final parts = estimatedTime.split('h');
+        final hours = int.tryParse(parts[0].trim()) ?? 0;
+        minutes = hours * 60;
+        if (parts.length > 1 && parts[1].contains('min')) {
+          final minPart = parts[1].replaceAll('min', '').trim();
+          minutes += int.tryParse(minPart) ?? 0;
+        }
+      } else if (estimatedTime.contains('min')) {
+        final minPart = estimatedTime.replaceAll('min', '').trim();
+        minutes = int.tryParse(minPart) ?? 0;
+      }
+      
+      if (minutes > 0) {
+        final arrival = DateTime.now().add(Duration(minutes: minutes));
+        return DateFormat('HH:mm').format(arrival);
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao calcular hora de chegada: $e');
+    }
+    return null;
   }
 
   /// Inicia tracking de localização para atualizar o mapa

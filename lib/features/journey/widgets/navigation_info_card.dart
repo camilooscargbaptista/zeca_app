@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
 
-/// Card que mostra informações da navegação (rua atual, próxima instrução)
+/// Card que mostra informações da navegação durante a viagem (estilo Google Maps)
 class NavigationInfoCard extends StatelessWidget {
   final String? currentStreet;
+  final String? nextStreet;
   final String? nextInstruction;
-  final String? destinationName;
   final String? estimatedTime;
   final double? distanceRemaining;
+  final VoidCallback? onNextInstruction;
 
   const NavigationInfoCard({
     Key? key,
     this.currentStreet,
+    this.nextStreet,
     this.nextInstruction,
-    this.destinationName,
     this.estimatedTime,
     this.distanceRemaining,
+    this.onNextInstruction,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.green[600],
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -37,116 +38,97 @@ class NavigationInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Nome da rua atual
-          if (currentStreet != null && currentStreet != 'Carregando...')
-            Text(
-              currentStreet!,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            )
-          else if (currentStreet == 'Carregando...')
-            const Row(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Carregando...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
+                // Seta de direção (para cima)
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_upward,
+                    color: Colors.white,
+                    size: 28,
                   ),
                 ),
-              ],
-            ),
-          
-          if (currentStreet != null && nextInstruction != null)
-            const SizedBox(height: 8),
-          
-          // Próxima instrução
-          if (nextInstruction != null)
-            Row(
-              children: [
-                const Icon(
-                  Icons.turn_right,
-                  color: Colors.blue,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
+                // Instrução de navegação
                 Expanded(
-                  child: Text(
-                    nextInstruction!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          
-          if ((currentStreet != null || nextInstruction != null) && 
-              (destinationName != null || estimatedTime != null))
-            const Divider(height: 24),
-          
-          // Destino e tempo estimado
-          if (destinationName != null || estimatedTime != null)
-            Row(
-              children: [
-                const Icon(
-                  Icons.place,
-                  color: Colors.green,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    destinationName ?? 'Destino',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                if (estimatedTime != null)
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        estimatedTime!,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                      // Rua atual
+                      if (currentStreet != null && currentStreet != 'Carregando...')
+                        Text(
+                          currentStreet!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        )
+                      else if (currentStreet == 'Carregando...')
+                        const Row(
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Carregando...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      // Próxima instrução
+                      if (nextInstruction != null || nextStreet != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          nextInstruction ?? 'em direção a ${nextStreet ?? ""}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
-                if (distanceRemaining != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child: Text(
-                      '${distanceRemaining!.toStringAsFixed(1)} km',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.blue,
-                      ),
+                ),
+                // Botão "Depois" (próxima instrução)
+                if (onNextInstruction != null)
+                  TextButton(
+                    onPressed: onNextInstruction,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Depois'),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward, size: 16),
+                      ],
                     ),
                   ),
               ],
             ),
+          ),
         ],
       ),
     );

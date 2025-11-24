@@ -62,10 +62,30 @@ class _RouteMapViewState extends State<RouteMapView> {
     if (widget.isNavigationMode && widget.currentPosition != null && _mapController != null) {
       if (oldWidget.currentPosition != widget.currentPosition || 
           oldWidget.isNavigationMode != widget.isNavigationMode) {
-        _centerCameraOnPosition(widget.currentPosition!, 0);
+        // Calcular bearing baseado na direção do movimento
+        double bearing = 0;
+        if (oldWidget.currentPosition != null && widget.currentPosition != null) {
+          bearing = _calculateBearing(
+            oldWidget.currentPosition!,
+            widget.currentPosition!,
+          );
+        }
+        _centerCameraOnPosition(widget.currentPosition!, bearing);
       }
     } else if (!widget.isNavigationMode && oldWidget.isNavigationMode && _mapController != null) {
       _fitBounds();
+    } else if (widget.currentPosition != null && oldWidget.currentPosition != widget.currentPosition && _mapController != null) {
+      // Se apenas a posição mudou (sem mudança de modo), atualizar câmera
+      if (widget.isNavigationMode) {
+        double bearing = 0;
+        if (oldWidget.currentPosition != null) {
+          bearing = _calculateBearing(
+            oldWidget.currentPosition!,
+            widget.currentPosition!,
+          );
+        }
+        _centerCameraOnPosition(widget.currentPosition!, bearing);
+      }
     }
   }
 
@@ -262,12 +282,22 @@ class _RouteMapViewState extends State<RouteMapView> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: position,
-            zoom: 17, // Zoom maior para navegação
+            zoom: 16.0, // Zoom ajustado para mostrar ruas e nomes (16 é ideal)
             bearing: bearing, // Rotação do mapa baseada na direção
-            tilt: 45, // Inclinação para perspectiva 3D
+            tilt: 45.0, // Inclinação para perspectiva 3D
           ),
         ),
       );
+      
+      // Aguardar um pouco e forçar atualização para garantir que os tiles sejam carregados
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted && _mapController != null) {
+        // Forçar refresh do mapa movendo a câmera ligeiramente e voltando
+        await _mapController!.moveCamera(
+          CameraUpdate.newLatLngZoom(position, 16.0),
+        );
+        debugPrint('✅ [Map] Câmera atualizada: $position, zoom: 16.0, bearing: $bearing');
+      }
     } catch (e) {
       debugPrint('❌ [Map] Erro ao centralizar câmera: $e');
     }
@@ -366,21 +396,24 @@ class _RouteMapViewState extends State<RouteMapView> {
           target: widget.isNavigationMode && widget.currentPosition != null
               ? widget.currentPosition!
               : LatLng(centerLat, centerLng),
-          zoom:  widget.isNavigationMode ? 17 : 13,
+          zoom: widget.isNavigationMode ? 16 : 13, // Zoom ajustado para mostrar ruas (16 é melhor que 18)
           bearing: 0,
-          tilt: widget.isNavigationMode ? 45 : 0, // Perspectiva 3D em navegação
+          tilt: widget.isNavigationMode ? 45 : 0, // Perspectiva 3D ajustada
         ),
         markers: _buildMarkers(),
         polylines: _polylines.isEmpty ? {} : _polylines,
         myLocationEnabled: true, // Habilitar para mostrar localização
-        myLocationButtonEnabled: true, // Botão de localização
-        zoomControlsEnabled: true, // Controles de zoom
+        myLocationButtonEnabled: true, // ✅ Sempre habilitado
+        zoomControlsEnabled: true, // ✅ Sempre habilitado
         mapToolbarEnabled: false,
-        compassEnabled: true, // Bússola
-        rotateGesturesEnabled: true, // Rotação com gestos
-        scrollGesturesEnabled: true, // Scroll/pan
-        tiltGesturesEnabled: true, // Inclinação
-        zoomGesturesEnabled: true, // Zoom com gestos
+        compassEnabled: true, // ✅ Sempre habilitado para orientação
+        rotateGesturesEnabled: true, // ✅ Sempre permitir rotação
+        scrollGesturesEnabled: true, // ✅ Sempre permitir movimento
+        tiltGesturesEnabled: true, // ✅ Sempre permitir inclinação
+        zoomGesturesEnabled: true, // ✅ Sempre permitir zoom
+        mapType: MapType.normal, // Sempre normal para mostrar ruas
+        trafficEnabled: false, // Tráfego desabilitado por padrão
+        buildingsEnabled: widget.isNavigationMode, // Edifícios 3D em navegação
         onMapCreated: (GoogleMapController controller) {
           try {
             _mapController = controller;
@@ -390,14 +423,37 @@ class _RouteMapViewState extends State<RouteMapView> {
             if (!widget.isNavigationMode) {
               _fitBounds();
             } else if (widget.currentPosition != null) {
-              // Em modo navegação, centralizar na posição atual
-              _centerCameraOnPosition(widget.currentPosition!, 0);
+              // Em modo navegação, centralizar na posição atual com zoom adequado para ruas
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted && _mapController != null) {
+                  _centerCameraOnPosition(widget.currentPosition!, 0);
+                }
+              });
             }
+            
+            // Forçar atualização do mapa para garantir que as ruas apareçam
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted && _mapController != null) {
+                debugPrint('✅ [Map] Verificando configuração do mapa:');
+                debugPrint('   - Tipo: normal (deve mostrar ruas)');
+                debugPrint('   - Zoom: ${widget.isNavigationMode ? 16 : 13}');
+                debugPrint('   - Modo navegação: ${widget.isNavigationMode}');
+                
+                // Forçar atualização da câmera para garantir que os tiles sejam carregados
+                if (widget.isNavigationMode && widget.currentPosition != null) {
+                  _mapController!.moveCamera(
+                    CameraUpdate.newLatLngZoom(
+                      widget.currentPosition!,
+                      16.0, // Zoom ideal para ver ruas
+                    ),
+                  );
+                }
+              }
+            });
           } catch (e) {
             debugPrint('❌ [Map] Erro ao criar mapa: $e');
           }
         },
-        mapType: MapType.normal, // Mostrar ruas e nomes
       );
   }
 
@@ -430,8 +486,10 @@ class _RouteMapViewState extends State<RouteMapView> {
       ),
     );
     
-    // Adicionar marcador de posição atual se em modo navegação
-    if (widget.isNavigationMode && widget.currentPosition != null) {
+    // Em modo navegação, não adicionar marker customizado - usar myLocationEnabled
+    // Isso mostra a seta azul do Google Maps que rotaciona com a direção
+    // O marker customizado só é usado quando não está em navegação
+    if (!widget.isNavigationMode && widget.currentPosition != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('current_position'),
@@ -449,6 +507,19 @@ class _RouteMapViewState extends State<RouteMapView> {
     return markers;
   }
 
+  /// Calcula bearing (direção) entre dois pontos
+  double _calculateBearing(LatLng from, LatLng to) {
+    final lat1 = from.latitude * (math.pi / 180);
+    final lat2 = to.latitude * (math.pi / 180);
+    final dLon = (to.longitude - from.longitude) * (math.pi / 180);
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    final bearing = (math.atan2(y, x) * (180 / math.pi) + 360) % 360;
+
+    return bearing;
+  }
+
   /// Centraliza mapa na posição atual (modo navegação)
   Future<void> _centerOnCurrentPosition() async {
     if (_mapController == null || widget.currentPosition == null) return;
@@ -458,12 +529,21 @@ class _RouteMapViewState extends State<RouteMapView> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: widget.currentPosition!,
-            zoom: 17.0, // Zoom maior para navegação
-            bearing: 0, // Norte
-            tilt: 45.0, // Inclinação para ver melhor a rota
+            zoom: 16.0, // Zoom ajustado para mostrar ruas (16 é melhor que 18 para ver nomes)
+            bearing: 0, // Será atualizado pelo _centerCameraOnPosition
+            tilt: 45.0, // Inclinação ajustada para ver melhor as ruas
           ),
         ),
       );
+      
+      // Forçar atualização do tipo de mapa para garantir que as ruas apareçam
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (mounted && _mapController != null) {
+        // Forçar refresh do mapa
+        await _mapController!.moveCamera(
+          CameraUpdate.newLatLngZoom(widget.currentPosition!, 16.0),
+        );
+      }
     } catch (e) {
       debugPrint('❌ [Map] Erro ao centralizar na posição atual: $e');
     }
