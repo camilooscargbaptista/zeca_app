@@ -24,7 +24,6 @@ import '../../domain/entities/journey_entity.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
 import '../../widgets/route_map_view.dart';
-import '../../widgets/route_map_view_minimal.dart';
 import '../../widgets/navigation_info_card.dart';
 import '../../widgets/speed_card.dart';
 import '../../widgets/route_summary_card.dart';
@@ -946,32 +945,42 @@ class _JourneyPageState extends State<JourneyPage> {
       child: SafeArea(
         child: Stack(
           children: [
-            // 🧪 DEBUG: Usando versão MINIMAL para isolar problemas
-            // Mapa ocupando toda a tela
+            // Mapa ocupando toda a tela (API Key corrigida - tiles funcionam!)
             if (_routeOriginLat != null && 
                 _routeOriginLng != null && 
                 _routeDestLat != null && 
                 _routeDestLng != null)
-              RouteMapViewMinimal(
+              RouteMapView(
+                onMapCreated: (controller) {
+                  _googleMapController = controller;
+                  debugPrint('✅ [Journey] GoogleMapController criado');
+                },
                 originLat: _routeOriginLat!,
                 originLng: _routeOriginLng!,
                 destLat: _routeDestLat!,
                 destLng: _routeDestLng!,
                 polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+                isNavigationMode: _isNavigationMode,
                 currentPosition: _currentLocation != null 
                     ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
                     : null,
               )
             else
-              // Se não houver rota, mostrar mapa com localização atual (simulador)
-              RouteMapViewMinimal(
-                originLat: _currentLocation?.latitude ?? -21.1704, // Ribeirão Preto (simulador)
+              // Se não houver rota, mostrar mapa com localização atual
+              RouteMapView(
+                onMapCreated: (controller) {
+                  _googleMapController = controller;
+                  debugPrint('✅ [Journey] GoogleMapController criado (sem rota)');
+                },
+                originLat: _currentLocation?.latitude ?? -21.1704,
                 originLng: _currentLocation?.longitude ?? -47.8103,
                 destLat: _currentLocation?.latitude ?? -21.1704,
                 destLng: _currentLocation?.longitude ?? -47.8103,
                 currentPosition: _currentLocation != null
                     ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
                     : null,
+                isNavigationMode: true,
               ),
 
             // Header compacto no topo
