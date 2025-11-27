@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 /// Representa um passo individual de navegação (turn-by-turn)
 /// 
 /// Contém informações sobre uma manobra específica na rota,
@@ -88,20 +90,20 @@ class NavigationStepEntity {
     final double dLat = _toRadians(lat2 - lat1);
     final double dLng = _toRadians(lng2 - lng1);
 
-    final double a = 
-        (dLat / 2).sin() * (dLat / 2).sin() +
-        (dLng / 2).sin() * (dLng / 2).sin() *
-        _toRadians(lat1).cos() *
-        _toRadians(lat2).cos();
+    final double a =
+        math.pow(math.sin(dLat / 2), 2) +
+            math.cos(_toRadians(lat1)) *
+                math.cos(_toRadians(lat2)) *
+                math.pow(math.sin(dLng / 2), 2);
 
-    final double c = 2 * (a.sqrt().asin());
+    final double c = 2 * math.asin(math.sqrt(a));
     final double distanceKm = earthRadiusKm * c;
 
     return distanceKm * 1000; // Retornar em metros
   }
 
   double _toRadians(double degrees) {
-    return degrees * (3.141592653589793 / 180.0);
+    return degrees * (math.pi / 180.0);
   }
 
   @override

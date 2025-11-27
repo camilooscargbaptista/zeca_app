@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:injectable/injectable.dart';
@@ -172,13 +173,12 @@ class NavigationService {
     final double dLng = _toRadians(lng2 - lng1);
 
     final double a =
-        (dLat / 2).sin() * (dLat / 2).sin() +
-            (dLng / 2).sin() *
-                (dLng / 2).sin() *
-                _toRadians(lat1).cos() *
-                _toRadians(lat2).cos();
+        math.pow(math.sin(dLat / 2), 2) +
+            math.cos(_toRadians(lat1)) *
+                math.cos(_toRadians(lat2)) *
+                math.pow(math.sin(dLng / 2), 2);
 
-    final double c = 2 * (a.sqrt().asin());
+    final double c = 2 * math.asin(math.sqrt(a));
     return earthRadiusKm * c * 1000; // Retornar em metros
   }
 

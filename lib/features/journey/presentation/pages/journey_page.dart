@@ -759,20 +759,6 @@ class _JourneyPageState extends State<JourneyPage> {
                             hintText: 'Ex: São Paulo - SP',
                             prefixIcon: Icons.location_on,
                             onPlaceSelected: _onPlaceSelected,
-                            validator: (value) {
-                              if (value == null || value.isEmpty || value.trim().isEmpty) {
-                                return 'Digite o destino da viagem';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              labelText: 'Destino *',
-                              hintText: 'Ex: São Paulo - SP',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              prefixIcon: const Icon(Icons.location_on, color: AppColors.zecaBlue),
-                            ),
                           ),
                           if (_isCalculatingRoute)
                             Positioned(
