@@ -960,55 +960,16 @@ class _JourneyPageState extends State<JourneyPage> {
                     : null,
               )
             else
-              // Se não houver rota, mostrar mapa com localização atual
-              FutureBuilder<Position?>(
-                future: _locationService.getCurrentPosition(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Container(
-                      color: Colors.white,
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Obtendo localização...'),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  
-                  if (snapshot.hasError) {
-                    debugPrint('❌ [Journey] Erro ao obter localização: ${snapshot.error}');
-                    // Tentar usar uma localização padrão (centro do Brasil) se houver erro
-                    return RouteMapView(
-                      originLat: -14.2350, // Centro do Brasil
-                      originLng: -51.9253,
-                      destLat: -14.2350,
-                      destLng: -51.9253,
-                    );
-                  }
-                  
-                  if (snapshot.hasData && snapshot.data != null) {
-                    final position = snapshot.data!;
-                    return RouteMapView(
-                      originLat: position.latitude,
-                      originLng: position.longitude,
-                      destLat: position.latitude,
-                      destLng: position.longitude,
-                    );
-                  }
-                  
-                  // Fallback: mostrar mapa com localização padrão
-                  return RouteMapView(
-                    originLat: -14.2350, // Centro do Brasil
-                    originLng: -51.9253,
-                    destLat: -14.2350,
-                    destLng: -51.9253,
-                  );
-                },
+              // Se não houver rota, mostrar mapa com localização atual (simulador)
+              RouteMapView(
+                originLat: _currentLocation?.latitude ?? -21.1704, // Ribeirão Preto (simulador)
+                originLng: _currentLocation?.longitude ?? -47.8103,
+                destLat: _currentLocation?.latitude ?? -21.1704,
+                destLng: _currentLocation?.longitude ?? -47.8103,
+                currentPosition: _currentLocation != null
+                    ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
+                    : null,
+                isNavigationMode: true,
               ),
 
             // Header compacto no topo
