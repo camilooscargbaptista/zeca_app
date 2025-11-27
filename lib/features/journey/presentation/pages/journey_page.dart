@@ -1646,6 +1646,11 @@ class _JourneyPageState extends State<JourneyPage> {
             _currentSpeed = position.speed * 3.6; // m/s para km/h
           });
           
+          // 🆕 LOG: Confirmar atualização de posição
+          debugPrint('📍 [Journey] Posição atualizada: ${position.latitude}, ${position.longitude}');
+          debugPrint('   - _currentLocation: $_currentLocation');
+          debugPrint('   - Será passado para RouteMapView');
+          
           // 🆕 Atualizar posição no NavigationService
           if (_isNavigationMode && navigationService.steps.isNotEmpty) {
             navigationService.updateCurrentPosition(

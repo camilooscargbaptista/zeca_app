@@ -48,20 +48,31 @@ class _RouteMapViewState extends State<RouteMapView> {
   void didUpdateWidget(RouteMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
     
+    debugPrint('🔄 [Map] didUpdateWidget chamado');
+    debugPrint('   - Old position: ${oldWidget.currentPosition}');
+    debugPrint('   - New position: ${widget.currentPosition}');
+    debugPrint('   - Navigation mode: ${widget.isNavigationMode}');
+    
     // Atualizar mapa quando o modo mudar
     if (oldWidget.isNavigationMode != widget.isNavigationMode) {
+      debugPrint('🔄 [Map] Modo mudou, atualizando câmera');
       _updateCamera();
     }
     
     // 🆕 ATUALIZAR CÂMERA EM TEMPO REAL quando posição mudar
     if (oldWidget.currentPosition != widget.currentPosition && widget.currentPosition != null) {
+      debugPrint('📍 [Map] Posição mudou! Atualizando marcadores e câmera...');
       _initializeMapElements();
       
       // 🎯 SEMPRE animar para posição atual em modo navegação
       if (widget.isNavigationMode) {
         debugPrint('🎬 [Map] Animando câmera para posição: ${widget.currentPosition!.latitude}, ${widget.currentPosition!.longitude}');
         _animateToCurrentPosition();
+      } else {
+        debugPrint('⚠️ [Map] Modo navegação desligado, câmera não atualizada');
       }
+    } else if (oldWidget.currentPosition == widget.currentPosition) {
+      debugPrint('⚠️ [Map] Posição NÃO mudou (mesma referência)');
     }
   }
 
