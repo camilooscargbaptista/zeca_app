@@ -8,6 +8,7 @@ import '../features/refueling/presentation/pages/refueling_code_page_simple.dart
 import '../features/refueling/presentation/pages/refueling_waiting_page.dart';
 import '../features/refueling/presentation/pages/pending_refuelings_page.dart';
 import '../features/journey/presentation/pages/journey_page.dart';
+import '../test_google_maps_page.dart';
 import '../features/journey/presentation/bloc/journey_bloc.dart';
 import '../features/journey/presentation/bloc/journey_event.dart';
 import '../features/journey_start/presentation/pages/journey_start_page.dart';
@@ -20,7 +21,8 @@ import '../features/journey/data/services/journey_storage_service.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
-    initialLocation: '/splash',
+    // 🧪 DEBUG: Rota inicial temporária para teste do Google Maps
+    initialLocation: '/test-maps', // VOLTAR para '/splash' após debug!
     routes: [
       GoRoute(
         path: '/splash',
@@ -36,6 +38,12 @@ class AppRouter {
         path: '/home',
         name: 'home',
         builder: (context, state) => const HomePageSimple(),
+      ),
+      // 🧪 Rota de TESTE para debug do Google Maps
+      GoRoute(
+        path: '/test-maps',
+        name: 'test-maps',
+        builder: (context, state) => const TestGoogleMapsPage(),
       ),
       GoRoute(
         path: '/refueling-code',
