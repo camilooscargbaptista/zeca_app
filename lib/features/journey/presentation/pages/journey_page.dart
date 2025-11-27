@@ -948,8 +948,6 @@ class _JourneyPageState extends State<JourneyPage> {
                 _routeDestLat != null && 
                 _routeDestLng != null)
               RouteMapView(
-                // 🆕 KEY: Força rebuild quando posição muda
-                key: ValueKey('map_${_currentLocation?.latitude ?? 0}_${_currentLocation?.longitude ?? 0}_${_isNavigationMode}'),
                 originLat: _routeOriginLat!,
                 originLng: _routeOriginLng!,
                 destLat: _routeDestLat!,
@@ -964,8 +962,6 @@ class _JourneyPageState extends State<JourneyPage> {
             else
               // Se não houver rota, mostrar mapa com localização atual (simulador)
               RouteMapView(
-                // 🆕 KEY: Força rebuild quando posição muda
-                key: ValueKey('map_simple_${_currentLocation?.latitude ?? 0}_${_currentLocation?.longitude ?? 0}'),
                 originLat: _currentLocation?.latitude ?? -21.1704, // Ribeirão Preto (simulador)
                 originLng: _currentLocation?.longitude ?? -47.8103,
                 destLat: _currentLocation?.latitude ?? -21.1704,
