@@ -24,6 +24,7 @@ import '../../domain/entities/journey_entity.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
 import '../../widgets/route_map_view.dart';
+import '../../widgets/route_map_view_minimal.dart';
 import '../../widgets/navigation_info_card.dart';
 import '../../widgets/speed_card.dart';
 import '../../widgets/route_summary_card.dart';
@@ -945,34 +946,25 @@ class _JourneyPageState extends State<JourneyPage> {
       child: SafeArea(
         child: Stack(
           children: [
+            // 🧪 DEBUG: Usando versão MINIMAL para isolar problemas
             // Mapa ocupando toda a tela
             if (_routeOriginLat != null && 
                 _routeOriginLng != null && 
                 _routeDestLat != null && 
                 _routeDestLng != null)
-              RouteMapView(
-                onMapCreated: (controller) {
-                  _googleMapController = controller;
-                  debugPrint('✅ [Journey] GoogleMapController capturado');
-                },
+              RouteMapViewMinimal(
                 originLat: _routeOriginLat!,
                 originLng: _routeOriginLng!,
                 destLat: _routeDestLat!,
                 destLng: _routeDestLng!,
                 polyline: _routePolyline,
-                destinationName: _routeDestinationName,
-                isNavigationMode: _isNavigationMode,
                 currentPosition: _currentLocation != null 
                     ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
                     : null,
               )
             else
               // Se não houver rota, mostrar mapa com localização atual (simulador)
-              RouteMapView(
-                onMapCreated: (controller) {
-                  _googleMapController = controller;
-                  debugPrint('✅ [Journey] GoogleMapController capturado (modo simples)');
-                },
+              RouteMapViewMinimal(
                 originLat: _currentLocation?.latitude ?? -21.1704, // Ribeirão Preto (simulador)
                 originLng: _currentLocation?.longitude ?? -47.8103,
                 destLat: _currentLocation?.latitude ?? -21.1704,
@@ -980,7 +972,6 @@ class _JourneyPageState extends State<JourneyPage> {
                 currentPosition: _currentLocation != null
                     ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
                     : null,
-                isNavigationMode: true,
               ),
 
             // Header compacto no topo
