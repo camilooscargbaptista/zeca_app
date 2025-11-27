@@ -524,6 +524,34 @@ class _JourneyPageState extends State<JourneyPage> {
             // Parar navegação quando jornada termina
             _stopNavigation();
           } else if (state is JourneyLoaded) {
+            // 🆕 RESTAURAR dados da rota se não existirem (viagem já em andamento)
+            if (_routeOriginLat == null || _routeOriginLng == null) {
+              debugPrint('🔄 [Journey] Restaurando dados da rota do storage...');
+              final journeyStorageService = JourneyStorageService();
+              final routeData = journeyStorageService.getRouteData(state.journey.id);
+              
+              if (routeData != null && mounted) {
+                setState(() {
+                  _routeOriginLat = routeData['origin_lat'] as double?;
+                  _routeOriginLng = routeData['origin_lng'] as double?;
+                  _routeDestLat = routeData['dest_lat'] as double?;
+                  _routeDestLng = routeData['dest_lng'] as double?;
+                  _routePolyline = routeData['polyline'] as String?;
+                  _routeDestinationName = routeData['destination_name'] as String?;
+                });
+                debugPrint('✅ [Journey] Dados da rota restaurados!');
+                debugPrint('   - Origin: ($_routeOriginLat, $_routeOriginLng)');
+                debugPrint('   - Dest: ($_routeDestLat, $_routeDestLng)');
+                
+                // Iniciar navegação após restaurar rota
+                if (_routeOriginLat != null) {
+                  _startNavigation();
+                }
+              } else {
+                debugPrint('⚠️ [Journey] Sem dados de rota salvos');
+              }
+            }
+            
             // Salvar dados da rota quando a jornada é carregada (após iniciar ou continuar)
             if (_routeOriginLat != null && 
                 _routeOriginLng != null && 
