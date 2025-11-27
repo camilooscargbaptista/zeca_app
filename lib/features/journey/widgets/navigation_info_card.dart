@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/navigation_utils.dart';
 
-/// Card que mostra informações da navegação durante a viagem (estilo Google Maps)
+/// Card que mostra informações da navegação durante a viagem (estilo Google Maps/Waze)
+/// 
+/// Suporta:
+/// - Ícones de manobra dinâmicos (virar direita, esquerda, etc.)
+/// - Distância em metros até próxima ação
+/// - Instrução formatada ("Em 350m, vire à direita")
 class NavigationInfoCard extends StatelessWidget {
   final String? currentStreet;
   final String? nextStreet;
@@ -8,6 +14,12 @@ class NavigationInfoCard extends StatelessWidget {
   final String? estimatedTime;
   final double? distanceRemaining;
   final VoidCallback? onNextInstruction;
+  
+  /// 🆕 Tipo de manobra (turn-right, turn-left, straight, etc.)
+  final String? maneuverType;
+  
+  /// 🆕 Distância em metros até a próxima manobra
+  final double? distanceToNextMeters;
 
   const NavigationInfoCard({
     Key? key,
@@ -17,6 +29,8 @@ class NavigationInfoCard extends StatelessWidget {
     this.estimatedTime,
     this.distanceRemaining,
     this.onNextInstruction,
+    this.maneuverType,
+    this.distanceToNextMeters,
   }) : super(key: key);
 
   @override
@@ -42,7 +56,7 @@ class NavigationInfoCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Seta de direção (para cima)
+                // Ícone de manobra dinâmico
                 Container(
                   width: 48,
                   height: 48,
@@ -50,8 +64,8 @@ class NavigationInfoCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.arrow_upward,
+                  child: Icon(
+                    NavigationUtils.getManeuverIcon(maneuverType),
                     color: Colors.white,
                     size: 28,
                   ),
@@ -62,15 +76,49 @@ class NavigationInfoCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Rua atual
-                      if (currentStreet != null && currentStreet != 'Carregando...')
+                      // 🆕 Distância + Instrução formatada
+                      if (distanceToNextMeters != null && nextInstruction != null)
                         Text(
-                          currentStreet!,
+                          NavigationUtils.formatInstructionWithDistance(
+                            nextInstruction!,
+                            distanceToNextMeters!,
+                          ),
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      // Fallback: Rua atual
+                      else if (currentStreet != null && currentStreet != 'Carregando...')
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentStreet!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (nextInstruction != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                nextInstruction!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
                         )
                       else if (currentStreet == 'Carregando...')
                         const Row(
@@ -85,27 +133,23 @@ class NavigationInfoCard extends StatelessWidget {
                             ),
                             SizedBox(width: 8),
                             Text(
-                              'Carregando...',
+                              'Carregando navegação...',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white70,
                               ),
                             ),
                           ],
-                        ),
-                      // Próxima instrução
-                      if (nextInstruction != null || nextStreet != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          nextInstruction ?? 'em direção a ${nextStreet ?? ""}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
+                        )
+                      else
+                        const Text(
+                          'Siga em frente',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
                     ],
                   ),
                 ),

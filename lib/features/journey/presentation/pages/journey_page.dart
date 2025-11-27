@@ -1033,9 +1033,35 @@ class _JourneyPageState extends State<JourneyPage> {
               ),
             ),
 
+            // 🆕 FAB Visualizar Rota (topo-direito, abaixo do header)
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null &&
+                !_showingInitialOverview) // Não mostrar durante animação inicial
+              Positioned(
+                top: 60,
+                right: 12,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isNavigationMode = !_isNavigationMode;
+                    });
+                    debugPrint('🗺️ [Journey] Toggle visualização: ${_isNavigationMode ? "Navegação" : "Rota Completa"}');
+                  },
+                  child: Icon(
+                    _isNavigationMode ? Icons.map_outlined : Icons.navigation,
+                    color: AppColors.zecaBlue,
+                  ),
+                  tooltip: _isNavigationMode ? 'Ver rota completa' : 'Modo navegação',
+                ),
+              ),
+
             // Cards flutuantes com informações (canto superior direito)
             Positioned(
-              top: 60,
+              top: 110, // Ajustado para ficar abaixo do FAB
               right: 12,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
