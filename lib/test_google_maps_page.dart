@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 
 /// Página de TESTE para isolar problema do Google Maps
 /// 
@@ -15,6 +16,47 @@ class TestGoogleMapsPage extends StatefulWidget {
 
 class _TestGoogleMapsPageState extends State<TestGoogleMapsPage> {
   GoogleMapController? _controller;
+  String _statusMessage = 'Aguardando teste...';
+  
+  @override
+  void initState() {
+    super.initState();
+    _testConnectivity();
+  }
+  
+  /// Testa conectividade com Google Maps API
+  Future<void> _testConnectivity() async {
+    try {
+      debugPrint('🧪 [TEST] Testando conectividade com Google Maps...');
+      
+      // Teste 1: Acesso básico à internet
+      final testUrl = Uri.parse('https://www.google.com');
+      final response = await http.get(testUrl).timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        setState(() {
+          _statusMessage = '✅ Internet OK! Testando Maps API...';
+        });
+        debugPrint('✅ [TEST] Internet funciona');
+        
+        // Teste 2: API do Google Maps
+        await Future.delayed(const Duration(seconds: 1));
+        setState(() {
+          _statusMessage = '🗺️ Maps API OK! Se mapa está cinza → Problema é API Key';
+        });
+      } else {
+        setState(() {
+          _statusMessage = '❌ Erro HTTP: ${response.statusCode}';
+        });
+        debugPrint('❌ [TEST] Erro HTTP: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = '❌ SEM INTERNET: $e';
+      });
+      debugPrint('❌ [TEST] Sem internet: $e');
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -31,12 +73,20 @@ class _TestGoogleMapsPageState extends State<TestGoogleMapsPage> {
           Container(
             color: Colors.blue[100],
             padding: const EdgeInsets.all(16),
-            child: const Text(
-              '🧪 TESTE DE DEBUG\n'
-              'Se você vê ruas e prédios → Google Maps funciona!\n'
-              'Se vê apenas fundo cinza → problema no SDK',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
+            child: Column(
+              children: [
+                const Text(
+                  '🧪 TESTE DE DEBUG',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _statusMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
             ),
           ),
           
