@@ -31,6 +31,8 @@ import '../../widgets/navigation_bottom_sheet.dart';
 import '../../widgets/navigation_countdown_dialog.dart';
 import '../../widgets/route_overview_card.dart';
 import '../../../../core/services/geocoding_service.dart';
+import '../../../../core/services/navigation_service.dart';
+import '../../../../core/services/directions_service.dart' as ds;
 
 class JourneyPage extends StatefulWidget {
   const JourneyPage({Key? key}) : super(key: key);
@@ -89,10 +91,23 @@ class _JourneyPageState extends State<JourneyPage> {
     return _geocodingService!;
   }
   
+  // 🆕 NavigationService para navegação turn-by-turn
+  NavigationService? _navigationService;
+  NavigationService get navigationService {
+    _navigationService ??= getIt<NavigationService>();
+    return _navigationService!;
+  }
+  StreamSubscription? _navigationSubscription;
+  
   // Dados de navegação (atualizados em tempo real)
   String? _currentStreetName;
   double _currentSpeed = 0; // km/h
   int? _speedLimit; // km/h
+  
+  // 🆕 Dados do step atual de navegação
+  String? _currentNavigationInstruction;
+  String? _currentManeuverType;
+  double? _distanceToNextMeters;
 
   @override
   void initState() {
