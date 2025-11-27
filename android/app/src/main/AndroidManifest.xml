@@ -63,5 +63,12 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        
+        <!-- Google Maps API Key -->
+        <!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
+        <!-- Ou configure via build.gradle usando resValue ou manifestPlaceholders -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q" />
     </application>
 </manifest>

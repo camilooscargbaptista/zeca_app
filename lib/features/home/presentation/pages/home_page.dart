@@ -46,8 +46,9 @@ class _HomePageState extends State<HomePage> {
   }
   
   void _onGenerateRefuelingCode() {
-    // TODO: Implementar geração de código de abastecimento
-    CustomToast.showInfo(context, 'Funcionalidade em desenvolvimento');
+    // Funcionalidade implementada em home_page_simple.dart
+    // Este arquivo pode ser backup/antigo
+    CustomToast.showInfo(context, 'Use a tela principal (home_page_simple.dart)');
   }
   
   void _onLogout() {

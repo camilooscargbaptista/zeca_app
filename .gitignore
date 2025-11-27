@@ -43,3 +43,47 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android Gradle (adicional)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/gradlew
+android/gradlew.bat
+android/.gradle
+android/captures/
+android/.externalNativeBuild
+android/.cxx
+
+# iOS
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/.last_build_id
+ios/Flutter/flutter_export_environment.sh
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Flutter plugins
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# Generated files
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
+# API Keys e configurações sensíveis
+lib/core/config/api_keys.local.dart
+*.local.dart
+.env
+.env.local
+google_maps_api_key.txt
+
+# Firebase (já adicionado anteriormente)
+lib/firebase_options.dart
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist

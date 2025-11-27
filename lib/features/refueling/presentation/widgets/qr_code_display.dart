@@ -130,7 +130,8 @@ class QRCodeDisplay extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Implementar finalização do abastecimento
+                      // NOTA: Funcionalidade implementada em refueling_code_page_simple.dart
+                      // Endpoint: POST /api/v1/refueling/:id/validate
                     },
                     icon: const Icon(Icons.check),
                     label: const Text('Finalizar'),

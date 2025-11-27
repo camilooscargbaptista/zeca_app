@@ -1,21 +1,35 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/services/storage_service.dart';
+import'../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../bloc/journey_bloc.dart';
 import '../bloc/journey_event.dart';
 import '../bloc/journey_state.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/services/places_service.dart';
+import '../../../../core/services/directions_service.dart';
 import '../../data/services/journey_storage_service.dart';
 import '../../domain/entities/journey_entity.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+import '../../../../shared/widgets/places_autocomplete_field.dart';
+import '../../../../shared/widgets/route_map_view.dart';
+import '../../widgets/navigation_info_card.dart';
+import '../../widgets/speed_card.dart';
+import '../../widgets/route_summary_card.dart';
+import '../../widgets/navigation_bottom_sheet.dart';
+import '../../widgets/navigation_countdown_dialog.dart';
+import '../../../../core/services/geocoding_service.dart';
 
 class JourneyPage extends StatefulWidget {
   const JourneyPage({Key? key}) : super(key: key);
@@ -31,7 +45,7 @@ class _JourneyPageState extends State<JourneyPage> {
   final _observacoesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // Formatter para odômetro (formato brasileiro: 123.456,789)
+  // Formatter para odômetro (formato brasileiro: 123.456 - apenas inteiros)
   final _odometroFormatter = OdometerFormatter();
 
   // Dados do veículo e usuário (carregados do storage)
@@ -39,12 +53,161 @@ class _JourneyPageState extends State<JourneyPage> {
   String? _nomeMotorista;
   String? _nomeTransportadora;
 
+  // Serviços para Places e Directions
+  final _placesService = PlacesService();
+  final _directionsService = DirectionsService();
+  final _locationService = LocationService();
+  
+  // Estado para cálculo de rota
+  bool _isCalculatingRoute = false;
+  
+  // Dados da rota calculada (para exibir no mapa)
+  double? _routeOriginLat;
+  double? _routeOriginLng;
+  double? _routeDestLat;
+  double? _routeDestLng;
+  String? _routePolyline;
+  String? _routeDestinationName;
+  String? _routeEstimatedTime;
+  double? _routeDistanceKm;
+  String? _routeOriginName;
+  
+  // Estado de navegação
+  bool _isNavigationMode = false;
+  Position? _currentLocation;
+  StreamSubscription<Position>? _locationSubscription;
+  
+  // Serviço de geocoding (lazy initialization)
+  GeocodingService? _geocodingService;
+  GeocodingService get geocodingService {
+    _geocodingService ??= getIt<GeocodingService>();
+    return _geocodingService!;
+  }
+  
+  // Dados de navegação (atualizados em tempo real)
+  String? _currentStreetName;
+  double _currentSpeed = 0; // km/h
+  int? _speedLimit; // km/h
+
   @override
   void initState() {
     super.initState();
     _loadVehicleData();
-    // Carregar jornada ativa ao iniciar
-    context.read<JourneyBloc>().add(const LoadActiveJourney());
+    // Verificar se há jornada ativa e perguntar ao usuário
+    // Usar um delay maior para garantir que tudo está inicializado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _checkActiveJourney();
+        }
+      });
+    });
+  }
+
+  /// Verifica se há jornada ativa e pergunta ao usuário o que fazer
+  Future<void> _checkActiveJourney() async {
+    if (!mounted) {
+      debugPrint('⚠️ [Journey] Widget não está mais montado, cancelando verificação');
+      return;
+    }
+
+    try {
+      final journeyStorageService = JourneyStorageService();
+      
+      // Tentar inicializar se necessário (pode já estar inicializado)
+      try {
+        await journeyStorageService.init();
+      } catch (e) {
+        debugPrint('⚠️ [Journey] Erro ao inicializar storage: $e');
+        // Continuar mesmo se houver erro na inicialização
+      }
+      
+      if (!mounted) return;
+      
+      final activeJourney = journeyStorageService.getActiveJourney();
+      
+      if (activeJourney != null && activeJourney.isActive) {
+        // Carregar dados da rota se existirem
+        final routeData = journeyStorageService.getRouteData(activeJourney.id);
+        if (routeData != null) {
+          setState(() {
+            _routeOriginLat = (routeData['origin_lat'] as num?)?.toDouble();
+            _routeOriginLng = (routeData['origin_lng'] as num?)?.toDouble();
+            _routeDestLat = (routeData['dest_lat'] as num?)?.toDouble();
+            _routeDestLng = (routeData['dest_lng'] as num?)?.toDouble();
+            _routePolyline = routeData['polyline'] as String?;
+            _routeDestinationName = routeData['destination_name'] as String?;
+          });
+          debugPrint('✅ [Journey] Dados da rota carregados da jornada ativa');
+        }
+        
+        // Há jornada ativa - perguntar ao usuário
+        if (!mounted) return;
+        
+        final shouldContinue = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Viagem Ativa Encontrada'),
+            content: Text(
+              'Existe uma viagem ativa para o veículo ${activeJourney.placa}.\\n\\n'
+              'O que deseja fazer?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Iniciar Nova'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.zecaBlue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Continuar Viagem'),
+              ),
+            ],
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (shouldContinue == true) {
+          // Continuar viagem ativa
+          context.read<JourneyBloc>().add(const LoadActiveJourney());
+        } else {
+          // Limpar jornada ativa - o estado inicial já é JourneyInitial
+          try {
+            await journeyStorageService.setActiveJourney(null);
+            // Limpar dados da rota também
+            await journeyStorageService.clearRouteData(activeJourney.id);
+            setState(() {
+              _routeOriginLat = null;
+              _routeOriginLng = null;
+              _routeDestLat = null;
+              _routeDestLng = null;
+              _routePolyline = null;
+              _routeDestinationName = null;
+            });
+          } catch (e) {
+            debugPrint('⚠️ [Journey] Erro ao limpar jornada ativa: $e');
+          }
+          // Não precisa fazer nada, o estado já é JourneyInitial por padrão
+        }
+      } else {
+        // Não há jornada ativa - o estado inicial já é JourneyInitial
+        // Não precisa fazer nada
+        debugPrint('ℹ️ [Journey] Nenhuma jornada ativa encontrada');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Journey] Erro ao verificar jornada ativa: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
+      // Em caso de erro, o estado inicial já é JourneyInitial por padrão
+      // Não precisa fazer nada
+    }
   }
 
   Future<void> _loadVehicleData() async {
@@ -59,12 +222,204 @@ class _JourneyPageState extends State<JourneyPage> {
     });
   }
 
+  /// Carrega dados da rota para uma jornada
+  Future<void> _loadRouteDataForJourney(JourneyEntity journey) async {
+    try {
+      final journeyStorageService = JourneyStorageService();
+      final routeData = journeyStorageService.getRouteData(journey.id);
+      if (routeData != null && mounted) {
+        setState(() {
+          _routeOriginLat = (routeData['origin_lat'] as num?)?.toDouble();
+          _routeOriginLng = (routeData['origin_lng'] as num?)?.toDouble();
+          _routeDestLat = (routeData['dest_lat'] as num?)?.toDouble();
+          _routeDestLng = (routeData['dest_lng'] as num?)?.toDouble();
+          _routePolyline = routeData['polyline'] as String?;
+          _routeDestinationName = routeData['destination_name'] as String?;
+        });
+        debugPrint('✅ [Journey] Dados da rota carregados para jornada: ${journey.id}');
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao carregar dados da rota: $e');
+    }
+  }
+
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
+
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
+      setState(() {
+        _odometroController.text = result;
+      });
+    }
+  }
+
+  /// Chamado quando um lugar é selecionado no autocomplete
+  /// Calcula automaticamente a rota e preenche o campo de KM
+  Future<void> _onPlaceSelected(Place place) async {
+    if (place.latitude == null || place.longitude == null) {
+      debugPrint('⚠️ [Journey] Lugar selecionado sem coordenadas');
+      return;
+    }
+
+    setState(() {
+      _isCalculatingRoute = true;
+    });
+
+    try {
+      // Obter localização atual do GPS
+      final currentLocation = await _locationService.getCurrentPosition();
+      
+      if (currentLocation == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Não foi possível obter sua localização atual. Verifique as permissões de GPS.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+        return;
+      }
+
+      // Detectar tipo de veículo baseado no modelo (se disponível)
+      // Por padrão, assume 'car'. Se o modelo contém palavras-chave de caminhão, usa 'truck'
+      String vehicleType = 'car'; // Padrão: carro
+      if (_placa != null) {
+        final storageService = getIt<StorageService>();
+        final vehicleData = await storageService.getJourneyVehicleData();
+        final model = vehicleData?['modelo']?.toString().toLowerCase() ?? '';
+        final brand = vehicleData?['marca']?.toString().toLowerCase() ?? '';
+        final combined = '$model $brand';
+        
+        // Palavras-chave que indicam caminhão
+        if (combined.contains('caminhão') || 
+            combined.contains('caminhao') ||
+            combined.contains('truck') ||
+            combined.contains('onibus') ||
+            combined.contains('ônibus') ||
+            combined.contains('van') ||
+            model.contains('350') || // Modelos comuns de caminhão
+            model.contains('450') ||
+            model.contains('550')) {
+          vehicleType = 'truck';
+        }
+      }
+
+      // Calcular rota
+      final routeResult = await _directionsService.calculateRoute(
+        originLat: currentLocation.latitude,
+        originLng: currentLocation.longitude,
+        destLat: place.latitude!,
+        destLng: place.longitude!,
+        vehicleType: vehicleType,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+
+        if (routeResult != null) {
+          // Preencher campo de previsão de KM automaticamente
+          _previsaoKmController.text = routeResult.distanceKm.round().toString();
+          
+          // Obter nome da origem (rua atual)
+          String? originName;
+          try {
+            originName = await geocodingService.getStreetName(
+              LatLng(currentLocation.latitude, currentLocation.longitude),
+            );
+          } catch (e) {
+            debugPrint('⚠️ [Journey] Erro ao obter nome da origem: $e');
+          }
+          
+          // Calcular hora de chegada estimada
+          final now = DateTime.now();
+          final arrivalTime = now.add(Duration(minutes: routeResult.durationMinutes));
+          final arrivalTimeStr = DateFormat('HH:mm').format(arrivalTime);
+          
+          // Salvar dados da rota para exibir no mapa
+          setState(() {
+            _routeOriginLat = currentLocation.latitude;
+            _routeOriginLng = currentLocation.longitude;
+            _routeDestLat = place.latitude;
+            _routeDestLng = place.longitude;
+            _routePolyline = routeResult.polyline;
+            _routeDestinationName = place.description;
+            _routeEstimatedTime = routeResult.formattedDuration;
+            _routeDistanceKm = routeResult.distanceKm;
+            _routeOriginName = originName ?? 'Seu local';
+          });
+          
+          // Salvar dados da rota no storage (se houver jornada ativa)
+          final journeyStorageService = JourneyStorageService();
+          final activeJourney = journeyStorageService.getActiveJourney();
+          if (activeJourney != null) {
+            await journeyStorageService.saveRouteData(
+              activeJourney.id,
+              originLat: currentLocation.latitude,
+              originLng: currentLocation.longitude,
+              destLat: place.latitude!,
+              destLng: place.longitude!,
+              polyline: routeResult.polyline,
+              destinationName: place.description,
+            );
+          }
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Rota calculada: ${routeResult.distanceKm.toStringAsFixed(1)} km (${routeResult.formattedDuration})',
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Não foi possível calcular a rota. Você pode digitar o KM manualmente.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao calcular rota: $e');
+      if (mounted) {
+        setState(() {
+          _isCalculatingRoute = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao calcular rota: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _odometroController.dispose();
     _destinoController.dispose();
     _previsaoKmController.dispose();
     _observacoesController.dispose();
+    _locationSubscription?.cancel();
     super.dispose();
   }
 
@@ -124,6 +479,46 @@ class _JourneyPageState extends State<JourneyPage> {
             );
           } else if (state is JourneyFinished) {
             _showFinishDialog(state.journey);
+            // Parar navegação quando jornada termina
+            _stopNavigation();
+          } else if (state is JourneyLoaded) {
+            // Salvar dados da rota quando a jornada é carregada (após iniciar ou continuar)
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null) {
+              final journeyStorageService = JourneyStorageService();
+              journeyStorageService.saveRouteData(
+                state.journey.id,
+                originLat: _routeOriginLat!,
+                originLng: _routeOriginLng!,
+                destLat: _routeDestLat!,
+                destLng: _routeDestLng!,
+                polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+              ).then((_) {
+                debugPrint('✅ [Journey] Dados da rota salvos após jornada ser iniciada/carregada');
+              });
+            }
+            
+            // Iniciar tracking de localização
+            _startLocationTracking();
+            
+            // Se houver rota, iniciar navegação automaticamente
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null) {
+              // Iniciar navegação automaticamente quando jornada começa com rota
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && !_isNavigationMode) {
+                  setState(() {
+                    _isNavigationMode = true;
+                  });
+                  _startNavigation();
+                }
+              });
+            }
           }
         },
         builder: (context, state) {
@@ -132,6 +527,10 @@ class _JourneyPageState extends State<JourneyPage> {
           }
 
           if (state is JourneyLoaded) {
+            // Carregar dados da rota quando a jornada é carregada
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _loadRouteDataForJourney(state.journey);
+            });
             return _buildActiveJourneyView(state);
           }
 
@@ -269,11 +668,16 @@ class _JourneyPageState extends State<JourneyPage> {
                         inputFormatters: [_odometroFormatter],
                         decoration: InputDecoration(
                           labelText: 'Odômetro Inicial (km) *',
-                          hintText: '0,000',
+                          hintText: '0',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.speed, color: AppColors.zecaBlue),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.camera_alt, color: AppColors.zecaBlue),
+                            onPressed: _openOdometerCamera,
+                            tooltip: 'Capturar odômetro com câmera',
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -290,34 +694,69 @@ class _JourneyPageState extends State<JourneyPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo Destino (OPCIONAL)
-                      TextFormField(
-                        controller: _destinoController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: 'Destino (opcional)',
-                          hintText: 'Ex: São Paulo - SP',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      // Campo Destino (OPCIONAL) com Autocomplete
+                      Stack(
+                        children: [
+                          PlacesAutocompleteField(
+                            controller: _destinoController,
+                            labelText: 'Destino (opcional)',
+                            hintText: 'Ex: São Paulo - SP',
+                            prefixIcon: Icons.location_on,
+                            onPlaceSelected: _onPlaceSelected,
+                            decoration: InputDecoration(
+                              labelText: 'Destino (opcional)',
+                              hintText: 'Ex: São Paulo - SP',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                            ),
                           ),
-                          prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
-                        ),
+                          if (_isCalculatingRoute)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo Previsão de KM (OPCIONAL)
+                      // Campo Previsão de KM (OPCIONAL) - Preenchido automaticamente
                       TextFormField(
                         controller: _previsaoKmController,
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        readOnly: _isCalculatingRoute,
                         decoration: InputDecoration(
                           labelText: 'Previsão de KM (opcional)',
-                          hintText: 'Ex: 500',
+                          hintText: _isCalculatingRoute ? 'Calculando rota...' : 'Ex: 500',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.route, color: Colors.grey),
                           suffixText: 'km',
+                          suffixIcon: _isCalculatingRoute
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -374,6 +813,7 @@ class _JourneyPageState extends State<JourneyPage> {
                                     observacoes: observacoes.isNotEmpty ? observacoes : null,
                                   ),
                                 );
+                            // Os dados da rota serão salvos no listener quando JourneyLoaded for emitido
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -416,381 +856,481 @@ class _JourneyPageState extends State<JourneyPage> {
     final kmFormatado = state.kmPercorridos.toStringAsFixed(1);
     final odometroFinal = journey.odometroInicial + state.kmPercorridos.round();
 
+    debugPrint('🗺️ [Journey] Construindo view de jornada ativa');
+    debugPrint('   - Rota disponível: ${_routeOriginLat != null && _routeOriginLng != null && _routeDestLat != null && _routeDestLng != null}');
+    debugPrint('   - Origin: ($_routeOriginLat, $_routeOriginLng)');
+    debugPrint('   - Dest: ($_routeDestLat, $_routeDestLng)');
+
     return Container(
       color: Colors.white,
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: AppColors.zecaBlue,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+            // Mapa ocupando toda a tela
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null)
+              RouteMapView(
+                originLat: _routeOriginLat!,
+                originLng: _routeOriginLng!,
+                destLat: _routeDestLat!,
+                destLng: _routeDestLng!,
+                polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+                isNavigationMode: _isNavigationMode,
+                currentPosition: _currentLocation != null 
+                    ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
+                    : null,
+              )
+            else
+              // Se não houver rota, mostrar mapa com localização atual
+              FutureBuilder<Position?>(
+                future: _locationService.getCurrentPosition(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      color: Colors.white,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Obtendo localização...'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  if (snapshot.hasError) {
+                    debugPrint('❌ [Journey] Erro ao obter localização: ${snapshot.error}');
+                    // Tentar usar uma localização padrão (centro do Brasil) se houver erro
+                    return RouteMapView(
+                      originLat: -14.2350, // Centro do Brasil
+                      originLng: -51.9253,
+                      destLat: -14.2350,
+                      destLng: -51.9253,
+                    );
+                  }
+                  
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final position = snapshot.data!;
+                    return RouteMapView(
+                      originLat: position.latitude,
+                      originLng: position.longitude,
+                      destLat: position.latitude,
+                      destLng: position.longitude,
+                    );
+                  }
+                  
+                  // Fallback: mostrar mapa com localização padrão
+                  return RouteMapView(
+                    originLat: -14.2350, // Centro do Brasil
+                    originLng: -51.9253,
+                    destLat: -14.2350,
+                    destLng: -51.9253,
+                  );
+                },
               ),
-              child: Row(
+
+            // Header compacto no topo
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.zecaBlue.withOpacity(0.95),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_shipping, size: 24, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            journey.placa,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            tempoFormatado,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Indicador de descanso (se aplicável)
+                    if (state.emDescanso)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.coffee, size: 14, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Descanso',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Cards flutuantes com informações (canto superior direito)
+            Positioned(
+              top: 60,
+              right: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Icon(
-                    Icons.local_shipping,
-                    size: 32,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  // Card de KM percorridos
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Jornada',
+                        const Text(
+                          'KM',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          kmFormatado,
+                          style: const TextStyle(
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.green,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        _formatBrazilDate(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                  const SizedBox(height: 8),
+                  // Card de odômetro inicial
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      Text(
-                        _formatBrazilTime(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Odômetro',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          OdometerFormatter.formatValue(journey.odometroInicial),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.zecaBlue,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Conteúdo Principal
-            Expanded(
-              child: Card(
-                margin: const EdgeInsets.all(16),
-                elevation: 4,
-                shadowColor: Colors.black.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    left: 24.0,
-                    right: 24.0,
-                    top: 24.0,
-                    bottom: 24.0 + MediaQuery.of(context).viewPadding.bottom,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Informações do Veículo
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Placa',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    journey.placa,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Odômetro Inicial',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${OdometerFormatter.formatValue(journey.odometroInicial)} km',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Cronômetro Principal
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.zecaBlue.withOpacity(0.1),
-                              AppColors.zecaBlue.withOpacity(0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Tempo de Direção',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              tempoFormatado,
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.zecaBlue,
-                                fontFeatures: [const FontFeature.tabularFigures()],
-                              ),
-                            ),
-                            if (state.emDescanso) ...[
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.coffee, size: 16, color: Colors.orange[700]),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Em Descanso',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Dados da Jornada
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Início',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatBrazilDate(journey.dataInicio),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    _formatBrazilTime(journey.dataInicio),
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.zecaBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Km Percorridos',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    kmFormatado,
-                                    style: const TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Botões de Controle
-                      if (!state.emDescanso)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<JourneyBloc>().add(
-                                  const ToggleRest(isStartingRest: true),
-                                );
-                          },
-                          icon: const Icon(Icons.pause),
-                          label: const Text('Iniciar Descanso'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        )
-                      else
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.read<JourneyBloc>().add(
-                                  const ToggleRest(isStartingRest: false),
-                                );
-                          },
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Retomar Direção'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.zecaBlue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _showFinishConfirmation();
+            // CARD DE ROTA (antes da navegação) - estilo Google Maps
+            if (!_isNavigationMode && 
+                _routeOriginLat != null && 
+                _routeDestLat != null &&
+                _routeDestinationName != null) ...[
+              Positioned(
+                top: 60, // Abaixo do header
+                left: 0,
+                right: 0,
+                child: RouteSummaryCard(
+                  originName: _routeOriginName,
+                  destinationName: _routeDestinationName,
+                  estimatedTime: _routeEstimatedTime,
+                  distanceKm: _routeDistanceKm,
+                  arrivalTime: _routeEstimatedTime != null 
+                      ? _calculateArrivalTime(_routeEstimatedTime!)
+                      : null,
+                  onStart: () {
+                    // Mostrar diálogo de contagem regressiva
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => NavigationCountdownDialog(
+                        onComplete: () {
+                          setState(() {
+                            _isNavigationMode = true;
+                          });
+                          _startNavigation();
                         },
-                        icon: const Icon(Icons.stop),
-                        label: const Text('Finalizar Jornada'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
+            // NAVIGATION OVERLAYS (durante navegação) - estilo Google Maps
+            if (_isNavigationMode) ...[
+              // Card verde de navegação no topo
+              Positioned(
+                top: 60, // Abaixo do header
+                left: 0,
+                right: 80, // ✅ Espaço para botões do lado direito
+                child: NavigationInfoCard(
+                  currentStreet: _currentStreetName ?? 'Carregando...',
+                  nextStreet: _routeDestinationName,
+                  nextInstruction: null, // TODO: Calcular próxima instrução baseada na rota
+                  onNextInstruction: () {
+                    // TODO: Mostrar próxima instrução
+                  },
+                ),
+              ),
+
+              // Card de velocidade no canto inferior esquerdo
+              Positioned(
+                left: 16,
+                bottom: 80, // Acima do bottom sheet
+                child: SpeedCard(
+                  currentSpeed: _currentSpeed,
+                  speedLimit: _speedLimit,
+                ),
+              ),
+              
+              // Bottom sheet com informações de chegada
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: NavigationBottomSheet(
+                  estimatedTime: _routeEstimatedTime,
+                  distanceRemaining: _routeDistanceKm,
+                  arrivalTime: _routeEstimatedTime != null 
+                      ? _calculateArrivalTime(_routeEstimatedTime!)
+                      : null,
+                  onExit: () {
+                    _showStopNavigationDialog();
+                  },
+                ),
+              ),
+            ],
+
+            // Botões de ação - lado direito
+            Positioned(
+              right: 16,
+              bottom: 90,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+            // Botão Finalizar
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showFinishConfirmation(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stop, color: Colors.white, size: 20),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Finalizar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
+            const SizedBox(height: 12),
 
-            // Footer
+            // Botão Navegação (estilo Waze)
             Container(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Mantenha-se seguro nas estradas 🚛',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.zecaBlue,
+              width: 160,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _isNavigationMode 
+                    ? [Colors.green.shade400, Colors.green.shade700]
+                    : [Colors.blue.shade400, Colors.blue.shade700],
                 ),
-                textAlign: TextAlign.center,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_isNavigationMode ? Colors.green : Colors.blue).withOpacity(0.5),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    if (_isNavigationMode) {
+                      // Parar navegação
+                      _showStopNavigationDialog();
+                    } else {
+                      // Iniciar navegação
+                      setState(() {
+                        _isNavigationMode = true;
+                      });
+                      _startNavigation();
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _isNavigationMode ? Icons.stop : Icons.navigation,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isNavigationMode ? 'Parar' : 'Navegar',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Botão Descanso - agora do lado direito, não sobreposto
+            Container(
+              decoration: BoxDecoration(
+                color: state.emDescanso ? AppColors.zecaBlue : Colors.orange,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    context.read<JourneyBloc>().add(
+                      ToggleRest(isStartingRest: !state.emDescanso),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          state.emDescanso ? Icons.play_arrow : Icons.pause,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          state.emDescanso ? 'Retomar' : 'Descanso',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+                ],
               ),
             ),
           ],
@@ -919,6 +1459,150 @@ class _JourneyPageState extends State<JourneyPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Inicia navegação estilo Waze
+  void _startNavigation() async {
+    try {
+      // Obter posição atual
+      final position = await _locationService.getCurrentPosition();
+      if (position != null) {
+        setState(() {
+          _currentLocation = position;
+          _currentSpeed = position.speed * 3.6; // m/s para km/h
+        });
+        
+        // Obter nome da rua atual
+        try {
+          final streetName = await geocodingService.getStreetName(
+            LatLng(position.latitude, position.longitude),
+          );
+          if (mounted && streetName != null) {
+            setState(() {
+              _currentStreetName = streetName;
+            });
+          }
+        } catch (e) {
+          debugPrint('❌ [Navigation] Erro ao obter nome da rua inicial: $e');
+        }
+        
+        debugPrint('✅ [Navigation] Navegação iniciada na posição: ${position.latitude}, ${position.longitude}');
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao iniciar navegação: $e');
+    }
+  }
+
+  /// Mostra diálogo para parar navegação
+  void _showStopNavigationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Parar Navegação?'),
+        content: const Text('Deseja parar a navegação? Você poderá retomá-la depois.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              // ✅ Primeiro fechar o diálogo
+              Navigator.of(context).pop();
+              // ✅ Depois parar navegação (já inclui setState)
+              _stopNavigation();
+              // ✅ Forçar atualização do estado
+              setState(() {
+                _isNavigationMode = false;
+              });
+            },
+            child: const Text('Parar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _stopNavigation() {
+    debugPrint('🛑 [Journey] Parando navegação');
+    _locationSubscription?.cancel();
+    _locationSubscription = null;
+    
+    setState(() {
+      _currentStreetName = null;
+      _currentSpeed = 0;
+      _speedLimit = null;
+    });
+  }
+
+  /// Calcula hora de chegada baseado no tempo estimado
+  String? _calculateArrivalTime(String estimatedTime) {
+    try {
+      // Parse do tempo estimado (ex: "24 min", "1h 30min", "3h")
+      int minutes = 0;
+      if (estimatedTime.contains('h')) {
+        final parts = estimatedTime.split('h');
+        final hours = int.tryParse(parts[0].trim()) ?? 0;
+        minutes = hours * 60;
+        if (parts.length > 1 && parts[1].contains('min')) {
+          final minPart = parts[1].replaceAll('min', '').trim();
+          minutes += int.tryParse(minPart) ?? 0;
+        }
+      } else if (estimatedTime.contains('min')) {
+        final minPart = estimatedTime.replaceAll('min', '').trim();
+        minutes = int.tryParse(minPart) ?? 0;
+      }
+      
+      if (minutes > 0) {
+        final arrival = DateTime.now().add(Duration(minutes: minutes));
+        return DateFormat('HH:mm').format(arrival);
+      }
+    } catch (e) {
+      debugPrint('❌ [Journey] Erro ao calcular hora de chegada: $e');
+    }
+    return null;
+  }
+
+  /// Inicia tracking de localização para atualizar o mapa
+  void _startLocationTracking() {
+    if (_locationSubscription != null) return; // Já está ativo
+    
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Atualizar a cada 10 metros
+      ),
+    ).listen(
+      (Position position) async {
+        if (mounted) {
+          setState(() {
+            _currentLocation = position;
+            _currentSpeed = position.speed * 3.6; // m/s para km/h
+          });
+          
+          // Atualizar nome da rua se estiver em modo navegação
+          if (_isNavigationMode) {
+            try {
+              final streetName = await geocodingService.getStreetName(
+                LatLng(position.latitude, position.longitude),
+              );
+              if (mounted && streetName != null) {
+                setState(() {
+                  _currentStreetName = streetName;
+                });
+              }
+            } catch (e) {
+              debugPrint('❌ [Navigation] Erro ao obter nome da rua: $e');
+            }
+          }
+          
+          debugPrint('📍 [Navigation] Nova posição: ${position.latitude}, ${position.longitude}, ${_currentSpeed.toStringAsFixed(1)} km/h');
+        }
+      },
+      onError: (error) {
+        debugPrint('❌ [Navigation] Erro no tracking: $error');
+      },
     );
   }
 

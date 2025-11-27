@@ -9,6 +9,7 @@ class JourneyStorageService {
   static const String _journeyBoxName = 'journeys';
   static const String _locationPointsBoxName = 'location_points';
   static const String _activeJourneyKey = 'active_journey_id';
+  static const String _routeDataKeyPrefix = 'route_data_';
 
   Box? _journeyBox;
   Box? _locationPointsBox;
@@ -49,6 +50,12 @@ class JourneyStorageService {
   /// Obter jornada ativa
   JourneyEntity? getActiveJourney() {
     try {
+      // Verificar se o box está inicializado
+      if (_journeyBox == null) {
+        debugPrint('⚠️ Journey box não está inicializado');
+        return null;
+      }
+      
       final activeId = _journeyBox?.get(_activeJourneyKey) as String?;
       if (activeId == null) return null;
       return getJourney(activeId);
@@ -210,6 +217,56 @@ class JourneyStorageService {
   }
 
   /// Limpar todos os dados
+  /// Salvar dados da rota para uma jornada
+  Future<void> saveRouteData(String journeyId, {
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+    String? polyline,
+    String? destinationName,
+  }) async {
+    try {
+      final key = '$_routeDataKeyPrefix$journeyId';
+      final data = {
+        'origin_lat': originLat,
+        'origin_lng': originLng,
+        'dest_lat': destLat,
+        'dest_lng': destLng,
+        'polyline': polyline,
+        'destination_name': destinationName,
+      };
+      await _journeyBox?.put(key, data);
+      debugPrint('✅ Dados da rota salvos para jornada: $journeyId');
+    } catch (e) {
+      debugPrint('❌ Erro ao salvar dados da rota: $e');
+    }
+  }
+
+  /// Obter dados da rota de uma jornada
+  Map<String, dynamic>? getRouteData(String journeyId) {
+    try {
+      final key = '$_routeDataKeyPrefix$journeyId';
+      final data = _journeyBox?.get(key);
+      if (data == null) return null;
+      return data as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('❌ Erro ao obter dados da rota: $e');
+      return null;
+    }
+  }
+
+  /// Limpar dados da rota de uma jornada
+  Future<void> clearRouteData(String journeyId) async {
+    try {
+      final key = '$_routeDataKeyPrefix$journeyId';
+      await _journeyBox?.delete(key);
+      debugPrint('✅ Dados da rota limpos para jornada: $journeyId');
+    } catch (e) {
+      debugPrint('❌ Erro ao limpar dados da rota: $e');
+    }
+  }
+
   Future<void> clearAll() async {
     try {
       await _journeyBox?.clear();

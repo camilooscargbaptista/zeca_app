@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 
-/// Formatter para campo de Odômetro com formato brasileiro: 123.456,789
-/// Formata automaticamente enquanto o usuário digita
-/// Exemplo: 123456789 -> 123.456,789
+/// Formatter para campo de Odômetro com formato brasileiro: 123.456
+/// Formata automaticamente enquanto o usuário digita (apenas inteiros)
+/// Exemplo: 123456 -> 123.456
 class OdometerFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -28,7 +28,7 @@ class OdometerFormatter extends TextInputFormatter {
       );
     }
 
-    // Formatar com separador de milhar (ponto) e vírgula para decimais
+    // Formatar com separador de milhar (ponto) - apenas inteiros
     String formatted = _formatOdometer(digitsOnly);
 
     // Calcular posição do cursor
@@ -45,28 +45,10 @@ class OdometerFormatter extends TextInputFormatter {
     );
   }
 
-  /// Formata o número com separadores: 123.456,789
+  /// Formata o número com separador de milhar: 123.456
   String _formatOdometer(String digits) {
-    // Se há menos de 4 dígitos, não forçar decimais ainda
-    if (digits.length < 4) {
-      // Formatar apenas como número inteiro com separador de milhar
-      return _formatWithThousandSeparator(digits.isEmpty ? '0' : digits);
-    }
-
-    // Separar parte inteira e decimal (últimos 3 dígitos são decimais)
-    String decimalPart = digits.substring(digits.length - 3);
-    String integerPart = digits.substring(0, digits.length - 3);
-
-    // Se parte inteira está vazia, usar "0"
-    if (integerPart.isEmpty) {
-      integerPart = '0';
-    }
-
-    // Formatar parte inteira com separador de milhar (ponto)
-    String formattedInteger = _formatWithThousandSeparator(integerPart);
-
-    // Combinar: parte inteira + vírgula + parte decimal
-    return '$formattedInteger,$decimalPart';
+    // Formatar apenas como número inteiro com separador de milhar
+    return _formatWithThousandSeparator(digits.isEmpty ? '0' : digits);
   }
 
   /// Adiciona separador de milhar (ponto) a cada 3 dígitos
@@ -145,7 +127,7 @@ class OdometerFormatter extends TextInputFormatter {
     return formatted.length;
   }
 
-  /// Converte valor formatado (123.456,789) para número inteiro (123456789)
+  /// Converte valor formatado (123.456) para número inteiro (123456)
   static int parseFormattedValue(String formattedValue) {
     if (formattedValue.isEmpty) return 0;
     
@@ -155,30 +137,17 @@ class OdometerFormatter extends TextInputFormatter {
     return int.tryParse(digitsOnly) ?? 0;
   }
 
-  /// Converte número inteiro para formato exibido (123456789 -> 123.456,789)
+  /// Converte número inteiro para formato exibido (123456 -> 123.456)
   static String formatValue(int value) {
-    if (value == 0) return '0,000';
+    if (value == 0) return '0';
     
     String digits = value.toString();
     
-    // Garantir pelo menos 4 dígitos (para ter 3 casas decimais)
-    if (digits.length < 4) {
-      digits = digits.padLeft(4, '0');
-    }
-    
-    // Separar parte inteira e decimal
-    String decimalPart = digits.substring(digits.length - 3);
-    String integerPart = digits.substring(0, digits.length - 3);
-    
-    if (integerPart.isEmpty) integerPart = '0';
-    
-    // Formatar parte inteira com separador de milhar
-    String formattedInteger = integerPart.replaceAllMapped(
+    // Formatar apenas com separador de milhar (sem decimais)
+    return digits.replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (match) => '${match.group(1)}.',
     );
-    
-    return '$formattedInteger,$decimalPart';
   }
 }
 

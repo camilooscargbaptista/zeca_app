@@ -575,19 +575,37 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
 
   /// Iniciar polling para verificar status do abastecimento
   void _startPolling() {
+    // Limpar código (remover hífens) para passar ao polling
+    final cleanCode = _refuelingCode.replaceAll('-', '').replaceAll(' ', '');
+    
+    debugPrint('🔄 [RefuelingCodePage] Iniciando polling: refuelingId=$_refuelingId, refuelingCode=$cleanCode (original: $_refuelingCode)');
+    
     // Pode usar refueling_id (se já existir) ou código de abastecimento
     _pollingService.startPolling(
       refuelingId: _refuelingId,
-      refuelingCode: _refuelingCode.isNotEmpty ? _refuelingCode : null,
+      refuelingCode: cleanCode.isNotEmpty ? cleanCode : null,
       intervalSeconds: 15, // Verificar a cada 15 segundos
       onStatusChanged: (refuelingId) {
+        debugPrint('🎯 [RefuelingCodePage] Callback onStatusChanged chamado com refuelingId: $refuelingId');
         // Quando status mudar para AGUARDANDO_VALIDACAO_MOTORISTA
         if (mounted) {
           // Parar polling
           _pollingService.stopPolling();
           
-          // Navegar para tela de validação
-          context.go('/refueling-validation/$refuelingId');
+          debugPrint('🚀 [RefuelingCodePage] Navegando para /refueling-waiting com refuelingId: $refuelingId');
+          
+          // Navegar para tela de validação com os dados necessários
+          context.go(
+            '/refueling-waiting',
+            extra: {
+              'refueling_id': refuelingId,
+              'refueling_code': _refuelingCode,
+              'vehicle_data': _vehicleData,
+              'station_data': _stationData,
+            },
+          );
+        } else {
+          debugPrint('⚠️ [RefuelingCodePage] Widget não está mais montado, não navegando');
         }
       },
     );

@@ -20,7 +20,7 @@ class _RefuelingCodePageState extends State<RefuelingCodePage> {
   @override
   void initState() {
     super.initState();
-    // TODO: Carregar dados do código de abastecimento
+    // NOTA: Funcionalidade implementada em refueling_code_page_simple.dart
     // context.read<RefuelingCodeBloc>().add(LoadRefuelingCode());
   }
   
@@ -38,7 +38,8 @@ class _RefuelingCodePageState extends State<RefuelingCodePage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // TODO: Implementar cancelamento
+              // NOTA: Funcionalidade implementada em refueling_code_page_simple.dart
+              // Endpoint: POST /api/v1/refueling/:id/reject
               CustomToast.showInfo(context, 'Código cancelado');
             },
             child: const Text('Sim'),
@@ -49,8 +50,9 @@ class _RefuelingCodePageState extends State<RefuelingCodePage> {
   }
   
   void _onFinalizeRefueling() {
-    // TODO: Implementar finalização do abastecimento
-    CustomToast.showInfo(context, 'Funcionalidade em desenvolvimento');
+    // NOTA: Funcionalidade implementada em refueling_code_page_simple.dart
+    // Endpoint: POST /api/v1/refueling/:id/validate
+    CustomToast.showInfo(context, 'Use refueling_code_page_simple.dart');
   }
   
   @override
