@@ -21,8 +21,7 @@ import '../features/journey/data/services/journey_storage_service.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
-    // 🧪 DEBUG: Rota inicial temporária para teste do Google Maps
-    initialLocation: '/test-maps', // VOLTAR para '/splash' após debug!
+    initialLocation: '/splash',
     routes: [
       GoRoute(
         path: '/splash',
