@@ -335,7 +335,8 @@ class _JourneyPageState extends State<JourneyPage> {
       }
 
       // Calcular rota
-      final routeResult = await _directionsService.calculateRoute(
+      // 🆕 Calcular rota COM steps para navegação turn-by-turn
+      final routeResult = await _directionsService.calculateRouteWithSteps(
         originLat: currentLocation.latitude,
         originLng: currentLocation.longitude,
         destLat: place.latitude!,
@@ -349,6 +350,25 @@ class _JourneyPageState extends State<JourneyPage> {
         });
 
         if (routeResult != null) {
+          // 🆕 Carregar steps no NavigationService
+          if (routeResult.steps.isNotEmpty) {
+            navigationService.setSteps(routeResult.steps);
+            debugPrint('✅ [Journey] ${routeResult.steps.length} steps carregados no NavigationService');
+            
+            // Subscribe ao stream de navegação
+            _navigationSubscription?.cancel();
+            _navigationSubscription = navigationService.statusStream.listen((status) {
+              if (mounted && status.currentStep != null) {
+                setState(() {
+                  _currentNavigationInstruction = status.currentStep!.instruction;
+                  _currentManeuverType = status.currentStep!.maneuver;
+                  _distanceToNextMeters = status.distanceToNextMeters;
+                });
+                debugPrint('🧭 [Navigation] Step ${status.currentStepIndex ?? 0}: ${status.currentStep!.instruction}');
+              }
+            });
+          }
+          
           // Preencher campo de previsão de KM automaticamente
           _previsaoKmController.text = routeResult.distanceKm.round().toString();
           
@@ -437,6 +457,8 @@ class _JourneyPageState extends State<JourneyPage> {
   void dispose() {
     _odometroController.dispose();
     _destinoController.dispose();
+    _navigationSubscription?.cancel(); // 🆕 Cancelar subscription de navegação
+    _overviewTimer?.cancel(); // Cancelar timer da animação
     _previsaoKmController.dispose();
     _observacoesController.dispose();
     _locationSubscription?.cancel();
@@ -1204,9 +1226,11 @@ class _JourneyPageState extends State<JourneyPage> {
                 child: NavigationInfoCard(
                   currentStreet: _currentStreetName ?? 'Carregando...',
                   nextStreet: _routeDestinationName,
-                  nextInstruction: null, // TODO: Calcular próxima instrução baseada na rota
+                  nextInstruction: _currentNavigationInstruction, // 🆕 Instrução do NavigationService
+                  maneuverType: _currentManeuverType, // 🆕 Tipo de manobra
+                  distanceToNextMeters: _distanceToNextMeters, // 🆕 Distância em metros
                   onNextInstruction: () {
-                    // TODO: Mostrar próxima instrução
+                    // TODO: Avançar para próximo step manualmente (se necessário)
                   },
                 ),
               ),
@@ -1646,6 +1670,13 @@ class _JourneyPageState extends State<JourneyPage> {
             _currentLocation = position;
             _currentSpeed = position.speed * 3.6; // m/s para km/h
           });
+          
+          // 🆕 Atualizar posição no NavigationService
+          if (_isNavigationMode && navigationService.steps.isNotEmpty) {
+            navigationService.updateCurrentPosition(
+              LatLng(position.latitude, position.longitude),
+            );
+          }
           
           // Atualizar nome da rua se estiver em modo navegação
           if (_isNavigationMode) {
