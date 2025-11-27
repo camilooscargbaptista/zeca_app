@@ -53,10 +53,13 @@ class _RouteMapViewState extends State<RouteMapView> {
       _updateCamera();
     }
     
-    // Atualizar posição atual
-    if (oldWidget.currentPosition != widget.currentPosition) {
+    // 🆕 ATUALIZAR CÂMERA EM TEMPO REAL quando posição mudar
+    if (oldWidget.currentPosition != widget.currentPosition && widget.currentPosition != null) {
       _initializeMapElements();
-      if (widget.isNavigationMode && widget.currentPosition != null) {
+      
+      // 🎯 SEMPRE animar para posição atual em modo navegação
+      if (widget.isNavigationMode) {
+        debugPrint('🎬 [Map] Animando câmera para posição: ${widget.currentPosition!.latitude}, ${widget.currentPosition!.longitude}');
         _animateToCurrentPosition();
       }
     }
@@ -166,12 +169,15 @@ class _RouteMapViewState extends State<RouteMapView> {
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: widget.currentPosition!,
-          zoom: 17.0, // Zoom próximo para navegação
-          tilt: 45.0, // Inclinação estilo Waze/Google Maps
-          bearing: 0.0, // Pode ser atualizado com heading do GPS
+          zoom: 18.0, // 🆕 Zoom mais próximo para navegação
+          tilt: 55.0, // 🆕 Mais inclinação para efeito 3D
+          bearing: 0.0, // TODO: atualizar com heading do GPS
         ),
       ),
+      duration: const Duration(milliseconds: 500), // 🆕 Animação suave
     );
+    
+    debugPrint('✅ [Map] Câmera atualizada - Zoom: 18, Tilt: 55°');
   }
 
   void _showFullRoute() {
@@ -199,14 +205,14 @@ class _RouteMapViewState extends State<RouteMapView> {
       onMapCreated: _onMapCreated,
       initialCameraPosition: CameraPosition(
         target: widget.currentPosition ?? LatLng(widget.originLat, widget.originLng),
-        zoom: widget.isNavigationMode ? 17.0 : 12.0,
-        tilt: widget.isNavigationMode ? 45.0 : 0.0,
+        zoom: widget.isNavigationMode ? 18.0 : 12.0, // 🆕 Zoom mais próximo
+        tilt: widget.isNavigationMode ? 55.0 : 0.0, // 🆕 Mais inclinação
       ),
       markers: _markers,
       polylines: _polylines,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: false, // Usamos nosso próprio FAB
-      mapType: MapType.normal,
+      myLocationEnabled: true, // 🔵 Ponto azul da localização
+      myLocationButtonEnabled: false,
+      mapType: MapType.normal, // Estradas, prédios, etc.
       compassEnabled: true,
       rotateGesturesEnabled: true,
       scrollGesturesEnabled: true,
@@ -214,9 +220,11 @@ class _RouteMapViewState extends State<RouteMapView> {
       zoomGesturesEnabled: true,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
-      trafficEnabled: false,
-      buildingsEnabled: true,
+      trafficEnabled: true, // 🆕 ATIVAR TRÁFEGO (mostrar congestionamentos)
+      buildingsEnabled: true, // 🏢 Mostrar prédios em 3D
       indoorViewEnabled: false,
+      // 🆕 Estilo do mapa (pode personalizar depois)
+      minMaxZoomPreference: const MinMaxZoomPreference(3.0, 20.0),
     );
   }
 
