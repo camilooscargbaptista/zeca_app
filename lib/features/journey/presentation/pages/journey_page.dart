@@ -29,6 +29,7 @@ import '../../widgets/speed_card.dart';
 import '../../widgets/route_summary_card.dart';
 import '../../widgets/navigation_bottom_sheet.dart';
 import '../../widgets/navigation_countdown_dialog.dart';
+import '../../widgets/route_overview_card.dart';
 import '../../../../core/services/geocoding_service.dart';
 
 class JourneyPage extends StatefulWidget {
@@ -76,6 +77,10 @@ class _JourneyPageState extends State<JourneyPage> {
   bool _isNavigationMode = false;
   Position? _currentLocation;
   StreamSubscription<Position>? _locationSubscription;
+  
+  // Animação inicial (5s overview)
+  bool _showingInitialOverview = false;
+  Timer? _overviewTimer;
   
   // Serviço de geocoding (lazy initialization)
   GeocodingService? _geocodingService;
@@ -511,11 +516,25 @@ class _JourneyPageState extends State<JourneyPage> {
                 _routeDestLng != null) {
               // Iniciar navegação automaticamente quando jornada começa com rota
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && !_isNavigationMode) {
+                if (mounted && !_isNavigationMode && !_showingInitialOverview) {
+                  // 🆕 Iniciar animação inicial (5s em zoom out)
+                  debugPrint('🎬 [Journey] Iniciando animação inicial (5s overview)');
                   setState(() {
-                    _isNavigationMode = true;
+                    _showingInitialOverview = true;
+                    _isNavigationMode = false; // Zoom out
                   });
-                  _startNavigation();
+                  
+                  // Após 5 segundos, entrar em modo navegação
+                  _overviewTimer = Timer(const Duration(seconds: 5), () {
+                    if (mounted) {
+                      debugPrint('✅ [Journey] Animação concluída, entrando em modo navegação');
+                      setState(() {
+                        _showingInitialOverview = false;
+                        _isNavigationMode = true;
+                      });
+                      _startNavigation();
+                    }
+                  });
                 }
               });
             }
@@ -694,22 +713,28 @@ class _JourneyPageState extends State<JourneyPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo Destino (OPCIONAL) com Autocomplete
+                      // Campo Destino (OBRIGATÓRIO) com Autocomplete
                       Stack(
                         children: [
                           PlacesAutocompleteField(
                             controller: _destinoController,
-                            labelText: 'Destino (opcional)',
+                            labelText: 'Destino *',
                             hintText: 'Ex: São Paulo - SP',
                             prefixIcon: Icons.location_on,
                             onPlaceSelected: _onPlaceSelected,
+                            validator: (value) {
+                              if (value == null || value.isEmpty || value.trim().isEmpty) {
+                                return 'Digite o destino da viagem';
+                              }
+                              return null;
+                            },
                             decoration: InputDecoration(
-                              labelText: 'Destino (opcional)',
+                              labelText: 'Destino *',
                               hintText: 'Ex: São Paulo - SP',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                              prefixIcon: const Icon(Icons.location_on, color: AppColors.zecaBlue),
                             ),
                           ),
                           if (_isCalculatingRoute)
