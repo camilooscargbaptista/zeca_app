@@ -16,6 +16,9 @@ class RouteMapView extends StatefulWidget {
   final String? destinationName;
   final bool isNavigationMode;
   final LatLng? currentPosition;
+  
+  /// 🆕 Callback para expor o controlador do mapa
+  final Function(GoogleMapController)? onMapCreated;
 
   const RouteMapView({
     Key? key,
@@ -27,6 +30,7 @@ class RouteMapView extends StatefulWidget {
     this.destinationName,
     this.isNavigationMode = true,
     this.currentPosition,
+    this.onMapCreated,
   }) : super(key: key);
 
   @override
@@ -158,6 +162,11 @@ class _RouteMapViewState extends State<RouteMapView> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+    debugPrint('✅ [Map] GoogleMapController criado e configurado');
+    
+    // 🆕 Expor controlador para o parent widget
+    widget.onMapCreated?.call(controller);
+    
     _updateCamera();
   }
 

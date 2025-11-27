@@ -108,6 +108,9 @@ class _JourneyPageState extends State<JourneyPage> {
   String? _currentNavigationInstruction;
   String? _currentManeuverType;
   double? _distanceToNextMeters;
+  
+  // 🆕 Controlador do Google Maps (para atualizar câmera diretamente)
+  GoogleMapController? _googleMapController;
 
   @override
   void initState() {
@@ -948,6 +951,10 @@ class _JourneyPageState extends State<JourneyPage> {
                 _routeDestLat != null && 
                 _routeDestLng != null)
               RouteMapView(
+                onMapCreated: (controller) {
+                  _googleMapController = controller;
+                  debugPrint('✅ [Journey] GoogleMapController capturado');
+                },
                 originLat: _routeOriginLat!,
                 originLng: _routeOriginLng!,
                 destLat: _routeDestLat!,
@@ -962,6 +969,10 @@ class _JourneyPageState extends State<JourneyPage> {
             else
               // Se não houver rota, mostrar mapa com localização atual (simulador)
               RouteMapView(
+                onMapCreated: (controller) {
+                  _googleMapController = controller;
+                  debugPrint('✅ [Journey] GoogleMapController capturado (modo simples)');
+                },
                 originLat: _currentLocation?.latitude ?? -21.1704, // Ribeirão Preto (simulador)
                 originLng: _currentLocation?.longitude ?? -47.8103,
                 destLat: _currentLocation?.latitude ?? -21.1704,
@@ -1648,8 +1659,32 @@ class _JourneyPageState extends State<JourneyPage> {
           
           // 🆕 LOG: Confirmar atualização de posição
           debugPrint('📍 [Journey] Posição atualizada: ${position.latitude}, ${position.longitude}');
-          debugPrint('   - _currentLocation: $_currentLocation');
-          debugPrint('   - Será passado para RouteMapView');
+          
+          // 🆕 ATUALIZAR CÂMERA DIRETAMENTE (solução estável)
+          if (_googleMapController != null && _isNavigationMode) {
+            try {
+              await _googleMapController!.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(
+                    target: LatLng(position.latitude, position.longitude),
+                    zoom: 18.0,
+                    tilt: 55.0,
+                    bearing: position.heading, // 🆕 Rotação do mapa!
+                  ),
+                ),
+              );
+              debugPrint('✅ [Journey] Câmera atualizada! Zoom: 18, Tilt: 55°, Bearing: ${position.heading}°');
+            } catch (e) {
+              debugPrint('⚠️ [Journey] Erro ao atualizar câmera: $e');
+            }
+          } else {
+            if (_googleMapController == null) {
+              debugPrint('⚠️ [Journey] GoogleMapController ainda null');
+            }
+            if (!_isNavigationMode) {
+              debugPrint('⚠️ [Journey] Modo navegação desligado');
+            }
+          }
           
           // 🆕 Atualizar posição no NavigationService
           if (_isNavigationMode && navigationService.steps.isNotEmpty) {
