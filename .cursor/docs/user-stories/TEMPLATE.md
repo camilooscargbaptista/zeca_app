@@ -4,6 +4,42 @@
 
 ---
 
+## 🔍 Análise do Existente
+
+> **⚠️ OBRIGATÓRIO:** Preencher ANTES de planejar tasks e estimar
+> 
+> **Consultar:** `.cursor/docs/patterns/PIPELINE_DESENVOLVIMENTO.md` (FASE 1)
+
+### ✅ O Que JÁ Existe:
+
+#### Backend:
+- Endpoints: [listar com paths]
+- Entidades: [listar]
+- Status: [X]% implementado
+
+#### App Flutter:
+- Telas: [listar com paths dos arquivos]
+- Widgets: [listar com paths]
+- Serviços: [listar]
+- BLoCs: [listar]
+- Status: [X]% implementado
+
+### ❌ O Que Precisa Ser Implementado:
+1. [Item 1 - tempo estimado]
+2. [Item 2 - tempo estimado]
+...
+
+### 📊 Completude Geral:
+**[X]%** da funcionalidade já existe
+
+### 📸 Evidências (screenshots, código, etc.):
+- [Adicionar aqui ou linkar documento separado]
+
+### 📄 Documento de Análise Detalhada:
+- Link: `.cursor/docs/user-stories/ANALISE_EXISTENTE_[NOME].md`
+
+---
+
 ## 📝 Descrição
 
 **Como** [tipo de usuário]  
