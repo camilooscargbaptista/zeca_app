@@ -44,10 +44,6 @@ Future<void> configureDependencies() async {
   print('🔧 [DI] Registrando AppRouter...');
   getIt.registerLazySingleton<AppRouter>(() => AppRouter());
   
-  // Register GeocodingService manually
-  print('🔧 [DI] Registrando GeocodingService...');
-  getIt.registerLazySingleton<GeocodingService>(() => GeocodingService());
-  
   // Initialize injectable
   print('🔧 [DI] Inicializando injectable...');
   getIt.init();
