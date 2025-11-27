@@ -23,7 +23,7 @@ import '../../data/services/journey_storage_service.dart';
 import '../../domain/entities/journey_entity.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
-import '../../../../shared/widgets/route_map_view.dart';
+import '../../widgets/route_map_view.dart';
 import '../../widgets/navigation_info_card.dart';
 import '../../widgets/speed_card.dart';
 import '../../widgets/route_summary_card.dart';
