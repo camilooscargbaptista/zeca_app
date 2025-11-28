@@ -4,6 +4,7 @@ import 'package:flutter_background_geolocation/flutter_background_geolocation.da
 import '../config/api_config.dart';
 import 'storage_service.dart';
 import 'device_service.dart';
+import 'token_manager_service.dart';
 import '../../core/di/injection.dart';
 
 /// Service para gerenciar tracking em background usando flutter_background_geolocation
@@ -60,6 +61,34 @@ class BackgroundGeolocationService {
     }
   }
 
+  /// Atualizar token nos headers do plugin (quando token é renovado)
+  Future<void> updateAuthToken(String newToken) async {
+    if (!_isTracking) {
+      debugPrint('⚠️ [BG-GEO] Tracking não está ativo, ignorando atualização de token');
+      return;
+    }
+
+    try {
+      debugPrint('🔄 [BG-GEO] Atualizando token nos headers...');
+      
+      final deviceService = DeviceService();
+      final deviceId = await deviceService.getDeviceId();
+      
+      // Atualizar configuração do plugin com novo token
+      await bg.BackgroundGeolocation.setConfig(bg.Config(
+        headers: {
+          'Authorization': 'Bearer $newToken',
+          'Content-Type': 'application/json',
+          'x-device-id': deviceId,
+        },
+      ));
+      
+      debugPrint('✅ [BG-GEO] Token atualizado com sucesso');
+    } catch (e) {
+      debugPrint('❌ [BG-GEO] Erro ao atualizar token: $e');
+    }
+  }
+
   /// Iniciar tracking de uma jornada
   Future<void> startTracking(String journeyId) async {
     if (!_isConfigured) {
@@ -82,6 +111,15 @@ class BackgroundGeolocationService {
       
       final token = storageService.read<String>('access_token');
       final deviceId = await deviceService.getDeviceId();
+      
+      debugPrint('🔑 [BG-GEO] Usando token para tracking (primeiros 20 chars): ${token?.substring(0, 20) ?? "null"}...');
+
+      // 🔔 Registrar listener para renovação de token
+      final tokenManager = getIt<TokenManagerService>();
+      tokenManager.addTokenRefreshListener((newToken) {
+        debugPrint('🔔 [BG-GEO] Token renovado! Atualizando headers...');
+        updateAuthToken(newToken);
+      });
 
       // Configurar o plugin
       bg.State state = await bg.BackgroundGeolocation.ready(bg.Config(
@@ -266,29 +304,14 @@ class BackgroundGeolocationService {
     try {
       debugPrint('🔄 [BG-GEO] Sincronizando pontos pendentes...');
       
-      // Verificar quantos pontos estão pendentes
-      final count = await getPendingLocationsCount();
-      debugPrint('📊 [BG-GEO] Pontos pendentes no banco local: $count');
-      
-      if (count == 0) {
-        debugPrint('✅ [BG-GEO] Nenhum ponto pendente, banco local está limpo');
-        return;
-      }
-      
       // Forçar sincronização de todos os pontos pendentes
+      // O plugin gerencia o SQLite internamente
       await bg.BackgroundGeolocation.sync();
-      debugPrint('✅ [BG-GEO] Sincronização iniciada para $count pontos');
+      debugPrint('✅ [BG-GEO] Sincronização solicitada ao plugin');
+      debugPrint('📊 [BG-GEO] Aguarde logs HTTP para confirmar envios');
       
       // Aguardar um pouco para os pontos serem enviados
       await Future.delayed(const Duration(seconds: 2));
-      
-      // Verificar novamente
-      final remainingCount = await getPendingLocationsCount();
-      if (remainingCount == 0) {
-        debugPrint('🎉 [BG-GEO] Todos os pontos foram sincronizados!');
-      } else {
-        debugPrint('⚠️ [BG-GEO] Ainda restam $remainingCount pontos pendentes (sem internet?)');
-      }
       
     } catch (e) {
       debugPrint('❌ [BG-GEO] Erro ao sincronizar: $e');
@@ -296,33 +319,29 @@ class BackgroundGeolocationService {
   }
   
   /// Obter quantidade de pontos pendentes no banco local
-  /// Útil para debug e para validar se a sincronização está funcionando
+  /// NOTA: O plugin versão 4.18 não expõe método getCount() diretamente
+  /// A contagem é inferida pelos logs HTTP de sync
   Future<int> getPendingLocationsCount() async {
-    try {
-      final count = await bg.BackgroundGeolocation.getCount();
-      return count;
-    } catch (e) {
-      debugPrint('❌ [BG-GEO] Erro ao obter contagem: $e');
-      return 0;
-    }
+    // Método não disponível na API pública do plugin v4.18
+    // O plugin gerencia o SQLite internamente
+    debugPrint('⚠️ [BG-GEO] getCount() não disponível nesta versão do plugin');
+    debugPrint('   Use logs HTTP para monitorar envios');
+    return 0;
   }
   
   /// Obter todos os pontos pendentes (para debug)
+  /// NOTA: O plugin versão 4.18 não expõe método getLocations() diretamente
   Future<List<bg.Location>> getPendingLocations() async {
-    try {
-      final locations = await bg.BackgroundGeolocation.getLocations();
-      debugPrint('📍 [BG-GEO] ${locations.length} pontos no banco local');
-      return locations;
-    } catch (e) {
-      debugPrint('❌ [BG-GEO] Erro ao obter pontos: $e');
-      return [];
-    }
+    // Método não disponível na API pública do plugin v4.18
+    debugPrint('⚠️ [BG-GEO] getLocations() não disponível nesta versão do plugin');
+    return [];
   }
   
   /// Limpar banco local (CUIDADO: usar apenas para debug/testes)
   Future<void> destroyLocations() async {
     try {
       debugPrint('🗑️ [BG-GEO] Limpando banco local...');
+      // O plugin tem este método disponível
       await bg.BackgroundGeolocation.destroyLocations();
       debugPrint('✅ [BG-GEO] Banco local limpo');
     } catch (e) {
@@ -402,10 +421,7 @@ class BackgroundGeolocationService {
     debugPrint('═══════════════════════════════════════════════════');
     debugPrint('🌐 [BG-GEO HTTP] ${event.success ? "✅ SUCCESS" : "❌ ERROR"}');
     debugPrint('═══════════════════════════════════════════════════');
-    debugPrint('📤 URL: ${event.url}');
     debugPrint('📊 Status Code: ${event.status}');
-    debugPrint('📦 Request Body:');
-    debugPrint(event.requestBody ?? '(empty)');
     debugPrint('📥 Response:');
     debugPrint(event.responseText ?? '(empty)');
     debugPrint('═══════════════════════════════════════════════════');
@@ -420,6 +436,7 @@ class BackgroundGeolocationService {
       debugPrint('   - Token expirado (401)');
       debugPrint('   - Body inválido (400)');
       debugPrint('   - Erro no servidor (500)');
+      debugPrint('⚠️ Status: ${event.status}');
     }
   }
 

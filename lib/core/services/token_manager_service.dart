@@ -29,10 +29,39 @@ class TokenManagerService {
   bool _isRefreshing = false;
   bool _isInitialized = false;
   
+  // Listeners para notificar quando token for renovado
+  final List<Function(String newToken)> _tokenRefreshListeners = [];
+  
   // JWT Sliding Window: Access Token = 120 minutos (2 horas)
   // Refresh Token = Sliding Window de 90 dias (nunca expira se app for usado)
   static const int _refreshIntervalMinutes = 30; // Renovar a cada 30 minutos (mais econômico com token de 2h)
   static const int _refreshBeforeExpiryMinutes = 10; // Renovar 10 minutos antes de expirar (2h - 10min = 1h50min)
+  
+  /// Adicionar listener para ser notificado quando token for renovado
+  void addTokenRefreshListener(Function(String newToken) listener) {
+    if (!_tokenRefreshListeners.contains(listener)) {
+      _tokenRefreshListeners.add(listener);
+      debugPrint('✅ TokenManager: Listener adicionado (total: ${_tokenRefreshListeners.length})');
+    }
+  }
+  
+  /// Remover listener
+  void removeTokenRefreshListener(Function(String newToken) listener) {
+    _tokenRefreshListeners.remove(listener);
+    debugPrint('🗑️ TokenManager: Listener removido (total: ${_tokenRefreshListeners.length})');
+  }
+  
+  /// Notificar todos os listeners quando token for renovado
+  void _notifyTokenRefreshListeners(String newToken) {
+    debugPrint('📣 TokenManager: Notificando ${_tokenRefreshListeners.length} listeners...');
+    for (var listener in _tokenRefreshListeners) {
+      try {
+        listener(newToken);
+      } catch (e) {
+        debugPrint('❌ TokenManager: Erro ao notificar listener: $e');
+      }
+    }
+  }
 
   /// Inicializar o serviço (deve ser chamado no startup do app)
   /// Pode ser chamado múltiplas vezes (ex: após login)
@@ -278,6 +307,9 @@ class TokenManagerService {
         if (newAccessToken != null) {
           await _storage.saveAccessToken(newAccessToken);
           _apiService.setAuthToken(newAccessToken);
+          
+          // 🔔 Notificar todos os listeners (ex: BackgroundGeolocationService)
+          _notifyTokenRefreshListeners(newAccessToken);
         }
         
         if (newRefreshToken != null) {
