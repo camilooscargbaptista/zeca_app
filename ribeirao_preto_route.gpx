@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="Xcode">
+  <!-- Rota simulada em Ribeirão Preto - SP -->
+  <!-- Do centro até Vila Tibério (aprox 3km) -->
+  
+  <wpt lat="-21.170400" lon="-47.810300">
+    <name>Início - Centro</name>
+    <time>2025-11-28T00:00:00Z</time>
+  </wpt>
+  
+  <wpt lat="-21.171000" lon="-47.809500">
+    <name>Ponto 1</name>
+    <time>2025-11-28T00:00:15Z</time>
+  </wpt>
+  
+  <wpt lat="-21.171500" lon="-47.808800">
+    <name>Ponto 2</name>
+    <time>2025-11-28T00:00:30Z</time>
+  </wpt>
+  
+  <wpt lat="-21.172000" lon="-47.808200">
+    <name>Ponto 3</name>
+    <time>2025-11-28T00:00:45Z</time>
+  </wpt>
+  
+  <wpt lat="-21.172500" lon="-47.807600">
+    <name>Ponto 4</name>
+    <time>2025-11-28T00:01:00Z</time>
+  </wpt>
+  
+  <wpt lat="-21.173000" lon="-47.807000">
+    <name>Ponto 5</name>
+    <time>2025-11-28T00:01:15Z</time>
+  </wpt>
+  
+  <wpt lat="-21.173500" lon="-47.806500">
+    <name>Ponto 6</name>
+    <time>2025-11-28T00:01:30Z</time>
+  </wpt>
+  
+  <wpt lat="-21.174000" lon="-47.806000">
+    <name>Ponto 7</name>
+    <time>2025-11-28T00:01:45Z</time>
+  </wpt>
+  
+  <wpt lat="-21.174500" lon="-47.805500">
+    <name>Ponto 8</name>
+    <time>2025-11-28T00:02:00Z</time>
+  </wpt>
+  
+  <wpt lat="-21.175000" lon="-47.805000">
+    <name>Ponto 9</name>
+    <time>2025-11-28T00:02:15Z</time>
+  </wpt>
+  
+  <wpt lat="-21.175500" lon="-47.804500">
+    <name>Ponto 10</name>
+    <time>2025-11-28T00:02:30Z</time>
+  </wpt>
+  
+  <wpt lat="-21.176000" lon="-47.804000">
+    <name>Ponto 11</name>
+    <time>2025-11-28T00:02:45Z</time>
+  </wpt>
+  
+  <wpt lat="-21.176500" lon="-47.803500">
+    <name>Ponto 12</name>
+    <time>2025-11-28T00:03:00Z</time>
+  </wpt>
+  
+  <wpt lat="-21.177000" lon="-47.803000">
+    <name>Ponto 13</name>
+    <time>2025-11-28T00:03:15Z</time>
+  </wpt>
+  
+  <wpt lat="-21.177500" lon="-47.802500">
+    <name>Ponto 14</name>
+    <time>2025-11-28T00:03:30Z</time>
+  </wpt>
+  
+  <wpt lat="-21.178000" lon="-47.802000">
+    <name>Fim - Vila Tibério</name>
+    <time>2025-11-28T00:03:45Z</time>
+  </wpt>
+</gpx>
+
