@@ -271,11 +271,16 @@ class BackgroundGeolocationService {
   /// Transformar dados do plugin para formato da API
   /// Converte speed (m/s) para velocidade (km/h) e adiciona journey_id
   Map<String, dynamic> _transformLocationToApi(bg.Location location) {
+    // Garantir que velocidade seja sempre >= 0 (backend valida isso)
+    // iOS Simulator pode retornar speed = -1.0 quando parado
+    final speedMps = location.coords.speed ?? 0.0;
+    final velocidadeKmh = speedMps >= 0 ? speedMps * 3.6 : 0.0;
+    
     return {
       'journey_id': _currentJourneyId!,
       'latitude': location.coords.latitude,
       'longitude': location.coords.longitude,
-      'velocidade': (location.coords.speed ?? 0) * 3.6,  // m/s → km/h
+      'velocidade': velocidadeKmh,  // km/h (sempre >= 0)
       'timestamp': location.timestamp,
     };
   }
