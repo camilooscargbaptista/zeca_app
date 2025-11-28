@@ -53,13 +53,13 @@ class NavigationInfoCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 // Ícone de manobra dinâmico
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -67,10 +67,10 @@ class NavigationInfoCard extends StatelessWidget {
                   child: Icon(
                     NavigationUtils.getManeuverIcon(maneuverType),
                     color: Colors.white,
-                    size: 28,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 // Instrução de navegação
                 Expanded(
                   child: Column(
@@ -84,11 +84,11 @@ class NavigationInfoCard extends StatelessWidget {
                             distanceToNextMeters!,
                           ),
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                          maxLines: 2,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         )
                       // Fallback: Rua atual
