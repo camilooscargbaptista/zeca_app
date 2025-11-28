@@ -344,7 +344,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         try {
           final journeyResponse = await _apiService.getActiveJourney();
           if (journeyResponse['success'] == true && journeyResponse['data'] != null) {
-            final updatedJourney = JourneyEntity.fromJson(journeyResponse['data']);
+            final journeyModel = JourneyModel.fromJson(journeyResponse['data']);
+            final updatedJourney = journeyModel.toEntity();
             // Sincronizar estado de descanso baseado no backend
             final hasActiveRest = journeyResponse['data']['active_rest_period'] != null;
             emit(currentState.copyWith(
