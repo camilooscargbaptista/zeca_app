@@ -120,14 +120,15 @@ class BackgroundGeolocationService {
           'x-device-id': deviceId,
         },
         
-        // Adicionar journey_id a TODOS os pontos enviados
-        extras: {
+        // Adicionar journey_id como parâmetro fixo
+        // O plugin adiciona params ao body automaticamente
+        params: {
           'journey_id': journeyId,
         },
         
-        // Configurar formato do body para o backend
+        // Mapear campos do plugin para o formato do backend
+        // speed (m/s) -> velocidade (km/h) será convertido no servidor
         httpRootProperty: '.',
-        locationTemplate: '{"journey_id":"<%= extras.journey_id %>","latitude":<%= latitude %>,"longitude":<%= longitude %>,"velocidade":<%= speed %>,"timestamp":"<%= timestamp %>"}',
         
         autoSync: true, // Sincronizar automaticamente
         autoSyncThreshold: 5, // Enviar a cada 5 pontos
