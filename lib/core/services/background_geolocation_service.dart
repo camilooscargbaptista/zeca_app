@@ -163,11 +163,20 @@ class BackgroundGeolocationService {
           'x-device-id': deviceId,
         },
         
-        // Adicionar journey_id como parâmetro fixo
-        // O plugin adiciona params ao body automaticamente
-        params: {
-          'journey_id': journeyId,
-        },
+        // ============================================
+        // MAPEAMENTO DE CAMPOS (locationTemplate)
+        // ============================================
+        // O plugin envia: latitude, longitude, speed (m/s), timestamp
+        // Backend espera: journey_id, latitude, longitude, velocidade (km/h), timestamp
+        locationTemplate: '''
+        {
+          "journey_id": "$journeyId",
+          "latitude": <%= latitude %>,
+          "longitude": <%= longitude %>,
+          "velocidade": <%= (speed * 3.6).round(2) %>,
+          "timestamp": "<%= timestamp %>"
+        }
+        ''',
         
         // ============================================
         // PERSISTÊNCIA LOCAL (SQLite) + SINCRONIZAÇÃO
