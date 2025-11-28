@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/storage_service.dart';
+import '../services/token_manager_service.dart';
 import '../services/geocoding_service.dart';
 import '../network/dio_client.dart';
 import '../../routes/app_router.dart';
@@ -35,6 +36,10 @@ Future<void> configureDependencies() async {
       getIt<SharedPreferences>(),
     ),
   );
+  
+  // Register TokenManagerService manually (singleton - única instância)
+  print('🔧 [DI] Registrando TokenManagerService...');
+  getIt.registerSingleton<TokenManagerService>(TokenManagerService());
   
   // Register DioClient manually
   print('🔧 [DI] Registrando DioClient...');
