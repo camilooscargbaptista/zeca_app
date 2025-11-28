@@ -101,15 +101,18 @@ class _RouteMapViewState extends State<RouteMapView> {
       ),
     };
 
-    // Adicionar marcador de posição atual se disponível
+    // Adicionar seta de posição atual se disponível (estilo Waze/Google Maps)
     if (widget.currentPosition != null) {
       _markers.add(
         Marker(
           markerId: const MarkerId('current_position'),
           position: widget.currentPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(title: 'Você está aqui'),
+          // 🔵 Usar ícone padrão de veículo/seta (ponto azul será desabilitado)
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          rotation: 0.0, // TODO: Atualizar com heading do GPS
+          flat: true, // Mantém o marcador "flat" contra o mapa para melhor visualização
           anchor: const Offset(0.5, 0.5),
+          infoWindow: const InfoWindow(title: 'Você está aqui'),
         ),
       );
     }
@@ -189,15 +192,15 @@ class _RouteMapViewState extends State<RouteMapView> {
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: widget.currentPosition!,
-          zoom: 18.0, // 🆕 Zoom mais próximo para navegação
-          tilt: 55.0, // 🆕 Mais inclinação para efeito 3D
-          bearing: 0.0, // TODO: atualizar com heading do GPS
+          zoom: 18.0, // Zoom próximo para navegação
+          tilt: 0.0, // Visão 2D (top-down) como Google Maps/Waze
+          bearing: 0.0, // TODO: atualizar com heading do GPS para rotacionar mapa
         ),
       ),
-      duration: const Duration(milliseconds: 500), // 🆕 Animação suave
+      duration: const Duration(milliseconds: 500), // Animação suave
     );
     
-    debugPrint('✅ [Map] Câmera atualizada - Zoom: 18, Tilt: 55°');
+    debugPrint('✅ [Map] Câmera atualizada - Zoom: 18, Tilt: 0° (2D)');
   }
 
   void _showFullRoute() {
@@ -225,12 +228,12 @@ class _RouteMapViewState extends State<RouteMapView> {
       onMapCreated: _onMapCreated,
       initialCameraPosition: CameraPosition(
         target: widget.currentPosition ?? LatLng(widget.originLat, widget.originLng),
-        zoom: widget.isNavigationMode ? 18.0 : 12.0, // 🆕 Zoom mais próximo
-        tilt: widget.isNavigationMode ? 55.0 : 0.0, // 🆕 Mais inclinação
+        zoom: widget.isNavigationMode ? 18.0 : 12.0, // Zoom próximo em navegação
+        tilt: 0.0, // Sempre visão 2D (top-down)
       ),
       markers: _markers,
       polylines: _polylines,
-      myLocationEnabled: true, // 🔵 Ponto azul da localização
+      myLocationEnabled: false, // Desabilitado - usando marcador customizado (seta)
       myLocationButtonEnabled: false,
       mapType: MapType.normal, // Estradas, prédios, etc.
       compassEnabled: true,
