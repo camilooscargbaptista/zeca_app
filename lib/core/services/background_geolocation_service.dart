@@ -110,8 +110,8 @@ class BackgroundGeolocationService {
         // ============================================
         // CONFIGURAÇÕES DE REDE/API
         // ============================================
-        // IMPORTANTE: Backend espera POST /api/v1/journeys/location-point
-        // ApiConfig.apiUrl já inclui /api/v1
+        // ESTRATÉGIA: Enviar imediatamente quando tem internet,
+        // armazenar localmente quando offline, sincronizar quando volta online
         url: '${ApiConfig.apiUrl}/journeys/location-point',
         
         headers: {
@@ -126,16 +126,30 @@ class BackgroundGeolocationService {
           'journey_id': journeyId,
         },
         
-        // Mapear campos do plugin para o formato do backend
-        // speed (m/s) -> velocidade (km/h) será convertido no servidor
-        httpRootProperty: '.',
+        // ============================================
+        // PERSISTÊNCIA LOCAL (SQLite) + SINCRONIZAÇÃO
+        // ============================================
+        // COMO FUNCIONA:
+        // 1. Todos os pontos são salvos em SQLite local PRIMEIRO
+        // 2. Plugin tenta enviar via HTTP automaticamente
+        // 3. Se falhar (sem internet), mantém no SQLite e retry depois
+        // 4. Ao finalizar jornada, forçamos sync manual de pontos pendentes
         
-        autoSync: true, // Sincronizar automaticamente
-        autoSyncThreshold: 5, // Enviar a cada 5 pontos
-        batchSync: true, // Enviar em lote
-        maxBatchSize: 50, // Máximo 50 pontos por request
-        maxDaysToPersist: 7, // Manter no máximo 7 dias no SQLite local
-        maxRecordsToPersist: 1000, // Máximo 1000 pontos no SQLite local
+        autoSync: true,              // ✅ Sincroniza automaticamente quando tem internet
+        autoSyncThreshold: 0,        // ✅ Envia IMEDIATAMENTE (não espera acumular)
+        batchSync: false,            // ✅ Envia 1 ponto por vez (endpoint espera isso)
+        maxBatchSize: 1,             // 1 ponto por request
+        
+        // SQLite Local (fallback para offline)
+        maxDaysToPersist: 7,         // Manter até 7 dias no banco local
+        maxRecordsToPersist: 5000,   // Aumentado para 5000 pontos (jornadas longas)
+        
+        // HTTP Retry (quando falha o envio)
+        locationsOrderDirection: 'ASC',  // Enviar do mais antigo para o mais novo
+        httpTimeout: 60000,              // Timeout de 60s por request
+        
+        // Mapear campos do plugin para o formato do backend
+        httpRootProperty: '.',
         
         // ============================================
         // CONFIGURAÇÕES DE LOG (DEBUG)
@@ -247,15 +261,72 @@ class BackgroundGeolocationService {
   }
 
   /// Sincronizar manualmente pontos pendentes
+  /// Envia todos os pontos que estão no SQLite local mas ainda não foram enviados
   Future<void> syncPendingLocations() async {
     try {
       debugPrint('🔄 [BG-GEO] Sincronizando pontos pendentes...');
       
-      // Forçar sincronização
+      // Verificar quantos pontos estão pendentes
+      final count = await getPendingLocationsCount();
+      debugPrint('📊 [BG-GEO] Pontos pendentes no banco local: $count');
+      
+      if (count == 0) {
+        debugPrint('✅ [BG-GEO] Nenhum ponto pendente, banco local está limpo');
+        return;
+      }
+      
+      // Forçar sincronização de todos os pontos pendentes
       await bg.BackgroundGeolocation.sync();
-      debugPrint('✅ [BG-GEO] Sincronização iniciada');
+      debugPrint('✅ [BG-GEO] Sincronização iniciada para $count pontos');
+      
+      // Aguardar um pouco para os pontos serem enviados
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // Verificar novamente
+      final remainingCount = await getPendingLocationsCount();
+      if (remainingCount == 0) {
+        debugPrint('🎉 [BG-GEO] Todos os pontos foram sincronizados!');
+      } else {
+        debugPrint('⚠️ [BG-GEO] Ainda restam $remainingCount pontos pendentes (sem internet?)');
+      }
+      
     } catch (e) {
       debugPrint('❌ [BG-GEO] Erro ao sincronizar: $e');
+    }
+  }
+  
+  /// Obter quantidade de pontos pendentes no banco local
+  /// Útil para debug e para validar se a sincronização está funcionando
+  Future<int> getPendingLocationsCount() async {
+    try {
+      final count = await bg.BackgroundGeolocation.getCount();
+      return count;
+    } catch (e) {
+      debugPrint('❌ [BG-GEO] Erro ao obter contagem: $e');
+      return 0;
+    }
+  }
+  
+  /// Obter todos os pontos pendentes (para debug)
+  Future<List<bg.Location>> getPendingLocations() async {
+    try {
+      final locations = await bg.BackgroundGeolocation.getLocations();
+      debugPrint('📍 [BG-GEO] ${locations.length} pontos no banco local');
+      return locations;
+    } catch (e) {
+      debugPrint('❌ [BG-GEO] Erro ao obter pontos: $e');
+      return [];
+    }
+  }
+  
+  /// Limpar banco local (CUIDADO: usar apenas para debug/testes)
+  Future<void> destroyLocations() async {
+    try {
+      debugPrint('🗑️ [BG-GEO] Limpando banco local...');
+      await bg.BackgroundGeolocation.destroyLocations();
+      debugPrint('✅ [BG-GEO] Banco local limpo');
+    } catch (e) {
+      debugPrint('❌ [BG-GEO] Erro ao limpar: $e');
     }
   }
 
@@ -327,11 +398,28 @@ class BackgroundGeolocationService {
   }
 
   void _onHttp(bg.HttpEvent event) {
-    if (event.success) {
-      debugPrint('✅ [BG-GEO] HTTP Success: ${event.status}');
-    } else {
-      debugPrint('❌ [BG-GEO] HTTP Error: ${event.status}');
-      debugPrint('   Response: ${event.responseText}');
+    debugPrint('');
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('🌐 [BG-GEO HTTP] ${event.success ? "✅ SUCCESS" : "❌ ERROR"}');
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('📤 URL: ${event.url}');
+    debugPrint('📊 Status Code: ${event.status}');
+    debugPrint('📦 Request Body:');
+    debugPrint(event.requestBody ?? '(empty)');
+    debugPrint('📥 Response:');
+    debugPrint(event.responseText ?? '(empty)');
+    debugPrint('═══════════════════════════════════════════════════');
+    debugPrint('');
+    
+    if (!event.success) {
+      // Log adicional para erros
+      debugPrint('⚠️ [BG-GEO HTTP] ATENÇÃO: Falha ao enviar ponto!');
+      debugPrint('⚠️ Possíveis causas:');
+      debugPrint('   - Sem internet (status 0 ou timeout)');
+      debugPrint('   - URL incorreta (404)');
+      debugPrint('   - Token expirado (401)');
+      debugPrint('   - Body inválido (400)');
+      debugPrint('   - Erro no servidor (500)');
     }
   }
 
