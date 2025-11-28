@@ -110,8 +110,9 @@ class BackgroundGeolocationService {
         // ============================================
         // CONFIGURAÇÕES DE REDE/API
         // ============================================
-        // ApiConfig.apiUrl já contém /api/v1, então só adicionar o restante
-        url: '${ApiConfig.apiUrl}/journeys/$journeyId/locations',
+        // IMPORTANTE: Backend espera POST /api/journeys/location-point (singular!)
+        // Body: { journey_id, latitude, longitude, velocidade, timestamp }
+        url: '${ApiConfig.baseUrl}/api/journeys/location-point',
         
         headers: {
           'Authorization': 'Bearer $token',
@@ -119,9 +120,14 @@ class BackgroundGeolocationService {
           'x-device-id': deviceId,
         },
         
-        params: {
+        // Adicionar journey_id a TODOS os pontos enviados
+        extras: {
           'journey_id': journeyId,
         },
+        
+        // Configurar formato do body para o backend
+        httpRootProperty: '.',
+        locationTemplate: '{"journey_id":"<%= extras.journey_id %>","latitude":<%= latitude %>,"longitude":<%= longitude %>,"velocidade":<%= speed %>,"timestamp":"<%= timestamp %>"}',
         
         autoSync: true, // Sincronizar automaticamente
         autoSyncThreshold: 5, // Enviar a cada 5 pontos
