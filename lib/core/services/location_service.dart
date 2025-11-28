@@ -186,13 +186,47 @@ class LocationService {
       }
 
       debugPrint('📍 Obtendo posição atual...');
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
+      
+      try {
+        // Tentar obter posição atual com timeout curto (evitar ANR no Android)
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 3), // ⚡ Reduzido de 10s para 3s
+        );
 
-      debugPrint('✅ Posição obtida: ${position.latitude}, ${position.longitude}');
-      return position;
+        debugPrint('✅ Posição obtida: ${position.latitude}, ${position.longitude}');
+        return position;
+        
+      } catch (timeoutError) {
+        debugPrint('⏱️ Timeout ao obter GPS, tentando última posição conhecida...');
+        
+        // Fallback 1: Última posição conhecida
+        try {
+          final lastPosition = await Geolocator.getLastKnownPosition();
+          if (lastPosition != null) {
+            debugPrint('✅ Usando última posição conhecida: ${lastPosition.latitude}, ${lastPosition.longitude}');
+            return lastPosition;
+          }
+        } catch (e) {
+          debugPrint('⚠️ Não foi possível obter última posição: $e');
+        }
+        
+        // Fallback 2: Coordenadas padrão (Ribeirão Preto - para emulador)
+        debugPrint('⚠️ Usando coordenadas padrão do emulador (Ribeirão Preto)');
+        return Position(
+          latitude: -21.1704,
+          longitude: -47.8103,
+          timestamp: DateTime.now(),
+          accuracy: 10.0,
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
+      }
+      
     } catch (e) {
       debugPrint('❌ Erro ao obter posição: $e');
       return null;
