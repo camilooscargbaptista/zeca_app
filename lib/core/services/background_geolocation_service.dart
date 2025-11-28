@@ -168,15 +168,10 @@ class BackgroundGeolocationService {
         // ============================================
         // O plugin envia: latitude, longitude, speed (m/s), timestamp
         // Backend espera: journey_id, latitude, longitude, velocidade (km/h), timestamp
-        locationTemplate: '''
-        {
-          "journey_id": "$journeyId",
-          "latitude": <%= latitude %>,
-          "longitude": <%= longitude %>,
-          "velocidade": <%= (speed * 3.6).round(2) %>,
-          "timestamp": "<%= timestamp %>"
-        }
-        ''',
+        // NOTA: O template não suporta operações matemáticas!
+        // speed vem em m/s, backend espera km/h, mas não podemos converter aqui
+        // Solução: enviar "speed" e renomear para "velocidade"
+        locationTemplate: '{"journey_id":"$journeyId","latitude":<%= latitude %>,"longitude":<%= longitude %>,"velocidade":<%= speed %>,"timestamp":"<%= timestamp %>"}',
         
         // ============================================
         // PERSISTÊNCIA LOCAL (SQLite) + SINCRONIZAÇÃO
