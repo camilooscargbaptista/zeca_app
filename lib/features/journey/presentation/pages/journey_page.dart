@@ -1204,11 +1204,11 @@ class _JourneyPageState extends State<JourneyPage> {
 
             // NAVIGATION OVERLAYS (durante navegação) - estilo Google Maps
             if (_isNavigationMode) ...[
-              // Card verde de navegação no topo
+              // Card verde de navegação no topo - FULL WIDTH
               Positioned(
                 top: 60, // Abaixo do header
                 left: 0,
-                right: 80, // ✅ Espaço para botões do lado direito
+                right: 0, // ✅ FULL WIDTH (era 80)
                 child: NavigationInfoCard(
                   currentStreet: _currentStreetName ?? 'Carregando...',
                   nextStreet: _routeDestinationName,
@@ -1217,33 +1217,6 @@ class _JourneyPageState extends State<JourneyPage> {
                   distanceToNextMeters: _distanceToNextMeters, // 🆕 Distância em metros
                   onNextInstruction: () {
                     // TODO: Avançar para próximo step manualmente (se necessário)
-                  },
-                ),
-              ),
-
-              // Card de velocidade no canto inferior esquerdo
-              Positioned(
-                left: 16,
-                bottom: 80, // Acima do bottom sheet
-                child: SpeedCard(
-                  currentSpeed: _currentSpeed,
-                  speedLimit: _speedLimit,
-                ),
-              ),
-              
-              // Bottom sheet com informações de chegada
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: NavigationBottomSheet(
-                  estimatedTime: _routeEstimatedTime,
-                  distanceRemaining: _routeDistanceKm,
-                  arrivalTime: _routeEstimatedTime != null 
-                      ? _calculateArrivalTime(_routeEstimatedTime!)
-                      : null,
-                  onExit: () {
-                    _showStopNavigationDialog();
                   },
                 ),
               ),
