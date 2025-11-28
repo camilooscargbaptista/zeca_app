@@ -55,18 +55,19 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
       // Tentar carregar do storage local primeiro
       final localJourney = _storageService.getActiveJourney();
       if (localJourney != null && localJourney.isActive) {
+        // Iniciar renovação automática de token durante a jornada
+        _tokenManager.startAutoRefresh();
+        
+        // ⚠️ CRÍTICO: Iniciar tracking ANTES de emitir JourneyLoaded
+        debugPrint('🔍 [JourneyBloc] Iniciando tracking ANTES de emitir JourneyLoaded (local)');
+        await _startTracking(localJourney);
+        debugPrint('✅ [JourneyBloc] Tracking iniciado, agora emitindo JourneyLoaded (local)');
+        
         emit(JourneyLoaded(
           journey: localJourney,
           tempoDecorridoSegundos: localJourney.tempoDirecaoSegundos,
           kmPercorridos: localJourney.kmPercorridos,
         ));
-        
-        // Iniciar renovação automática de token durante a jornada
-        _tokenManager.startAutoRefresh();
-        
-        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após LoadActiveJourney (local)');
-        await _startTracking(localJourney);
-        debugPrint('🔍 [JourneyBloc] _startTracking retornou após LoadActiveJourney (local)');
         return;
       }
 
@@ -77,18 +78,20 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         final journey = journeyModel.toEntity();
         await _storageService.saveJourney(journey);
         await _storageService.setActiveJourney(journey.id);
+        
+        // Iniciar renovação automática de token durante a jornada
+        _tokenManager.startAutoRefresh();
+        
+        // ⚠️ CRÍTICO: Iniciar tracking ANTES de emitir JourneyLoaded
+        debugPrint('🔍 [JourneyBloc] Iniciando tracking ANTES de emitir JourneyLoaded (backend)');
+        await _startTracking(journey);
+        debugPrint('✅ [JourneyBloc] Tracking iniciado, agora emitindo JourneyLoaded (backend)');
+        
         emit(JourneyLoaded(
           journey: journey,
           tempoDecorridoSegundos: journey.tempoDirecaoSegundos,
           kmPercorridos: journey.kmPercorridos,
         ));
-        
-        // Iniciar renovação automática de token durante a jornada
-        _tokenManager.startAutoRefresh();
-        
-        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após LoadActiveJourney (backend)');
-        await _startTracking(journey);
-        debugPrint('🔍 [JourneyBloc] _startTracking retornou após LoadActiveJourney (backend)');
       } else {
         // Se não há jornada ativa (404) ou erro, emitir estado inicial
         // 404 não é erro - é comportamento esperado quando não há jornada ativa
@@ -146,18 +149,21 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         await _storageService.setActiveJourney(journey.id);
         
         _journeyStartTime = DateTime.now();
+        
+        // Iniciar renovação automática de token durante a jornada
+        _tokenManager.startAutoRefresh();
+        
+        // ⚠️ CRÍTICO: Iniciar tracking ANTES de emitir JourneyLoaded
+        // Isso previne race condition e garante que GPS está ativo quando UI atualiza
+        debugPrint('🔍 [JourneyBloc] Iniciando tracking ANTES de emitir JourneyLoaded');
+        await _startTracking(journey);
+        debugPrint('✅ [JourneyBloc] Tracking iniciado, agora emitindo JourneyLoaded');
+        
         emit(JourneyLoaded(
           journey: journey,
           tempoDecorridoSegundos: 0,
           kmPercorridos: 0.0,
         ));
-        
-        // Iniciar renovação automática de token durante a jornada
-        _tokenManager.startAutoRefresh();
-        
-        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após StartJourney');
-        await _startTracking(journey);
-        debugPrint('🔍 [JourneyBloc] _startTracking retornou após StartJourney');
       } else {
         emit(JourneyError(response['error'] ?? 'Erro ao iniciar jornada'));
       }
