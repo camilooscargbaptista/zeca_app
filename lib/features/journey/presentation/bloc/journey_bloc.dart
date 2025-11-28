@@ -336,7 +336,30 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         emit(JourneyError(response['error'] ?? 'Erro ao alterar status de descanso'));
       }
     } catch (e) {
-      emit(JourneyError('Erro ao alterar status de descanso: $e'));
+      // 🔧 TRATAR ERRO 409 (Descanso já ativo/inativo)
+      final errorMessage = e.toString();
+      if (errorMessage.contains('409') || errorMessage.contains('Já existe um período de descanso')) {
+        debugPrint('⚠️ [Rest] Erro 409: Estado dessincronizado. Recarregando do backend...');
+        // Recarregar jornada do backend para sincronizar estado
+        try {
+          final journeyResponse = await _apiService.getActiveJourney();
+          if (journeyResponse['success'] == true && journeyResponse['data'] != null) {
+            final updatedJourney = JourneyEntity.fromJson(journeyResponse['data']);
+            // Sincronizar estado de descanso baseado no backend
+            final hasActiveRest = journeyResponse['data']['active_rest_period'] != null;
+            emit(currentState.copyWith(
+              journey: updatedJourney,
+              emDescanso: hasActiveRest,
+            ));
+            debugPrint('✅ [Rest] Estado sincronizado: emDescanso=$hasActiveRest');
+          }
+        } catch (syncError) {
+          debugPrint('❌ [Rest] Erro ao sincronizar estado: $syncError');
+          emit(const JourneyError('Estado dessincronizado. Por favor, reinicie a viagem.'));
+        }
+      } else {
+        emit(JourneyError('Erro ao alterar status de descanso: $e'));
+      }
     }
   }
 
