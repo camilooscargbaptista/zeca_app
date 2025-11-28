@@ -109,10 +109,15 @@ class BackgroundGeolocationService {
       final storageService = getIt<StorageService>();
       final deviceService = DeviceService();
       
-      final token = storageService.read<String>('access_token');
+      final token = await storageService.getAccessToken();  // ✅ Usar método correto (SecureStorage)
       final deviceId = await deviceService.getDeviceId();
       
-      debugPrint('🔑 [BG-GEO] Usando token para tracking (primeiros 20 chars): ${token?.substring(0, 20) ?? "null"}...');
+      if (token == null) {
+        debugPrint('❌ [BG-GEO] Token não encontrado no storage!');
+        throw Exception('Token não encontrado. Faça login novamente.');
+      }
+      
+      debugPrint('🔑 [BG-GEO] Usando token para tracking (primeiros 20 chars): ${token.substring(0, 20)}...');
 
       // 🔔 Registrar listener para renovação de token
       final tokenManager = getIt<TokenManagerService>();
