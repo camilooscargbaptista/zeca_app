@@ -1186,57 +1186,9 @@ class _JourneyPageState extends State<JourneyPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-
+            
             // ❌ BOTÃO "PARAR" REMOVIDO
-
-            // Botão Descanso - agora do lado direito, não sobreposto
-            Container(
-              decoration: BoxDecoration(
-                color: state.emDescanso ? AppColors.zecaBlue : Colors.orange,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    context.read<JourneyBloc>().add(
-                      ToggleRest(isStartingRest: !state.emDescanso),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          state.emDescanso ? Icons.play_arrow : Icons.pause,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          state.emDescanso ? 'Retomar' : 'Descanso',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // ❌ BOTÃO "DESCANSO" REMOVIDO (revisitar futuramente)
                 ],
               ),
             ),
