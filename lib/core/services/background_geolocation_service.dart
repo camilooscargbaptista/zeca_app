@@ -110,9 +110,9 @@ class BackgroundGeolocationService {
         // ============================================
         // CONFIGURAÇÕES DE REDE/API
         // ============================================
-        // IMPORTANTE: Backend espera POST /api/journeys/location-point (singular!)
-        // Body: { journey_id, latitude, longitude, velocidade, timestamp }
-        url: '${ApiConfig.baseUrl}/api/journeys/location-point',
+        // IMPORTANTE: Backend espera POST /api/v1/journeys/location-point
+        // ApiConfig.apiUrl já inclui /api/v1
+        url: '${ApiConfig.apiUrl}/journeys/location-point',
         
         headers: {
           'Authorization': 'Bearer $token',
