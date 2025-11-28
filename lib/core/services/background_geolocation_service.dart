@@ -299,8 +299,8 @@ class BackgroundGeolocationService {
       debugPrint('   - Velocidade: ${payload['velocidade']} km/h');
       debugPrint('   - Timestamp: ${payload['timestamp']}');
 
-      // Enviar via ApiService (que usa Dio)
-      final apiService = getIt<ApiService>();
+      // Enviar via ApiService (singleton, não usa GetIt)
+      final apiService = ApiService();
       final response = await apiService.addLocationPoint(
         journeyId: payload['journey_id'],
         latitude: payload['latitude'],
