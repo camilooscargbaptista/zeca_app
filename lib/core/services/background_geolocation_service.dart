@@ -5,6 +5,7 @@ import '../config/api_config.dart';
 import 'storage_service.dart';
 import 'device_service.dart';
 import 'token_manager_service.dart';
+import 'api_service.dart';
 import '../../core/di/injection.dart';
 
 /// Service para gerenciar tracking em background usando flutter_background_geolocation
@@ -151,52 +152,12 @@ class BackgroundGeolocationService {
         heartbeatInterval: 60, // Heartbeat a cada 60s quando parado
         
         // ============================================
-        // CONFIGURAÇÕES DE REDE/API
+        // ESTRATÉGIA DE ENVIO PARA BACKEND
         // ============================================
-        // ESTRATÉGIA: Enviar imediatamente quando tem internet,
-        // armazenar localmente quando offline, sincronizar quando volta online
-        url: '${ApiConfig.apiUrl}/journeys/location-point',
-        
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-          'x-device-id': deviceId,
-        },
-        
-        // ============================================
-        // MAPEAMENTO DE CAMPOS (locationTemplate)
-        // ============================================
-        // O plugin envia: latitude, longitude, speed (m/s), timestamp
-        // Backend espera: journey_id, latitude, longitude, velocidade (km/h), timestamp
-        // NOTA: O template não suporta operações matemáticas!
-        // speed vem em m/s, backend espera km/h, mas não podemos converter aqui
-        // Solução: enviar "speed" e renomear para "velocidade"
-        locationTemplate: '{"journey_id":"$journeyId","latitude":<%= latitude %>,"longitude":<%= longitude %>,"velocidade":<%= speed %>,"timestamp":"<%= timestamp %>"}',
-        
-        // ============================================
-        // PERSISTÊNCIA LOCAL (SQLite) + SINCRONIZAÇÃO
-        // ============================================
-        // COMO FUNCIONA:
-        // 1. Todos os pontos são salvos em SQLite local PRIMEIRO
-        // 2. Plugin tenta enviar via HTTP automaticamente
-        // 3. Se falhar (sem internet), mantém no SQLite e retry depois
-        // 4. Ao finalizar jornada, forçamos sync manual de pontos pendentes
-        
-        autoSync: true,              // ✅ Sincroniza automaticamente quando tem internet
-        autoSyncThreshold: 0,        // ✅ Envia IMEDIATAMENTE (não espera acumular)
-        batchSync: false,            // ✅ Envia 1 ponto por vez (endpoint espera isso)
-        maxBatchSize: 1,             // 1 ponto por request
-        
-        // SQLite Local (fallback para offline)
-        maxDaysToPersist: 7,         // Manter até 7 dias no banco local
-        maxRecordsToPersist: 5000,   // Aumentado para 5000 pontos (jornadas longas)
-        
-        // HTTP Retry (quando falha o envio)
-        locationsOrderDirection: 'ASC',  // Enviar do mais antigo para o mais novo
-        httpTimeout: 60000,              // Timeout de 60s por request
-        
-        // Mapear campos do plugin para o formato do backend
-        httpRootProperty: '.',
+        // ❌ NÃO usar 'url' do plugin (envia campos extras que backend rejeita)
+        // ✅ Plugin SÓ captura GPS
+        // ✅ App envia manualmente via Dio (listener _onLocation)
+        // ✅ Controle total sobre formato dos dados
         
         // ============================================
         // CONFIGURAÇÕES DE LOG (DEBUG)
@@ -307,24 +268,66 @@ class BackgroundGeolocationService {
     }
   }
 
-  /// Sincronizar manualmente pontos pendentes
-  /// Envia todos os pontos que estão no SQLite local mas ainda não foram enviados
-  Future<void> syncPendingLocations() async {
+  /// Transformar dados do plugin para formato da API
+  /// Converte speed (m/s) para velocidade (km/h) e adiciona journey_id
+  Map<String, dynamic> _transformLocationToApi(bg.Location location) {
+    return {
+      'journey_id': _currentJourneyId!,
+      'latitude': location.coords.latitude,
+      'longitude': location.coords.longitude,
+      'velocidade': (location.coords.speed ?? 0) * 3.6,  // m/s → km/h
+      'timestamp': location.timestamp,
+    };
+  }
+  
+  /// Enviar location point para API via Dio (HTTP manual)
+  /// Esta é a solução recomendada pelo guia do backend
+  Future<void> _sendLocationPoint(bg.Location location) async {
     try {
-      debugPrint('🔄 [BG-GEO] Sincronizando pontos pendentes...');
+      // Validar journey_id
+      if (_currentJourneyId == null) {
+        debugPrint('⚠️ [BG-GEO] Journey ID não definido, ignorando ponto');
+        return;
+      }
+
+      // Transformar dados do plugin para formato da API
+      final payload = _transformLocationToApi(location);
       
-      // Forçar sincronização de todos os pontos pendentes
-      // O plugin gerencia o SQLite internamente
-      await bg.BackgroundGeolocation.sync();
-      debugPrint('✅ [BG-GEO] Sincronização solicitada ao plugin');
-      debugPrint('📊 [BG-GEO] Aguarde logs HTTP para confirmar envios');
-      
-      // Aguardar um pouco para os pontos serem enviados
-      await Future.delayed(const Duration(seconds: 2));
+      debugPrint('📤 [BG-GEO] Enviando ponto via Dio:');
+      debugPrint('   - Journey: ${payload['journey_id']}');
+      debugPrint('   - Lat/Lng: ${payload['latitude']}, ${payload['longitude']}');
+      debugPrint('   - Velocidade: ${payload['velocidade']} km/h');
+      debugPrint('   - Timestamp: ${payload['timestamp']}');
+
+      // Enviar via ApiService (que usa Dio)
+      final apiService = getIt<ApiService>();
+      final response = await apiService.addLocationPoint(
+        journeyId: payload['journey_id'],
+        latitude: payload['latitude'],
+        longitude: payload['longitude'],
+        velocidade: payload['velocidade'],
+        timestamp: DateTime.parse(payload['timestamp']),
+      );
+
+      if (response['success'] == true) {
+        debugPrint('✅ [BG-GEO] Ponto enviado com SUCESSO! Status: 201');
+      } else {
+        debugPrint('⚠️ [BG-GEO] Falha ao enviar ponto: ${response['error']}');
+      }
       
     } catch (e) {
-      debugPrint('❌ [BG-GEO] Erro ao sincronizar: $e');
+      debugPrint('❌ [BG-GEO] Erro ao enviar ponto: $e');
+      // NÃO fazer throw - continuar tracking mesmo se falhar
+      // Os pontos ficam salvos localmente e podemos retentar depois
     }
+  }
+  
+  /// Sincronizar manualmente pontos pendentes
+  /// NOTA: Como agora usamos HTTP manual, não há pontos pendentes no plugin
+  /// Deixando método para compatibilidade, mas não faz nada
+  Future<void> syncPendingLocations() async {
+    debugPrint('ℹ️ [BG-GEO] syncPendingLocations() não necessário com HTTP manual');
+    debugPrint('   Pontos são enviados imediatamente via Dio');
   }
   
   /// Obter quantidade de pontos pendentes no banco local
@@ -400,12 +403,18 @@ class BackgroundGeolocationService {
     debugPrint('   - Precisão: ${location.coords.accuracy}m');
     debugPrint('   - Em movimento: ${location.isMoving}');
     debugPrint('   - Odômetro: ${location.odometer}m');
+    
+    // ✨ NOVO: Enviar ponto para backend via HTTP manual (Dio)
+    _sendLocationPoint(location);
   }
 
   void _onMotionChange(bg.Location location) {
     debugPrint('🚗 [BG-GEO] Mudança de movimento:');
     debugPrint('   - Em movimento: ${location.isMoving}');
     debugPrint('   - Velocidade: ${(location.coords.speed * 3.6).toStringAsFixed(1)} km/h');
+    
+    // ✨ NOVO: Enviar ponto para backend via HTTP manual (Dio)
+    _sendLocationPoint(location);
   }
 
   void _onActivityChange(bg.ActivityChangeEvent event) {
