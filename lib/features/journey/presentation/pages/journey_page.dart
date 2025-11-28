@@ -1083,14 +1083,16 @@ class _JourneyPageState extends State<JourneyPage> {
               ),
 
             // Cards flutuantes com informações (canto superior direito)
-            Positioned(
-              top: 110, // Ajustado para ficar abaixo do FAB
-              right: 12,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Card de KM percorridos
-                  Container(
+            // 🚫 OCULTAR durante navegação para não sobrepor card verde
+            if (!_isNavigationMode)
+              Positioned(
+                top: 110, // Ajustado para ficar abaixo do FAB
+                right: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Card de KM percorridos
+                    Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -1222,10 +1224,10 @@ class _JourneyPageState extends State<JourneyPage> {
               ),
             ],
 
-            // Botões de ação - lado direito
+            // Botões de ação - lado direito (mais para baixo)
             Positioned(
               right: 16,
-              bottom: 90,
+              bottom: 30, // ✅ Movido mais para baixo (era 90)
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1270,67 +1272,7 @@ class _JourneyPageState extends State<JourneyPage> {
             ),
             const SizedBox(height: 12),
 
-            // Botão Navegação (estilo Waze)
-            Container(
-              width: 160,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: _isNavigationMode 
-                    ? [Colors.green.shade400, Colors.green.shade700]
-                    : [Colors.blue.shade400, Colors.blue.shade700],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isNavigationMode ? Colors.green : Colors.blue).withOpacity(0.5),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    if (_isNavigationMode) {
-                      // Parar navegação
-                      _showStopNavigationDialog();
-                    } else {
-                      // Iniciar navegação
-                      setState(() {
-                        _isNavigationMode = true;
-                      });
-                      _startNavigation();
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _isNavigationMode ? Icons.stop : Icons.navigation,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _isNavigationMode ? 'Parar' : 'Navegar',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+            // ❌ BOTÃO "PARAR" REMOVIDO
 
             // Botão Descanso - agora do lado direito, não sobreposto
             Container(
