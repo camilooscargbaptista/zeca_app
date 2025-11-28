@@ -110,7 +110,8 @@ class BackgroundGeolocationService {
         // ============================================
         // CONFIGURAÇÕES DE REDE/API
         // ============================================
-        url: '${ApiConfig.apiUrl}/api/v1/journeys/$journeyId/locations',
+        // ApiConfig.apiUrl já contém /api/v1, então só adicionar o restante
+        url: '${ApiConfig.apiUrl}/journeys/$journeyId/locations',
         
         headers: {
           'Authorization': 'Bearer $token',
