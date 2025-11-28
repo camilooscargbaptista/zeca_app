@@ -34,7 +34,7 @@ coordinates=(
 for i in "${!coordinates[@]}"; do
   coord="${coordinates[$i]}"
   echo "📍 Ponto $((i+1))/${#coordinates[@]}: $coord"
-  xcrun simctl location "$DEVICE_ID" "$coord"
+  xcrun simctl location "$DEVICE_ID" set "$coord"
   
   # Aguardar 15 segundos antes do próximo ponto (exceto no último)
   if [ $i -lt $((${#coordinates[@]}-1)) ]; then
