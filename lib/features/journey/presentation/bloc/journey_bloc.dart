@@ -64,7 +64,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         // Iniciar renovação automática de token durante a jornada
         _tokenManager.startAutoRefresh();
         
-        _startTracking(localJourney);
+        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após LoadActiveJourney (local)');
+        await _startTracking(localJourney);
+        debugPrint('🔍 [JourneyBloc] _startTracking retornou após LoadActiveJourney (local)');
         return;
       }
 
@@ -84,7 +86,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         // Iniciar renovação automática de token durante a jornada
         _tokenManager.startAutoRefresh();
         
-        _startTracking(journey);
+        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após LoadActiveJourney (backend)');
+        await _startTracking(journey);
+        debugPrint('🔍 [JourneyBloc] _startTracking retornou após LoadActiveJourney (backend)');
       } else {
         // Se não há jornada ativa (404) ou erro, emitir estado inicial
         // 404 não é erro - é comportamento esperado quando não há jornada ativa
@@ -151,7 +155,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
         // Iniciar renovação automática de token durante a jornada
         _tokenManager.startAutoRefresh();
         
-        _startTracking(journey);
+        debugPrint('🔍 [JourneyBloc] Prestes a chamar _startTracking após StartJourney');
+        await _startTracking(journey);
+        debugPrint('🔍 [JourneyBloc] _startTracking retornou após StartJourney');
       } else {
         emit(JourneyError(response['error'] ?? 'Erro ao iniciar jornada'));
       }
@@ -478,6 +484,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
   // ============================================================
 
   Future<void> _startTracking(JourneyEntity journey) async {
+    debugPrint('🔍 [Tracking] _startTracking CHAMADO para journey: ${journey.id}');
+    debugPrint('🔍 [Tracking] _isTracking atual: $_isTracking');
+    
     if (_isTracking) {
       debugPrint('⚠️ [Tracking] Já está ativo');
       return;
