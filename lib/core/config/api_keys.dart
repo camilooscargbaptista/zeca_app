@@ -37,10 +37,11 @@ class ApiKeys {
         // Usar import dinâmico via reflection ou leitura direta
         // Por enquanto, vamos ler diretamente do arquivo
         final content = localFile.readAsStringSync();
+        // Regex para encontrar googleMapsApiKey = 'valor' ou googleMapsApiKey = "valor"
         final match = RegExp(r"googleMapsApiKey\s*=\s*['\"]([^'\"]+)['\"]").firstMatch(content);
-        if (match != null && match.group(1) != null) {
-          final key = match.group(1)!;
-          if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
+        if (match != null) {
+          final key = match.group(1);
+          if (key != null && key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
             _cachedKey = key;
             debugPrint('✅ [ApiKeys] API Key carregada do arquivo local');
             return _cachedKey!;
