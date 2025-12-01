@@ -78,6 +78,10 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false   // <-- REQUIRED for flutter_background_geolocation
+            // Desabilitar strip de símbolos de debug (resolve erro comum)
+            ndk {
+                debugSymbolLevel 'NONE'
+            }
         }
     }
     
@@ -86,12 +90,6 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
-    }
-    
-    // Desabilitar strip de símbolos de debug (resolve erro comum)
-    androidResources {
-        noCompress 'tflite'
-        noCompress 'lite'
     }
 }
 
