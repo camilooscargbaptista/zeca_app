@@ -47,40 +47,39 @@ jobs:
           
       - name: 🔨 Gerar código
         run: |
-          # Tentar gerar código. Se falhar por causa do analyzer antigo, 
-          # verificar se os arquivos gerados já existem (commitados)
-          set +e  # Não falhar em caso de erro
-          flutter pub run build_runner build --delete-conflicting-outputs
-          BUILD_RUNNER_EXIT=$?
-          set -e  # Voltar a falhar em caso de erro
+          # Verificar se arquivos gerados já existem (commitados)
+          CRITICAL_FILES=(
+            "lib/core/di/injection.config.dart"
+            "lib/features/home/data/models/vehicle_model.g.dart"
+            "lib/features/home/data/models/company_model.g.dart"
+          )
           
-          if [ $BUILD_RUNNER_EXIT -ne 0 ]; then
-            echo "⚠️ Build runner falhou (exit code: $BUILD_RUNNER_EXIT)"
-            echo "🔍 Verificando se arquivos gerados já existem..."
-            
-            # Verificar arquivos críticos gerados
-            CRITICAL_FILES=(
-              "lib/core/di/injection.config.dart"
-              "lib/features/home/data/models/vehicle_model.g.dart"
-              "lib/features/home/data/models/company_model.g.dart"
-            )
-            
-            ALL_EXIST=true
-            for file in "${CRITICAL_FILES[@]}"; do
-              if [ ! -f "$file" ]; then
-                echo "❌ Arquivo crítico não encontrado: $file"
-                ALL_EXIST=false
-              fi
-            done
-            
-            if [ "$ALL_EXIST" = true ]; then
-              echo "✅ Arquivos gerados encontrados, continuando com build..."
-            else
-              echo "❌ Arquivos gerados não encontrados! Build precisa do código gerado."
-              exit 1
+          ALL_EXIST=true
+          for file in "${CRITICAL_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "⚠️ Arquivo crítico não encontrado: $file"
+              ALL_EXIST=false
             fi
+          done
+          
+          if [ "$ALL_EXIST" = true ]; then
+            echo "✅ Arquivos gerados já existem (commitados), pulando build_runner..."
+            echo "ℹ️  Nota: build_runner pode falhar por causa do analyzer antigo (6.4.1 vs Dart 3.6.0)"
+            echo "ℹ️  Mas como os arquivos já existem, o build pode continuar normalmente."
           else
-            echo "✅ Build runner completou com sucesso!"
+            echo "⚠️ Alguns arquivos gerados não foram encontrados, tentando gerar..."
+            set +e  # Não falhar em caso de erro
+            flutter pub run build_runner build --delete-conflicting-outputs
+            BUILD_RUNNER_EXIT=$?
+            set -e  # Voltar a falhar em caso de erro
+            
+            if [ $BUILD_RUNNER_EXIT -ne 0 ]; then
+              echo "❌ Build runner falhou (exit code: $BUILD_RUNNER_EXIT)"
+              echo "❌ Arquivos gerados não encontrados e não foi possível gerá-los!"
+              exit 1
+            else
+              echo "✅ Build runner completou com sucesso!"
+            fi
           fi
 
       - name: 🔍 Verificar versão
