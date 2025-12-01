@@ -25,8 +25,11 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
+    debugPrint('🎬 [SplashPage] initState chamado');
     _initializeAnimations();
+    debugPrint('🎬 [SplashPage] Animações inicializadas');
     _startAnimations();
+    debugPrint('🎬 [SplashPage] Animações iniciadas');
   }
 
   void _initializeAnimations() {
@@ -160,6 +163,7 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🎨 [SplashPage] build chamado');
     return Scaffold(
       backgroundColor: AppColors.zecaWhite,
       body: AnimatedBuilder(
