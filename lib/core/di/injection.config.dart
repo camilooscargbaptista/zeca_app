@@ -11,6 +11,7 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:zeca_app/core/network/dio_client.dart' as _i241;
+import 'package:zeca_app/core/services/geocoding_service.dart' as _i579;
 import 'package:zeca_app/core/services/storage_service.dart' as _i852;
 import 'package:zeca_app/features/auth/data/datasources/auth_local_datasource.dart'
     as _i414;
@@ -106,6 +107,7 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
+    gh.factory<_i579.GeocodingService>(() => _i579.GeocodingService());
     gh.factory<_i23.RefuelingFormBloc>(() => _i23.RefuelingFormBloc());
     gh.factory<_i921.VehicleRemoteDataSource>(
         () => _i921.VehicleRemoteDataSourceImpl(gh<_i241.DioClient>()));

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-// Import do arquivo local (não commitado)
-import 'api_keys.local.dart' as local;
+// Import do arquivo local (não commitado) - opcional
+// Se o arquivo não existir, será ignorado e usará apenas variáveis de ambiente
 
 /// Configuração de chaves de API
 /// 
@@ -30,15 +30,25 @@ class ApiKeys {
       return _cachedKey!;
     }
 
-    // Tentar arquivo local (não commitado)
+    // Tentar arquivo local (não commitado) - apenas se existir
     try {
-      final key = local.LocalApiKeys.googleMapsApiKey;
-      if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
-        _cachedKey = key;
-        debugPrint('✅ [ApiKeys] API Key carregada do arquivo local');
-        return _cachedKey!;
+      final localFile = File('lib/core/config/api_keys.local.dart');
+      if (localFile.existsSync()) {
+        // Usar import dinâmico via reflection ou leitura direta
+        // Por enquanto, vamos ler diretamente do arquivo
+        final content = localFile.readAsStringSync();
+        final match = RegExp(r"googleMapsApiKey\s*=\s*['\"]([^'\"]+)['\"]").firstMatch(content);
+        if (match != null && match.group(1) != null) {
+          final key = match.group(1)!;
+          if (key.isNotEmpty && key != 'GOOGLE_MAPS_API_KEY_PLACEHOLDER') {
+            _cachedKey = key;
+            debugPrint('✅ [ApiKeys] API Key carregada do arquivo local');
+            return _cachedKey!;
+          }
+        }
       }
     } catch (e) {
+      // Arquivo local não existe ou não foi configurado - isso é normal no CI/CD
       debugPrint('⚠️ [ApiKeys] Arquivo local não encontrado ou inválido: $e');
     }
     
