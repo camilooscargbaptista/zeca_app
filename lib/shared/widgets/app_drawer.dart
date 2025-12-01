@@ -82,30 +82,32 @@ class AppDrawer extends StatelessWidget {
                   }
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.directions_car, color: AppColors.zecaBlue),
-                title: const Text('Registrar Jornada'),
-                selected: currentRoute == '/journey',
-                selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
-                onTap: () {
-                  Navigator.of(context).pop(); // Fechar o drawer
-                  if (currentRoute != '/journey') {
-                    context.go('/journey');
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.checklist, color: AppColors.zecaBlue),
-                title: const Text('Checklist'),
-                selected: currentRoute == '/checklist',
-                selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
-                onTap: () {
-                  Navigator.of(context).pop(); // Fechar o drawer
-                  if (currentRoute != '/checklist') {
-                    context.go('/checklist');
-                  }
-                },
-              ),
+              // Ocultado temporariamente - Registrar Jornada (maps)
+              // ListTile(
+              //   leading: const Icon(Icons.directions_car, color: AppColors.zecaBlue),
+              //   title: const Text('Registrar Jornada'),
+              //   selected: currentRoute == '/journey',
+              //   selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
+              //   onTap: () {
+              //     Navigator.of(context).pop(); // Fechar o drawer
+              //     if (currentRoute != '/journey') {
+              //       context.go('/journey');
+              //     }
+              //   },
+              // ),
+              // Ocultado temporariamente - Checklist
+              // ListTile(
+              //   leading: const Icon(Icons.checklist, color: AppColors.zecaBlue),
+              //   title: const Text('Checklist'),
+              //   selected: currentRoute == '/checklist',
+              //   selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
+              //   onTap: () {
+              //     Navigator.of(context).pop(); // Fechar o drawer
+              //     if (currentRoute != '/checklist') {
+              //       context.go('/checklist');
+              //     }
+              //   },
+              // ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
