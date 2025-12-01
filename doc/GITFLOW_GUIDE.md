@@ -1,5 +1,8 @@
 # 🌿 Guia Git Flow - ZECA App
 
+> **⚠️ IMPORTANTE:** Este guia complementa as [REGRAS DE OURO DO DESENVOLVIMENTO](./REGRAS_DE_OURO_DESENVOLVIMENTO.md).  
+> **Leia primeiro:** [REGRAS_DE_OURO_DESENVOLVIMENTO.md](./REGRAS_DE_OURO_DESENVOLVIMENTO.md)
+
 ## 📋 **Status Atual**
 
 ✅ **Git Flow configurado e ativo**
@@ -12,6 +15,8 @@
 ## 🚨 **Regra de Ouro: NUNCA commitar diretamente na `main`**
 
 A branch `main` deve conter **apenas código estável e testado** que está em produção.
+
+**Esta é uma REGRA DE OURO e deve ser seguida SEMPRE. Veja:** [REGRAS_DE_OURO_DESENVOLVIMENTO.md](./REGRAS_DE_OURO_DESENVOLVIMENTO.md)
 
 ---
 

@@ -121,6 +121,11 @@
 - [ROADMAP_FUNCIONALIDADES.md](./ROADMAP_FUNCIONALIDADES.md) - Roadmap de funcionalidades
 - [DEVELOPMENT_CHECKLIST.md](./DEVELOPMENT_CHECKLIST.md) - Checklist de desenvolvimento
 
+### 🏆 Regras & Padrões de Desenvolvimento
+
+- [REGRAS_DE_OURO_DESENVOLVIMENTO.md](./REGRAS_DE_OURO_DESENVOLVIMENTO.md) - **🏆 REGRAS DE OURO - OBRIGATÓRIO LER PRIMEIRO**
+- [GITFLOW_GUIDE.md](./GITFLOW_GUIDE.md) - Guia completo de Git Flow
+
 ---
 
 ### 📖 Documentação Geral
@@ -196,10 +201,12 @@
 ## 📌 Documentos Mais Importantes
 
 ### Para Desenvolvedores Novos
-1. [README.md](./README.md) - Comece aqui
-2. [DEVELOPMENT_CHECKLIST.md](./DEVELOPMENT_CHECKLIST.md) - Checklist de desenvolvimento
-3. [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Documentação da API
-4. [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Como testar
+1. [REGRAS_DE_OURO_DESENVOLVIMENTO.md](./REGRAS_DE_OURO_DESENVOLVIMENTO.md) - **🏆 LEIA PRIMEIRO - Regras de Ouro**
+2. [README.md](./README.md) - Comece aqui
+3. [GITFLOW_GUIDE.md](./GITFLOW_GUIDE.md) - Guia de Git Flow
+4. [DEVELOPMENT_CHECKLIST.md](./DEVELOPMENT_CHECKLIST.md) - Checklist de desenvolvimento
+5. [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Documentação da API
+6. [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Como testar
 
 ### Para Deploy
 1. [GUIA_CONFIGURACAO_PASSO_A_PASSO.md](./GUIA_CONFIGURACAO_PASSO_A_PASSO.md) - **🚀 COMECE AQUI - Configuração passo a passo**
