@@ -45,7 +45,11 @@ jobs:
       - name: 📦 Instalar dependências
         run: |
           flutter pub get
-          flutter pub run build_runner build --delete-conflicting-outputs || true
+          
+      - name: 🔨 Gerar código (ignorar erros do analyzer antigo)
+        continue-on-error: true
+        run: |
+          flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: 🔍 Verificar versão
         id: version
@@ -105,7 +109,11 @@ jobs:
       - name: 📦 Instalar dependências
         run: |
           flutter pub get
-          flutter pub run build_runner build --delete-conflicting-outputs || true
+          
+      - name: 🔨 Gerar código (ignorar erros do analyzer antigo)
+        continue-on-error: true
+        run: |
+          flutter pub run build_runner build --delete-conflicting-outputs
           cd ios && pod install && cd ..
 
       - name: 🔍 Verificar versão
