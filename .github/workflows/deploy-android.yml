@@ -45,10 +45,20 @@ jobs:
         run: |
           flutter pub get
           
-      - name: 🔨 Gerar código (ignorar erros do analyzer antigo)
-        continue-on-error: true
+      - name: 🔨 Gerar código
         run: |
-          flutter pub run build_runner build --delete-conflicting-outputs
+          # Tentar gerar código. Se falhar por causa do analyzer antigo, 
+          # verificar se os arquivos gerados já existem (commitados)
+          if ! flutter pub run build_runner build --delete-conflicting-outputs; then
+            echo "⚠️ Build runner falhou (provavelmente por causa do analyzer antigo)"
+            echo "🔍 Verificando se arquivos gerados já existem..."
+            if [ -f "lib/core/di/injection.config.dart" ]; then
+              echo "✅ Arquivos gerados encontrados, continuando..."
+            else
+              echo "❌ Arquivos gerados não encontrados! Build precisa do código gerado."
+              exit 1
+            fi
+          fi
 
       - name: 🔍 Verificar versão
         id: version
