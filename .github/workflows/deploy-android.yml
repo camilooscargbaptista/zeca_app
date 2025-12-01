@@ -49,15 +49,38 @@ jobs:
         run: |
           # Tentar gerar código. Se falhar por causa do analyzer antigo, 
           # verificar se os arquivos gerados já existem (commitados)
-          if ! flutter pub run build_runner build --delete-conflicting-outputs; then
-            echo "⚠️ Build runner falhou (provavelmente por causa do analyzer antigo)"
+          set +e  # Não falhar em caso de erro
+          flutter pub run build_runner build --delete-conflicting-outputs
+          BUILD_RUNNER_EXIT=$?
+          set -e  # Voltar a falhar em caso de erro
+          
+          if [ $BUILD_RUNNER_EXIT -ne 0 ]; then
+            echo "⚠️ Build runner falhou (exit code: $BUILD_RUNNER_EXIT)"
             echo "🔍 Verificando se arquivos gerados já existem..."
-            if [ -f "lib/core/di/injection.config.dart" ]; then
-              echo "✅ Arquivos gerados encontrados, continuando..."
+            
+            # Verificar arquivos críticos gerados
+            CRITICAL_FILES=(
+              "lib/core/di/injection.config.dart"
+              "lib/features/home/data/models/vehicle_model.g.dart"
+              "lib/features/home/data/models/company_model.g.dart"
+            )
+            
+            ALL_EXIST=true
+            for file in "${CRITICAL_FILES[@]}"; do
+              if [ ! -f "$file" ]; then
+                echo "❌ Arquivo crítico não encontrado: $file"
+                ALL_EXIST=false
+              fi
+            done
+            
+            if [ "$ALL_EXIST" = true ]; then
+              echo "✅ Arquivos gerados encontrados, continuando com build..."
             else
               echo "❌ Arquivos gerados não encontrados! Build precisa do código gerado."
               exit 1
             fi
+          else
+            echo "✅ Build runner completou com sucesso!"
           fi
 
       - name: 🔍 Verificar versão
