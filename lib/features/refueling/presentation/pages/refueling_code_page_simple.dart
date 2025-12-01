@@ -808,6 +808,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
         }
         
         // Verificar status e tomar ação apropriada
+        // ACTIVE: não permitir finalização (posto ainda não validou)
         if (codeStatus == 'ACTIVE') {
           setState(() {
             _isUploading = false;
@@ -821,19 +822,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           return;
         }
         
-        if (codeStatus == 'USED') {
-          setState(() {
-            _isUploading = false;
-          });
-          
-          ErrorDialog.show(
-            context,
-            title: 'Código Já Utilizado',
-            message: 'Este código já foi utilizado para registrar um abastecimento.\n\nPor favor, gere um novo código para continuar.',
-          );
-          return;
-        }
-        
+        // EXPIRED: não permitir finalização
         if (codeStatus == 'EXPIRED') {
           setState(() {
             _isUploading = false;
@@ -847,8 +836,10 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           return;
         }
         
-        // Se status não for VALIDADO, rejeitar
-        if (codeStatus != 'VALIDADO') {
+        // Permitir apenas VALIDADO ou USED para finalização
+        // VALIDADO: posto validou, motorista pode finalizar
+        // USED: posto já registrou, motorista pode finalizar
+        if (codeStatus != 'VALIDADO' && codeStatus != 'USED') {
           setState(() {
             _isUploading = false;
           });
@@ -856,13 +847,13 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           ErrorDialog.show(
             context,
             title: 'Código Inválido',
-            message: message ?? 'Status do código inválido para finalização: $codeStatus',
+            message: message ?? 'Status do código inválido para finalização: $codeStatus\n\nO código deve estar VALIDADO ou USED para ser finalizado.',
           );
           return;
         }
         
-        // Se chegou aqui, status é VALIDADO - continuar com finalização
-        debugPrint('✅ Código validado, prosseguindo com finalização...');
+        // Se chegou aqui, status é VALIDADO ou USED - continuar com finalização
+        debugPrint('✅ Código validado (status: $codeStatus), prosseguindo com finalização...');
       } else {
         // Erro ao verificar status
         setState(() {
