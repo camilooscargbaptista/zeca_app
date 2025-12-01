@@ -233,12 +233,7 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
                 // Link Esqueci minha senha
                 TextButton(
                   onPressed: () {
-                    // TODO: Implementar recuperação de senha
-                    ErrorDialog.show(
-                      context,
-                      title: 'Em Desenvolvimento',
-                      message: 'Funcionalidade em desenvolvimento',
-                    );
+                    _showForgotPasswordDialog();
                   },
                   child: const Text('Esqueci minha senha'),
                 ),
@@ -248,6 +243,36 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Mostrar modal de esqueci a senha
+  void _showForgotPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Esqueci minha senha'),
+            ],
+          ),
+          content: const Text(
+            'Entre em contato com o gestor da frota, para atualizar sua senha.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 
