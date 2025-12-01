@@ -131,6 +131,8 @@ jobs:
           flutter clean
           flutter build appbundle --release
           echo "✅ AAB gerado com sucesso"
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY || 'GOOGLE_MAPS_API_KEY_PLACEHOLDER' }}
 
       - name: 📊 Verificar AAB gerado
         run: |
