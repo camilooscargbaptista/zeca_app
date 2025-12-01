@@ -1,0 +1,161 @@
+name: 🚀 Deploy Completo - Android + iOS
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Ex: v1.0.3, v2.1.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex: 1.0.3)'
+        required: true
+      build_number:
+        description: 'Build number (ex: 65)'
+        required: true
+      android_track:
+        description: 'Track Android'
+        required: false
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      skip_ios_upload:
+        description: 'Pular upload iOS'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  deploy-android:
+    name: 📱 Deploy Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: 📦 Instalar dependências
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: 🔍 Verificar versão
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            BUILD_NUMBER="${{ github.event.inputs.build_number }}"
+          else
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            BUILD_NUMBER=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f2)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: 📝 Atualizar versão
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.version }}+${{ steps.version.outputs.build_number }}/" pubspec.yaml
+
+      - name: 🔐 Configurar assinatura Android
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/zeca-release-key.jks
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=zeca-release-key.jks
+          EOF
+
+      - name: 🏗️ Build AAB
+        run: |
+          flutter clean
+          flutter build appbundle --release
+
+      - name: 📤 Upload para Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.zeca.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.android_track || 'internal' }}
+          status: completed
+
+  deploy-ios:
+    name: 🍎 Deploy iOS
+    runs-on: macos-latest
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: 📦 Instalar dependências
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+          cd ios && pod install && cd ..
+
+      - name: 🔍 Verificar versão
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            BUILD_NUMBER="${{ github.event.inputs.build_number }}"
+          else
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            BUILD_NUMBER=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f2)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: 📝 Atualizar versão
+        run: |
+          sed -i '' "s/^version:.*/version: ${{ steps.version.outputs.version }}+${{ steps.version.outputs.build_number }}/" pubspec.yaml
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ steps.version.outputs.build_number }}" ios/Runner/Info.plist
+
+      - name: 🔐 Importar certificados
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+
+      - name: 🏗️ Build IPA
+        run: |
+          flutter clean
+          flutter build ipa --release
+
+      - name: 📤 Upload para App Store
+        if: github.event.inputs.skip_ios_upload != 'true'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/ipa/*.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+  notify:
+    name: 📧 Notificação Final
+    needs: [deploy-android, deploy-ios]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 📊 Resumo
+        run: |
+          echo "## 🚀 Deploy Concluído" >> $GITHUB_STEP_SUMMARY
+          echo "### Android: ${{ needs.deploy-android.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "### iOS: ${{ needs.deploy-ios.result }}" >> $GITHUB_STEP_SUMMARY
+

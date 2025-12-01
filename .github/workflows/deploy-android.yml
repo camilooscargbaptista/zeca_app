@@ -1,0 +1,164 @@
+name: 🚀 Deploy Android - Google Play Store
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Ex: v1.0.3, v2.1.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex: 1.0.3)'
+        required: true
+      build_number:
+        description: 'Build number (ex: 65)'
+        required: true
+      track:
+        description: 'Track de publicação'
+        required: false
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  deploy-android:
+    name: 📱 Build e Deploy Android
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: 📦 Instalar dependências
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: 🔍 Verificar versão
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            BUILD_NUMBER="${{ github.event.inputs.build_number }}"
+          else
+            # Extrair versão da tag (ex: v1.0.3 -> 1.0.3)
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            # Ler build number do pubspec.yaml
+            BUILD_NUMBER=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f2)
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "📱 Versão: $VERSION+$BUILD_NUMBER"
+
+      - name: 📝 Atualizar versão no pubspec.yaml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BUILD_NUMBER="${{ steps.version.outputs.build_number }}"
+          sed -i "s/^version:.*/version: $VERSION+$BUILD_NUMBER/" pubspec.yaml
+          echo "✅ Versão atualizada: $VERSION+$BUILD_NUMBER"
+
+      - name: 🔐 Configurar assinatura Android
+        run: |
+          # Criar diretório para keystore
+          mkdir -p android/app
+          
+          # Decodificar keystore do secret
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/zeca-release-key.jks
+          
+          # Criar key.properties na raiz do android (onde build.gradle espera)
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=app/zeca-release-key.jks
+          EOF
+          
+          echo "✅ Assinatura configurada"
+          echo "📁 Keystore: android/app/zeca-release-key.jks"
+          echo "📁 Key properties: android/key.properties"
+
+      - name: 🏗️ Build App Bundle (AAB)
+        run: |
+          flutter clean
+          flutter build appbundle --release
+          echo "✅ AAB gerado com sucesso"
+
+      - name: 📊 Verificar AAB gerado
+        run: |
+          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+          if [ -f "$AAB_PATH" ]; then
+            SIZE=$(du -h "$AAB_PATH" | cut -f1)
+            echo "✅ AAB gerado: $AAB_PATH ($SIZE)"
+            ls -lh "$AAB_PATH"
+          else
+            echo "❌ AAB não encontrado!"
+            exit 1
+          fi
+
+      - name: 📤 Upload para Google Play Store
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.zeca.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.track || 'internal' }}
+          status: completed
+          inAppUpdatePriority: 2
+          whatsNewDirectory: fastlane/metadata/android/pt-BR/changelogs
+          mappingFile: build/app/outputs/mapping/release/mapping.txt
+
+      - name: 📝 Criar Release no GitHub
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/app/outputs/bundle/release/app-release.aab
+          body: |
+            ## 🚀 Release Android ${{ steps.version.outputs.version }}
+            
+            **Build Number:** ${{ steps.version.outputs.build_number }}
+            **Track:** ${{ github.event.inputs.track || 'internal' }}
+            
+            ### 📦 Arquivos
+            - App Bundle (AAB) anexado
+            
+            ### ✅ Status
+            - ✅ Build concluído
+            - ✅ Upload para Google Play Store concluído
+            - ✅ Enviado para track: ${{ github.event.inputs.track || 'internal' }}
+            
+            **Próximos passos:**
+            1. Aguardar processamento do Google Play (10-30 minutos)
+            2. Verificar status na Play Console
+            3. Se necessário, promover para produção
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📧 Notificação de sucesso
+        if: success()
+        run: |
+          echo "✅ Deploy Android concluído com sucesso!"
+          echo "📱 Versão: ${{ steps.version.outputs.version }}+${{ steps.version.outputs.build_number }}"
+          echo "📦 Track: ${{ github.event.inputs.track || 'internal' }}"
+          echo "🔗 Play Console: https://play.google.com/console/u/0/developers"
+
+      - name: ❌ Notificação de erro
+        if: failure()
+        run: |
+          echo "❌ Deploy Android falhou!"
+          echo "Verifique os logs acima para mais detalhes"
+
