@@ -147,27 +147,25 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                     onTap: () => context.go('/home'),
                   ),
                   
-                  const SizedBox(height: 16),
+                  // Card 2: Iniciar Viagem (oculto por enquanto)
+                  // const SizedBox(height: 16),
+                  // _buildActionCard(
+                  //   icon: Icons.route,
+                  //   title: 'Iniciar Viagem',
+                  //   description: 'Iniciar registro de viagem',
+                  //   color: AppColors.zecaBlue,
+                  //   onTap: () => context.go('/journey'),
+                  // ),
                   
-                  // Card 2: Iniciar Viagem
-                  _buildActionCard(
-                    icon: Icons.route,
-                    title: 'Iniciar Viagem',
-                    description: 'Iniciar registro de viagem',
-                    color: AppColors.zecaBlue,
-                    onTap: () => context.go('/journey'),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Card 3: Checklist
-                  _buildActionCard(
-                    icon: Icons.assignment_turned_in,
-                    title: 'Checklist',
-                    description: 'Realizar checklist do veículo',
-                    color: Colors.green,
-                    onTap: () => context.go('/checklist'),
-                  ),
+                  // Card 3: Checklist (oculto por enquanto)
+                  // const SizedBox(height: 16),
+                  // _buildActionCard(
+                  //   icon: Icons.assignment_turned_in,
+                  //   title: 'Checklist',
+                  //   description: 'Realizar checklist do veículo',
+                  //   color: Colors.green,
+                  //   onTap: () => context.go('/checklist'),
+                  // ),
                 ],
               ),
             ),
