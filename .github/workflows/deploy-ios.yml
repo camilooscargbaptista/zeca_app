@@ -1,0 +1,166 @@
+name: 🍎 Deploy iOS - App Store Connect
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Ex: v1.0.3, v2.1.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão (ex: 1.0.3)'
+        required: true
+      build_number:
+        description: 'Build number (ex: 65)'
+        required: true
+      skip_upload:
+        description: 'Pular upload (apenas build)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  XCODE_VERSION: '15.0'
+
+jobs:
+  deploy-ios:
+    name: 🍎 Build e Deploy iOS
+    runs-on: macos-latest
+    
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: 📦 Instalar dependências Flutter
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: 📦 Instalar CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: 🔍 Verificar versão
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            BUILD_NUMBER="${{ github.event.inputs.build_number }}"
+          else
+            # Extrair versão da tag (ex: v1.0.3 -> 1.0.3)
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            # Ler build number do pubspec.yaml
+            BUILD_NUMBER=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f2)
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "🍎 Versão: $VERSION+$BUILD_NUMBER"
+
+      - name: 📝 Atualizar versão no pubspec.yaml
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BUILD_NUMBER="${{ steps.version.outputs.build_number }}"
+          sed -i '' "s/^version:.*/version: $VERSION+$BUILD_NUMBER/" pubspec.yaml
+          echo "✅ Versão atualizada: $VERSION+$BUILD_NUMBER"
+
+      - name: 📝 Atualizar versão no Info.plist
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BUILD_NUMBER="${{ steps.version.outputs.build_number }}"
+          
+          # Atualizar CFBundleShortVersionString (versão)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ios/Runner/Info.plist
+          
+          # Atualizar CFBundleVersion (build number)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/Runner/Info.plist
+          
+          echo "✅ Info.plist atualizado: $VERSION ($BUILD_NUMBER)"
+
+      - name: 🔐 Importar certificados e provisioning profiles
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+
+      - name: 📋 Listar certificados instalados
+        run: |
+          security find-identity -v -p codesigning
+
+      - name: 🏗️ Build IPA
+        run: |
+          flutter clean
+          flutter build ipa --release
+          echo "✅ IPA gerado com sucesso"
+
+      - name: 📊 Verificar IPA gerado
+        run: |
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" 2>/dev/null | head -1)
+          if [ -n "$IPA_PATH" ] && [ -f "$IPA_PATH" ]; then
+            SIZE=$(du -h "$IPA_PATH" | cut -f1)
+            echo "✅ IPA gerado: $IPA_PATH ($SIZE)"
+            ls -lh "$IPA_PATH"
+            echo "ipa_path=$IPA_PATH" >> $GITHUB_OUTPUT
+          else
+            echo "❌ IPA não encontrado!"
+            exit 1
+          fi
+        id: ipa
+
+      - name: 📤 Upload para App Store Connect
+        if: github.event.inputs.skip_upload != 'true'
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ${{ steps.ipa.outputs.ipa_path }}
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      - name: 📝 Criar Release no GitHub
+        if: github.event_name == 'push' && github.event.inputs.skip_upload != 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.ipa.outputs.ipa_path }}
+          body: |
+            ## 🍎 Release iOS ${{ steps.version.outputs.version }}
+            
+            **Build Number:** ${{ steps.version.outputs.build_number }}
+            
+            ### 📦 Arquivos
+            - IPA anexado
+            
+            ### ✅ Status
+            - ✅ Build concluído
+            - ✅ Upload para App Store Connect concluído
+            - ✅ Enviado para TestFlight
+            
+            **Próximos passos:**
+            1. Aguardar processamento do App Store Connect (10-30 minutos)
+            2. Verificar status no App Store Connect
+            3. Se necessário, enviar para revisão
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📧 Notificação de sucesso
+        if: success()
+        run: |
+          echo "✅ Deploy iOS concluído com sucesso!"
+          echo "🍎 Versão: ${{ steps.version.outputs.version }}+${{ steps.version.outputs.build_number }}"
+          echo "🔗 App Store Connect: https://appstoreconnect.apple.com"
+
+      - name: ❌ Notificação de erro
+        if: failure()
+        run: |
+          echo "❌ Deploy iOS falhou!"
+          echo "Verifique os logs acima para mais detalhes"
+
