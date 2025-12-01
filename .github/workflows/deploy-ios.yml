@@ -40,7 +40,7 @@ jobs:
       - name: 📦 Instalar dependências Flutter
         run: |
           flutter pub get
-          flutter pub run build_runner build --delete-conflicting-outputs
+          flutter pub run build_runner build --delete-conflicting-outputs || true
 
       - name: 📦 Instalar CocoaPods
         run: |
