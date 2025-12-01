@@ -21,11 +21,15 @@ import '../features/journey/data/services/journey_storage_service.dart';
 class AppRouter {
   static final GoRouter _router = GoRouter(
     initialLocation: '/splash',
+    debugLogDiagnostics: true,
     routes: [
       GoRoute(
         path: '/splash',
         name: 'splash',
-        builder: (context, state) => const SplashPage(),
+        builder: (context, state) {
+          debugPrint('🛣️ [Router] Navegando para /splash');
+          return const SplashPage();
+        },
       ),
       GoRoute(
         path: '/login',
@@ -96,35 +100,44 @@ class AppRouter {
         },
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Página não encontrada',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'A página que você está procurando não existe.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Voltar ao início'),
-            ),
-          ],
+    errorBuilder: (context, state) {
+      debugPrint('❌ [Router] Erro de rota: ${state.error}');
+      debugPrint('❌ [Router] Rota: ${state.uri}');
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Página não encontrada',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'A página que você está procurando não existe.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Erro: ${state.error}',
+                style: const TextStyle(fontSize: 12, color: Colors.red),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Voltar ao início'),
+              ),
+            ],
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
   
   GoRouter get router => _router;
