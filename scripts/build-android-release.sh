@@ -122,7 +122,8 @@ echo ""
 echo -e "${BLUE}🏗️  Gerando Android App Bundle (AAB)...${NC}"
 echo ""
 
-if flutter build appbundle --release; then
+# Usar flag para desabilitar strip de símbolos (resolve erro comum)
+if flutter build appbundle --release --no-strip-debug-symbols; then
     AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
     
     if [ -f "$AAB_PATH" ]; then

@@ -78,6 +78,17 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false   // <-- REQUIRED for flutter_background_geolocation
+            // Desabilitar strip de símbolos de debug para evitar erro no build
+            ndk {
+                debugSymbolLevel 'NONE'
+            }
+        }
+    }
+    
+    // Configuração para desabilitar strip de símbolos de debug
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 }
