@@ -122,11 +122,13 @@ echo ""
 echo -e "${BLUE}🏗️  Gerando Android App Bundle (AAB)...${NC}"
 echo ""
 
-# Usar flag para desabilitar strip de símbolos (resolve erro comum)
-if flutter build appbundle --release --no-strip-debug-symbols; then
-    AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
-    
-    if [ -f "$AAB_PATH" ]; then
+# Executar build (pode mostrar aviso sobre símbolos de debug, mas não é fatal)
+flutter build appbundle --release 2>&1 | tee /tmp/flutter_build.log
+
+# Verificar se o AAB foi gerado (mesmo com avisos)
+AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+
+if [ -f "$AAB_PATH" ]; then
         AAB_SIZE=$(du -h "$AAB_PATH" | cut -f1)
         echo ""
         echo -e "${GREEN}✅ Build concluído com sucesso!${NC}"
@@ -158,12 +160,38 @@ if flutter build appbundle --release --no-strip-debug-symbols; then
         fi
         
         exit 0
+else
+    echo -e "${YELLOW}⚠️  AAB não encontrado. Verificando logs...${NC}"
+    echo ""
+    
+    # Verificar se o erro foi apenas sobre símbolos de debug
+    if grep -q "failed to strip debug symbols" /tmp/flutter_build.log 2>/dev/null; then
+        echo -e "${YELLOW}⚠️  Aviso sobre símbolos de debug detectado${NC}"
+        echo "   Este aviso geralmente não impede o build."
+        echo "   Verificando se há outros erros..."
+        echo ""
+        
+        # Verificar se há erros reais
+        if grep -i "error\|failed\|exception" /tmp/flutter_build.log | grep -v "failed to strip" | head -5; then
+            echo -e "${RED}❌ Erros encontrados no build. Verifique os logs acima.${NC}"
+            exit 1
+        else
+            echo -e "${YELLOW}⚠️  Apenas avisos sobre símbolos de debug. Tentando localizar AAB...${NC}"
+            # Tentar encontrar AAB em outros locais possíveis
+            ALTERNATIVE_AAB=$(find build -name "*.aab" -type f 2>/dev/null | head -1)
+            if [ ! -z "$ALTERNATIVE_AAB" ]; then
+                echo -e "${GREEN}✅ AAB encontrado em: $ALTERNATIVE_AAB${NC}"
+                AAB_PATH="$ALTERNATIVE_AAB"
+                # Continuar com o fluxo normal
+            else
+                echo -e "${RED}❌ AAB não foi gerado. Verifique os logs completos em /tmp/flutter_build.log${NC}"
+                exit 1
+            fi
+        fi
     else
-        echo -e "${RED}❌ Erro: Arquivo AAB não foi gerado${NC}"
+        echo -e "${RED}❌ Erro ao gerar build. Verifique os logs em /tmp/flutter_build.log${NC}"
+        tail -30 /tmp/flutter_build.log
         exit 1
     fi
-else
-    echo -e "${RED}❌ Erro ao gerar build${NC}"
-    exit 1
 fi
 
