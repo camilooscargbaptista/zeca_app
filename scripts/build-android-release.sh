@@ -57,22 +57,29 @@ if [ ! -f "$KEY_PROPERTIES" ]; then
     
     # Tentar recuperar do GitHub Secrets (se possível)
     if command -v gh &> /dev/null; then
-        echo "Tentando recuperar credenciais do GitHub Secrets..."
-        STORE_PASSWORD=$(gh secret get ANDROID_KEYSTORE_PASSWORD 2>/dev/null || echo "")
-        KEY_PASSWORD=$(gh secret get ANDROID_KEY_PASSWORD 2>/dev/null || echo "")
-        KEY_ALIAS=$(gh secret get ANDROID_KEY_ALIAS 2>/dev/null || echo "zeca-key")
+        echo -e "${BLUE}🔐 Tentando recuperar credenciais do GitHub Secrets...${NC}"
         
-        if [ ! -z "$STORE_PASSWORD" ] && [ ! -z "$KEY_PASSWORD" ]; then
-            echo -e "${GREEN}✅ Credenciais recuperadas do GitHub Secrets${NC}"
-            cat > "$KEY_PROPERTIES" << EOF
+        # Verificar se está autenticado
+        if gh auth status &> /dev/null; then
+            STORE_PASSWORD=$(gh secret get ANDROID_KEYSTORE_PASSWORD 2>/dev/null || echo "")
+            KEY_PASSWORD=$(gh secret get ANDROID_KEY_PASSWORD 2>/dev/null || echo "")
+            KEY_ALIAS=$(gh secret get ANDROID_KEY_ALIAS 2>/dev/null || echo "zeca-key")
+            
+            if [ ! -z "$STORE_PASSWORD" ] && [ ! -z "$KEY_PASSWORD" ]; then
+                echo -e "${GREEN}✅ Credenciais recuperadas do GitHub Secrets${NC}"
+                cat > "$KEY_PROPERTIES" << EOF
 storePassword=$STORE_PASSWORD
 keyPassword=$KEY_PASSWORD
 keyAlias=${KEY_ALIAS:-zeca-key}
 storeFile=zeca-release-key.jks
 EOF
-            echo -e "${GREEN}✅ key.properties criado automaticamente${NC}"
+                echo -e "${GREEN}✅ key.properties criado automaticamente${NC}"
+            else
+                echo -e "${YELLOW}⚠️  Não foi possível recuperar do GitHub. Usando script interativo...${NC}"
+                ./scripts/criar-key-properties.sh
+            fi
         else
-            echo -e "${YELLOW}⚠️  Não foi possível recuperar do GitHub. Usando script interativo...${NC}"
+            echo -e "${YELLOW}⚠️  GitHub CLI não autenticado. Usando script interativo...${NC}"
             ./scripts/criar-key-properties.sh
         fi
     else
