@@ -168,20 +168,58 @@ echo "📦 Instalando CocoaPods..."
 cd ios
 echo "   Executando: pod install --repo-update"
 if pod install --repo-update > /tmp/pod_install.log 2>&1; then
-echo -e "${GREEN}✅ CocoaPods instalado${NC}"
+    echo -e "${GREEN}✅ CocoaPods instalado${NC}"
 else
-    echo -e "${RED}❌ Erro ao instalar CocoaPods${NC}"
+    echo -e "${YELLOW}⚠️  Erro ao instalar CocoaPods, tentando atualizar pods específicos...${NC}"
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📋 ÚLTIMAS 30 LINHAS DO LOG:"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    tail -30 /tmp/pod_install.log
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "💡 Log completo em: /tmp/pod_install.log"
-    echo ""
-    cd ..
-    exit 1
+    
+    # Tentar atualizar pods específicos que podem ter conflito
+    echo "   Tentando: pod update TOCropViewController"
+    if pod update TOCropViewController > /tmp/pod_update.log 2>&1; then
+        echo "   ✅ TOCropViewController atualizado"
+        echo "   Tentando instalar novamente..."
+        if pod install --repo-update > /tmp/pod_install.log 2>&1; then
+            echo -e "${GREEN}✅ CocoaPods instalado após atualização${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Ainda com erro, removendo Podfile.lock e tentando novamente...${NC}"
+            rm -f Podfile.lock
+            if pod install --repo-update > /tmp/pod_install.log 2>&1; then
+                echo -e "${GREEN}✅ CocoaPods instalado após remover lock${NC}"
+            else
+                echo -e "${RED}❌ Erro ao instalar CocoaPods${NC}"
+                echo ""
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "📋 ÚLTIMAS 30 LINHAS DO LOG:"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                tail -30 /tmp/pod_install.log
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                echo "💡 Log completo em: /tmp/pod_install.log"
+                echo ""
+                cd ..
+                exit 1
+            fi
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Erro ao atualizar TOCropViewController, removendo Podfile.lock...${NC}"
+        rm -f Podfile.lock
+        if pod install --repo-update > /tmp/pod_install.log 2>&1; then
+            echo -e "${GREEN}✅ CocoaPods instalado após remover lock${NC}"
+        else
+            echo -e "${RED}❌ Erro ao instalar CocoaPods${NC}"
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📋 ÚLTIMAS 30 LINHAS DO LOG:"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            tail -30 /tmp/pod_install.log
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "💡 Log completo em: /tmp/pod_install.log"
+            echo ""
+            cd ..
+            exit 1
+        fi
+    fi
 fi
 cd ..
 echo ""
