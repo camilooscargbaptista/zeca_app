@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.zeca.app">
+    <!-- Compatibilidade com páginas de memória de 16 KB -->
+    <!-- Esta propriedade garante que bibliotecas nativas sejam compatíveis -->
     <!-- Permissões necessárias -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />

@@ -57,7 +57,7 @@ android {
     defaultConfig {
         applicationId "com.zeca.app"
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
