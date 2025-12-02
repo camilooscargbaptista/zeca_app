@@ -1,7 +1,7 @@
 =============================================================
 RELATÓRIO DE ALINHAMENTO ELF - COMPATIBILIDADE 16 KB
 =============================================================
-Data: Mon Dec  1 23:12:30 -03 2025
+Data: Tue Dec  2 07:26:58 -03 2025
 AAB: build/app/outputs/bundle/release/app-release.aab
 Ferramenta: /Users/camilooscargirardellibaptista/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-readelf
 
@@ -18,15 +18,6 @@ Analisando: libapp.so
   LOAD           0x6b0000 0x00000000006b0000 0x00000000006b0000 0x000090 0x000090 RW  0x10000
 STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x10000 (65536 bytes) >= 16384 bytes (16 KB)
-
-=============================================================
-Analisando: libbarhopper_v3.so
-=============================================================
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x415a20 0x415a20 R E 0x1000
-  LOAD           0x416000 0x0000000000416000 0x0000000000416000 0x00a908 0x00a908 RW  0x1000
-  LOAD           0x420908 0x0000000000421908 0x0000000000421908 0x006e50 0x02fe38 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
 
 =============================================================
 Analisando: libdatastore_shared_counter.so
@@ -46,16 +37,6 @@ Analisando: libflutter.so
   LOAD           0xa84500 0x0000000000ab4500 0x0000000000ab4500 0x001b80 0x015440 RW  0x10000
 STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x10000 (65536 bytes) >= 16384 bytes (16 KB)
-
-=============================================================
-Analisando: libimage_processing_util_jni.so
-=============================================================
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x00193c 0x00193c R   0x1000
-  LOAD           0x00193c 0x000000000000293c 0x000000000000293c 0x004c34 0x004c34 R E 0x1000
-  LOAD           0x006570 0x0000000000008570 0x0000000000008570 0x0003a8 0x0003a8 RW  0x1000
-  LOAD           0x006918 0x0000000000009918 0x0000000000009918 0x000000 0x000004 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
 
 =============================================================
 Analisando: libtslocationmanager.so
@@ -80,15 +61,6 @@ STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x4000 (16384 bytes) >= 16384 bytes (16 KB)
 
 =============================================================
-Analisando: libbarhopper_v3.so
-=============================================================
-  LOAD           0x000000 0x00000000 0x00000000 0x2a1ec0 0x2a1ec0 R E 0x1000
-  LOAD           0x2a2000 0x002a2000 0x002a2000 0x05938 0x05938 RW  0x1000
-  LOAD           0x2a7938 0x002a8938 0x002a8938 0x04c04 0x1b961 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
-
-=============================================================
 Analisando: libdatastore_shared_counter.so
 =============================================================
   LOAD           0x000000 0x00000000 0x00000000 0x00a90 0x00a90 R E 0x4000
@@ -105,16 +77,6 @@ Analisando: libflutter.so
   LOAD           0x78de68 0x007bde68 0x007bde68 0x00f40 0x0ad9c RW  0x10000
 STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x10000 (65536 bytes) >= 16384 bytes (16 KB)
-
-=============================================================
-Analisando: libimage_processing_util_jni.so
-=============================================================
-  LOAD           0x000000 0x00000000 0x00000000 0x00ef0 0x00ef0 R   0x1000
-  LOAD           0x000ef0 0x00001ef0 0x00001ef0 0x03dc0 0x03dc0 R E 0x1000
-  LOAD           0x004cb0 0x00006cb0 0x00006cb0 0x001ec 0x001ec RW  0x1000
-  LOAD           0x004e9c 0x00007e9c 0x00007e9c 0x00000 0x00004 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
 
 =============================================================
 Analisando: libtslocationmanager.so
@@ -139,15 +101,6 @@ STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x10000 (65536 bytes) >= 16384 bytes (16 KB)
 
 =============================================================
-Analisando: libbarhopper_v3.so
-=============================================================
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x532120 0x532120 R E 0x1000
-  LOAD           0x533000 0x0000000000533000 0x0000000000533000 0x009700 0x009700 RW  0x1000
-  LOAD           0x53c700 0x000000000053d700 0x000000000053d700 0x006f20 0x02bad0 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
-
-=============================================================
 Analisando: libdatastore_shared_counter.so
 =============================================================
   LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x000f20 0x000f20 R E 0x4000
@@ -166,16 +119,6 @@ STATUS: ✅ COMPATÍVEL
 Alinhamento: 0x10000 (65536 bytes) >= 16384 bytes (16 KB)
 
 =============================================================
-Analisando: libimage_processing_util_jni.so
-=============================================================
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x002334 0x002334 R   0x1000
-  LOAD           0x002340 0x0000000000003340 0x0000000000003340 0x008690 0x008690 R E 0x1000
-  LOAD           0x00a9d0 0x000000000000c9d0 0x000000000000c9d0 0x0002b0 0x0002b0 RW  0x1000
-  LOAD           0x00ac80 0x000000000000dc80 0x000000000000dc80 0x000000 0x000004 RW  0x1000
-STATUS: ❌ INCOMPATÍVEL
-Alinhamento: 0x1000 (4096 bytes) < 16384 bytes (16 KB)
-
-=============================================================
 Analisando: libtslocationmanager.so
 =============================================================
   LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x0d2770 0x0d2770 R E 0x4000
@@ -187,7 +130,7 @@ Alinhamento: 0x4000 (16384 bytes) >= 16384 bytes (16 KB)
 =============================================================
 RESUMO FINAL
 =============================================================
-Total de bibliotecas analisadas: 18
+Total de bibliotecas analisadas: 12
 Bibliotecas compatíveis (>= 16 KB): 12
-Bibliotecas incompatíveis (< 16 KB): 6
+Bibliotecas incompatíveis (< 16 KB): 0
 

@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+70
+version: 1.0.3+71
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -69,7 +69,8 @@ dependencies:
   
   # QR Code
   qr_flutter: ^4.1.0
-  mobile_scanner: ^3.5.2
+  # mobile_scanner - REMOVIDO (não está sendo usado e causa incompatibilidade 16 KB via ML Kit)
+  # mobile_scanner: ^3.5.2
   
   # Validação e Formatação
   mask_text_input_formatter: ^2.5.0
