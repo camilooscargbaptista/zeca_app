@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+71
+version: 1.0.3+72
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
