@@ -74,5 +74,92 @@ O app utiliza rastreamento de localização em segundo plano para registrar a jo
 
 ---
 
+## 🔄 Permissão: ACTIVITY_RECOGNITION
+
+### **Descrição do Uso:**
+
+```
+O app utiliza a permissão ACTIVITY_RECOGNITION para detectar quando o veículo está em movimento ou parado durante o rastreamento de jornadas. Esta permissão permite que o sistema otimize o consumo de bateria ao reduzir a frequência de coleta de localização quando o veículo está estacionado, e aumentar a precisão quando está em movimento. Isso garante um rastreamento eficiente e preciso das rotas, preservando a bateria do dispositivo do motorista.
+```
+
+### **Versão Alternativa (Mais Técnica):**
+
+```
+A permissão ACTIVITY_RECOGNITION é utilizada pelo serviço de rastreamento GPS em segundo plano para detectar o estado de movimento do veículo (parado, em movimento, caminhando, em veículo). Esta detecção permite que o app ajuste dinamicamente a frequência de coleta de coordenadas GPS: reduzindo quando o veículo está parado (economizando bateria) e aumentando quando está em movimento (garantindo precisão). O recurso é essencial para otimizar o consumo de recursos durante o rastreamento contínuo de jornadas de trabalho.
+```
+
+### **Versão Resumida:**
+
+```
+Detecção de movimento do veículo para otimizar o rastreamento GPS. O app ajusta a frequência de coleta de localização baseado no estado de movimento: reduz quando parado (economiza bateria) e aumenta quando em movimento (garante precisão).
+```
+
+---
+
+## 📋 Resumo para Copiar e Colar - ACTIVITY_RECOGNITION
+
+### **Campo: "Descreva o uso da permissão android.permission.ACTIVITY_RECOGNITION"**
+
+```
+O app utiliza a permissão ACTIVITY_RECOGNITION para detectar quando o veículo está em movimento ou parado durante o rastreamento de jornadas. Esta permissão permite que o sistema otimize o consumo de bateria ao reduzir a frequência de coleta de localização quando o veículo está estacionado, e aumentar a precisão quando está em movimento. Isso garante um rastreamento eficiente e preciso das rotas, preservando a bateria do dispositivo do motorista.
+```
+
+**Caracteres:** ~330 (dentro do limite típico de 500)
+
+---
+
+## ✅ Por que usamos ACTIVITY_RECOGNITION?
+
+### **1. Otimização de Bateria**
+- **Quando parado:** Reduz a frequência de GPS (economiza bateria)
+- **Quando em movimento:** Aumenta a frequência (garante precisão)
+
+### **2. Detecção Inteligente de Estado**
+- Detecta se o veículo está:
+  - 🚗 **Em movimento** (em veículo)
+  - 🛑 **Parado** (estacionado)
+  - 🚶 **Caminhando** (motorista fora do veículo)
+
+### **3. Melhor Precisão do Rastreamento**
+- Ajusta dinamicamente a precisão do GPS baseado no movimento
+- Evita coletar dados desnecessários quando parado
+- Garante dados precisos quando em movimento
+
+### **4. Integração com flutter_background_geolocation**
+- O plugin `flutter_background_geolocation` usa esta permissão para:
+  - Detectar automaticamente quando parar o tracking
+  - Otimizar o uso de sensores
+  - Reduzir consumo de recursos
+
+### **5. Benefícios para o Usuário**
+- ✅ Bateria dura mais durante jornadas longas
+- ✅ Rastreamento mais preciso quando necessário
+- ✅ Menos uso de dados móveis
+- ✅ Melhor experiência geral
+
+---
+
+## 🔍 Contexto Técnico
+
+### **Onde é usado no código:**
+
+```dart
+// lib/core/services/background_geolocation_service.dart
+disableMotionActivityUpdates: false, // Usar sensores de movimento
+```
+
+### **Configuração no AndroidManifest.xml:**
+
+```xml
+<uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+```
+
+### **Quando é solicitada:**
+- Apenas quando o motorista inicia uma jornada
+- Durante o período de rastreamento ativo
+- Não é usada quando o app está inativo
+
+---
+
 **Última atualização:** 2025-01-27
 
