@@ -1,17 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+// Google Maps removido - não está sendo usado e causa incompatibilidade 16 KB
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Serviço para obter informações de localização reversa (endereço a partir de coordenadas)
 @injectable
 class GeocodingService {
   /// Obtém o nome da rua a partir de coordenadas
-  Future<String?> getStreetName(LatLng position) async {
+  Future<String?> getStreetName(double latitude, double longitude) async {
     try {
       final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
+        latitude,
+        longitude,
       );
       
       if (placemarks.isNotEmpty) {
@@ -41,11 +42,11 @@ class GeocodingService {
   }
 
   /// Obtém endereço completo a partir de coordenadas
-  Future<String?> getFullAddress(LatLng position) async {
+  Future<String?> getFullAddress(double latitude, double longitude) async {
     try {
       final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
+        latitude,
+        longitude,
       );
       
       if (placemarks.isNotEmpty) {

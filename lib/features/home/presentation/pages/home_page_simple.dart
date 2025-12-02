@@ -15,7 +15,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
-import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+// OdometerCameraPage removido - não está sendo usado e causa incompatibilidade 16 KB
+// import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 
 class HomePageSimple extends StatefulWidget {
   const HomePageSimple({Key? key}) : super(key: key);
@@ -391,21 +392,21 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     super.dispose();
   }
 
-  /// Abre a tela de câmera para capturar odômetro
-  Future<void> _openOdometerCamera() async {
-    final result = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (context) => const OdometerCameraPage(),
-      ),
-    );
+  /// Abre a tela de câmera para capturar odômetro - REMOVIDO (não está sendo usado)
+  // Future<void> _openOdometerCamera() async {
+  //   final result = await Navigator.of(context).push<String>(
+  //     MaterialPageRoute(
+  //       builder: (context) => const OdometerCameraPage(),
+  //     ),
+  //   );
 
-    if (result != null && mounted) {
-      // Preencher campo com valor extraído
-      setState(() {
-        _kmController.text = result;
-      });
-    }
-  }
+  //   if (result != null && mounted) {
+  //     // Preencher campo com valor extraído
+  //     setState(() {
+  //       _kmController.text = result;
+  //     });
+  //   }
+  // }
 
 
   Future<void> _searchVehicle() async {
@@ -1222,11 +1223,12 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                           border: const OutlineInputBorder(),
                           hintText: '0',
                           helperText: 'Digite apenas números (ex: 123456 = 123.456)',
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.camera_alt, color: Colors.red),
-                            onPressed: _openOdometerCamera,
-                            tooltip: 'Capturar odômetro com câmera',
-                          ),
+                          // Ícone de câmera removido - funcionalidade não está sendo usada
+                          // suffixIcon: IconButton(
+                          //   icon: const Icon(Icons.camera_alt, color: Colors.red),
+                          //   onPressed: _openOdometerCamera,
+                          //   tooltip: 'Capturar odômetro com câmera',
+                          // ),
                         ),
                       ),
                       if (_vehicleData != null)
