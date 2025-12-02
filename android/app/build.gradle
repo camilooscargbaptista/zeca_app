@@ -39,7 +39,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.zeca.app"
     compileSdk 36
-    ndkVersion "28.0.12674087"  // NDK r28+ requerido para suporte a 16 KB
+    ndkVersion "27.0.12077973"  // NDK r27+ requerido para suporte a 16 KB (mínimo: 26.1.10909125)
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
