@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+67
+version: 1.0.3+68
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -44,7 +44,7 @@ dependencies:
   image_cropper: ^11.0.0
   
   # OCR - Google ML Kit
-  google_mlkit_text_recognition: ^0.11.0
+  google_mlkit_text_recognition: ^0.15.0
   image: ^4.1.7  # Para pré-processamento de imagens
   
   # Permissions
@@ -53,7 +53,7 @@ dependencies:
   # Location
   geolocator: ^10.1.0  # Manter por enquanto (fallback)
   geocoding: ^2.1.1
-  flutter_background_geolocation: ^4.18.1  # Tracking robusto em background
+  flutter_background_geolocation: ^4.18.2  # Tracking robusto em background
   
   # Maps
   google_maps_flutter: ^2.5.0
