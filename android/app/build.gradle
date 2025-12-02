@@ -39,15 +39,15 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.zeca.app"
     compileSdk 36
-    ndkVersion "27.0.12077973"
+    ndkVersion "28.0.12674087"  // NDK r28+ requerido para suporte a 16 KB
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -62,7 +62,7 @@ android {
         versionName flutterVersionName
         
         // Compatibilidade com páginas de memória de 16 KB
-        // Garante que bibliotecas nativas sejam compatíveis
+        // NDK r28+ compila automaticamente com alinhamento ELF de 16 KB
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
