@@ -161,5 +161,99 @@ disableMotionActivityUpdates: false, // Usar sensores de movimento
 
 ---
 
+## 📸 Permissão: READ_MEDIA_IMAGES
+
+### **Descrição Recomendada (250 caracteres):**
+
+```
+O app utiliza READ_MEDIA_IMAGES para permitir que motoristas selecionem fotos da galeria para anexar comprovantes de abastecimento e documentos relacionados. A permissão é solicitada apenas quando o usuário escolhe anexar uma imagem existente.
+```
+
+**Caracteres:** ~200 (dentro do limite de 250)
+
+### **Versão Alternativa (Mais Detalhada - se permitir mais caracteres):**
+
+```
+O app utiliza READ_MEDIA_IMAGES para permitir que motoristas selecionem fotos da galeria do dispositivo para anexar como comprovantes de abastecimento, documentos fiscais e fotos do odômetro. A permissão é solicitada apenas quando o usuário escolhe anexar uma imagem existente, não sendo acessada em segundo plano.
+```
+
+### **Versão Resumida (Se precisar ser mais curta):**
+
+```
+Permite selecionar fotos da galeria para anexar comprovantes de abastecimento e documentos. Acesso apenas quando o usuário escolhe anexar imagem.
+```
+
+---
+
+## 📋 Resumo para Copiar e Colar - READ_MEDIA_IMAGES
+
+### **Campo: "Descreva como seu app usa a permissão READ_MEDIA_IMAGES"**
+
+```
+O app utiliza READ_MEDIA_IMAGES para permitir que motoristas selecionem fotos da galeria para anexar comprovantes de abastecimento e documentos relacionados. A permissão é solicitada apenas quando o usuário escolhe anexar uma imagem existente.
+```
+
+**Caracteres:** ~200 (dentro do limite de 250)
+
+---
+
+## ✅ Por que usamos READ_MEDIA_IMAGES?
+
+### **1. Anexar Comprovantes de Abastecimento**
+- Motoristas podem anexar fotos de notas fiscais
+- Comprovantes de pagamento
+- Documentos relacionados ao abastecimento
+
+### **2. Fotos do Odômetro**
+- Captura de leitura do odômetro via OCR
+- Validação de quilometragem do veículo
+
+### **3. Documentos Fiscais**
+- Upload de documentos necessários para auditoria
+- Comprovação de transações
+
+### **4. Quando é Usada**
+- ✅ Apenas quando o usuário escolhe "Anexar da Galeria"
+- ✅ Não é acessada em segundo plano
+- ✅ Solicitação de permissão apenas quando necessário
+
+### **5. Onde é Usada no App**
+- `refueling_code_page_simple.dart` - Anexar fotos durante abastecimento
+- `document_upload_section.dart` - Upload de documentos
+- `odometer_camera_page.dart` - Seleção de foto do odômetro
+
+---
+
+## 🔍 Contexto Técnico
+
+### **Onde é usado no código:**
+
+```dart
+// lib/features/refueling/presentation/pages/refueling_code_page_simple.dart
+Future<void> _pickFromGallery() async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? image = await picker.pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 80,
+    maxWidth: 1920,
+    maxHeight: 1080,
+  );
+}
+```
+
+### **Configuração no AndroidManifest.xml:**
+
+```xml
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+```
+
+### **Plugin usado:**
+- `image_picker: ^1.0.4`
+
+### **Permissão solicitada:**
+- `Permission.photos.request()` - apenas quando necessário
+
+---
+
 **Última atualização:** 2025-01-27
 
