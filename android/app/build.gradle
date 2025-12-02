@@ -60,6 +60,12 @@ android {
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        
+        // Compatibilidade com páginas de memória de 16 KB
+        // Garante que bibliotecas nativas sejam compatíveis
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
     }
 
     signingConfigs {
