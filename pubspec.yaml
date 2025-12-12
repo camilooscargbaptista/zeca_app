@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+63
+version: 1.0.3+77
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -78,6 +78,9 @@ dependencies:
   # Utils
   intl: ^0.18.1
   logger: ^2.0.2+1
+  
+  # WebSocket - Comunicação em tempo real
+  socket_io_client: ^2.0.3+1
   dartz: ^0.10.1
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
@@ -126,14 +129,14 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/common/zeca_logo.png"
+  image_path: "assets/images/icon/app_icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   # Configuração para Android Adaptive Icon
   adaptive_icon_background: "#FFFFFF" # Fundo branco
-  adaptive_icon_foreground: "assets/images/common/zeca_logo.png" # Logo maior no foreground
+  adaptive_icon_foreground: "assets/images/icon/app_icon.png" # Logo maior no foreground
   # Garantir fundo branco e logo maior
   android_adaptive_icon_background: "#FFFFFF"
-  android_adaptive_icon_foreground: "assets/images/common/zeca_logo.png"
+  android_adaptive_icon_foreground: "assets/images/icon/app_icon.png"
   # iOS - remover transparência e garantir fundo branco
   remove_alpha_ios: true
   ios_background_color: "#FFFFFF" # Fundo branco para iOS

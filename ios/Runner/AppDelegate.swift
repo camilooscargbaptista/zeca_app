@@ -79,12 +79,13 @@ import CoreLocation
     locationManager?.desiredAccuracy = kCLLocationAccuracyBest
     locationManager?.distanceFilter = 30 // 30 metros
     
-    // CRÍTICO: Habilitar rastreamento em background
-    locationManager?.allowsBackgroundLocationUpdates = true
-    locationManager?.pausesLocationUpdatesAutomatically = false
-    locationManager?.showsBackgroundLocationIndicator = true
+    // BACKGROUND LOCATION DESATIVADO (flutter_background_geolocation removido)
+    // Estas linhas causam crash sem UIBackgroundModes location no Info.plist
+    // locationManager?.allowsBackgroundLocationUpdates = true
+    // locationManager?.pausesLocationUpdatesAutomatically = false
+    // locationManager?.showsBackgroundLocationIndicator = true
     
-    print("✅ Location Manager configurado para background tracking")
+    print("⚠️ Location Manager configurado (foreground only)")
     
     // Verificar status de autorização e solicitar se necessário
     checkLocationAuthorization()

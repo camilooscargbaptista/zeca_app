@@ -130,24 +130,25 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _requestPermissionsImmediately() async {
     if (!mounted) return;
     
-    // Solicitar permissões IMEDIATAMENTE - uma por vez
+    // Solicitar apenas permissões REALMENTE necessárias
+    // Câmera e Galeria desativadas nesta versão
     try {
-      // 1. Câmera
-      await Permission.camera.request();
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 1. Câmera - DESATIVADA (não usada nesta versão)
+      // await Permission.camera.request();
+      // await Future.delayed(const Duration(milliseconds: 300));
       
-      // 2. Galeria/Fotos
-      await Permission.photos.request();
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 2. Galeria/Fotos - DESATIVADA (não usada nesta versão)
+      // await Permission.photos.request();
+      // await Future.delayed(const Duration(milliseconds: 300));
       
-      // 3. Localização
+      // 3. Localização - NECESSÁRIA para validar abastecimentos
       await Permission.location.request();
       await Future.delayed(const Duration(milliseconds: 300));
       
-      // 4. Notificações
+      // 4. Notificações - NECESSÁRIA para alertas
       await Permission.notification.request();
       
-      print('✅ Todas as permissões foram solicitadas!');
+      print('✅ Permissões necessárias solicitadas!');
     } catch (e) {
       print('❌ Erro ao solicitar permissões: $e');
     }
@@ -211,7 +212,7 @@ class _SplashPageState extends State<SplashPage>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.asset(
-                              'assets/images/common/zeca_logo.png',
+                              'assets/images/common/zeca_logo_trans.png',
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
                                 // Fallback se a imagem não existir

@@ -1,0 +1,208 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../config/api_config.dart';
+
+/// Serviço de WebSocket para notificações em tempo real
+/// 
+/// Conecta ao servidor WebSocket para receber eventos de abastecimento
+/// em tempo real, substituindo o polling a cada 15 segundos.
+/// 
+/// Eventos recebidos:
+/// - refueling:pending_validation - Quando abastecimento precisa validação do motorista
+class WebSocketService {
+  static final WebSocketService _instance = WebSocketService._internal();
+  factory WebSocketService() => _instance;
+  WebSocketService._internal();
+
+  IO.Socket? _socket;
+  bool _isConnected = false;
+  bool _isConnecting = false;
+  String? _currentDriverId;
+  
+  // Callbacks para eventos
+  Function(Map<String, dynamic>)? _onRefuelingPendingValidation;
+  Function()? _onConnected;
+  Function(String)? _onError;
+  Function()? _onDisconnected;
+  
+  // Stream controller para eventos de conexão
+  final StreamController<bool> _connectionStatusController = 
+      StreamController<bool>.broadcast();
+  
+  Stream<bool> get connectionStatus => _connectionStatusController.stream;
+  bool get isConnected => _isConnected;
+
+  /// Conectar ao servidor WebSocket
+  /// 
+  /// [token] - JWT token para autenticação
+  /// [onRefuelingPendingValidation] - Callback quando receber evento de validação pendente
+  void connect({
+    required String token,
+    Function(Map<String, dynamic>)? onRefuelingPendingValidation,
+    Function()? onConnected,
+    Function(String)? onError,
+    Function()? onDisconnected,
+  }) {
+    if (_isConnecting || _isConnected) {
+      debugPrint('⚠️ [WebSocket] Já conectado ou conectando...');
+      return;
+    }
+
+    _isConnecting = true;
+    _onRefuelingPendingValidation = onRefuelingPendingValidation;
+    _onConnected = onConnected;
+    _onError = onError;
+    _onDisconnected = onDisconnected;
+
+    try {
+      // URL do servidor WebSocket (mesmo servidor da API, namespace /refueling)
+      final wsUrl = '${ApiConfig.baseUrl}/refueling';
+      
+      debugPrint('🔌 [WebSocket] Conectando a: $wsUrl');
+
+      _socket = IO.io(
+        wsUrl,
+        IO.OptionBuilder()
+          .setTransports(['websocket']) // Forçar WebSocket em vez de polling
+          .setExtraHeaders({'Authorization': 'Bearer $token'})
+          .setAuth({'token': token})
+          .enableAutoConnect()
+          .enableReconnection()
+          .setReconnectionAttempts(5)
+          .setReconnectionDelay(2000)
+          .setReconnectionDelayMax(10000)
+          .build(),
+      );
+
+      _setupListeners();
+
+    } catch (e) {
+      debugPrint('❌ [WebSocket] Erro ao conectar: $e');
+      _isConnecting = false;
+      _onError?.call(e.toString());
+    }
+  }
+
+  /// Configurar listeners de eventos
+  void _setupListeners() {
+    if (_socket == null) return;
+
+    // Evento de conexão estabelecida
+    _socket!.onConnect((_) {
+      debugPrint('✅ [WebSocket] Conectado ao servidor!');
+      _isConnected = true;
+      _isConnecting = false;
+      _connectionStatusController.add(true);
+      _onConnected?.call();
+    });
+
+    // Evento de confirmação de conexão do servidor
+    _socket!.on('connected', (data) {
+      debugPrint('✅ [WebSocket] Confirmação do servidor: $data');
+      if (data is Map && data['room'] != null) {
+        debugPrint('📍 [WebSocket] Associado à sala: ${data['room']}');
+      }
+    });
+
+    // ⚡ EVENTO PRINCIPAL: Abastecimento pendente de validação
+    _socket!.on('refueling:pending_validation', (data) {
+      debugPrint('🎯 [WebSocket] Evento recebido: refueling:pending_validation');
+      debugPrint('📦 [WebSocket] Dados: $data');
+      
+      if (data is Map<String, dynamic>) {
+        _onRefuelingPendingValidation?.call(data);
+      } else if (data is Map) {
+        _onRefuelingPendingValidation?.call(Map<String, dynamic>.from(data));
+      }
+    });
+
+    // Evento de erro
+    _socket!.on('error', (data) {
+      debugPrint('❌ [WebSocket] Erro do servidor: $data');
+      if (data is Map && data['message'] != null) {
+        _onError?.call(data['message'].toString());
+      }
+    });
+
+    // Evento de desconexão
+    _socket!.onDisconnect((_) {
+      debugPrint('🔌 [WebSocket] Desconectado do servidor');
+      _isConnected = false;
+      _connectionStatusController.add(false);
+      _onDisconnected?.call();
+    });
+
+    // Evento de erro de conexão
+    _socket!.onConnectError((error) {
+      debugPrint('❌ [WebSocket] Erro de conexão: $error');
+      _isConnecting = false;
+      _onError?.call('Erro de conexão: $error');
+    });
+
+    // Evento de reconexão
+    _socket!.onReconnect((_) {
+      debugPrint('🔄 [WebSocket] Reconectado!');
+      _isConnected = true;
+      _connectionStatusController.add(true);
+    });
+
+    // Evento de tentativa de reconexão
+    _socket!.onReconnectAttempt((attemptNumber) {
+      debugPrint('🔄 [WebSocket] Tentativa de reconexão #$attemptNumber');
+    });
+
+    // Evento de erro de reconexão
+    _socket!.onReconnectError((error) {
+      debugPrint('❌ [WebSocket] Erro de reconexão: $error');
+    });
+
+    // Evento de falha de reconexão (todas tentativas falharam)
+    _socket!.onReconnectFailed((_) {
+      debugPrint('❌ [WebSocket] Todas tentativas de reconexão falharam');
+      _isConnecting = false;
+      _onError?.call('Falha ao reconectar - usando fallback de polling');
+    });
+  }
+
+  /// Desconectar do servidor WebSocket
+  void disconnect() {
+    debugPrint('🔌 [WebSocket] Desconectando...');
+    
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
+    
+    _isConnected = false;
+    _isConnecting = false;
+    _currentDriverId = null;
+    
+    _onRefuelingPendingValidation = null;
+    _onConnected = null;
+    _onError = null;
+    _onDisconnected = null;
+    
+    _connectionStatusController.add(false);
+    
+    debugPrint('✅ [WebSocket] Desconectado');
+  }
+
+  /// Reconectar manualmente
+  void reconnect() {
+    if (_socket != null) {
+      debugPrint('🔄 [WebSocket] Forçando reconexão...');
+      _socket!.connect();
+    }
+  }
+
+  /// Verificar se está conectado
+  bool checkConnection() {
+    return _socket?.connected ?? false;
+  }
+
+  /// Limpar recursos
+  void dispose() {
+    disconnect();
+    _connectionStatusController.close();
+  }
+}

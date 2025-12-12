@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Zeca App</string>
+	<string>ZECA</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,21 +27,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Este app precisa acessar a câmera para capturar fotos dos comprovantes de abastecimento.</string>
+	<string>Este app pode usar a câmera para capturar fotos de comprovantes de abastecimento em versões futuras.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Este app precisa acessar a galeria para selecionar imagens dos comprovantes de abastecimento.</string>
+	<string>Este app pode acessar a galeria para selecionar imagens de comprovantes em versões futuras.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Este app precisa salvar fotos na sua galeria</string>
+	<string>Este app pode salvar fotos na galeria em versões futuras.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ZECA precisa acessar sua localização para registrar pontos de GPS durante a jornada de trabalho e encontrar postos próximos.</string>
-	<!-- Permissões de background REMOVIDAS (flutter_background_geolocation removido)
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>...</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>...</string>
-	<key>NSMotionUsageDescription</key>
-	<string>...</string>
-	-->
+	<string>ZECA pode acessar sua localização para registrar pontos de GPS durante a jornada de trabalho. Isso permite encontrar postos próximos e validar abastecimentos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>FirebaseAppDelegateProxyEnabled</key>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/mock/mock_api_service.dart';
 import '../../../../core/services/refueling_polling_service.dart';
+import '../../../../core/services/websocket_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -40,7 +41,9 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   
   // Serviços
   final RefuelingPollingService _pollingService = RefuelingPollingService();
+  final WebSocketService _webSocketService = WebSocketService();
   final ApiService _apiService = ApiService();
+  bool _usingWebSocket = false; // Flag para saber se está usando WebSocket
 
   /// Formatar código no padrão XXXX-XXXX-XXXXXXXX
   String _formatCode(String code) {
@@ -69,8 +72,9 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
 
   @override
   void dispose() {
-    // Parar polling quando sair da tela
+    // Parar polling e desconectar WebSocket quando sair da tela
     _pollingService.stopPolling();
+    _webSocketService.disconnect();
     super.dispose();
   }
 
@@ -573,28 +577,103 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
     }
   }
 
-  /// Iniciar polling para verificar status do abastecimento
-  void _startPolling() {
+  /// Iniciar WebSocket (primário) ou polling (fallback) para verificar status
+  void _startPolling() async {
     // Limpar código (remover hífens) para passar ao polling
     final cleanCode = _refuelingCode.replaceAll('-', '').replaceAll(' ', '');
     
-    debugPrint('🔄 [RefuelingCodePage] Iniciando polling: refuelingId=$_refuelingId, refuelingCode=$cleanCode (original: $_refuelingCode)');
+    debugPrint('🔄 [RefuelingCodePage] Iniciando notificações: refuelingId=$_refuelingId, refuelingCode=$cleanCode');
     
-    // Pode usar refueling_id (se já existir) ou código de abastecimento
+    // Tentar conectar via WebSocket primeiro (mais eficiente)
+    try {
+      final token = await _apiService.getToken();
+      
+      if (token != null && token.isNotEmpty) {
+        debugPrint('📡 [RefuelingCodePage] Tentando conectar via WebSocket...');
+        
+        _webSocketService.connect(
+          token: token,
+          onRefuelingPendingValidation: (data) {
+            debugPrint('🎯 [WebSocket] Evento recebido: $data');
+            
+            final refuelingId = data['refueling_id']?.toString() ?? '';
+            if (refuelingId.isEmpty) {
+              debugPrint('⚠️ [WebSocket] refueling_id vazio no evento');
+              return;
+            }
+            
+            if (mounted) {
+              _webSocketService.disconnect();
+              _pollingService.stopPolling();
+              
+              debugPrint('🚀 [WebSocket] Navegando para /refueling-waiting com refuelingId: $refuelingId');
+              
+              context.go(
+                '/refueling-waiting',
+                extra: {
+                  'refueling_id': refuelingId,
+                  'refueling_code': _refuelingCode,
+                  'vehicle_data': _vehicleData,
+                  'station_data': _stationData,
+                },
+              );
+            }
+          },
+          onConnected: () {
+            debugPrint('✅ [WebSocket] Conectado! Usando WebSocket para notificações');
+            if (mounted) {
+              setState(() {
+                _usingWebSocket = true;
+              });
+            }
+          },
+          onError: (error) {
+            debugPrint('❌ [WebSocket] Erro: $error - Ativando fallback de polling');
+            _startPollingFallback(cleanCode);
+          },
+          onDisconnected: () {
+            debugPrint('🔌 [WebSocket] Desconectado');
+            // Se desconectar, ativar polling como fallback
+            if (mounted && !_pollingService.isPolling) {
+              _startPollingFallback(cleanCode);
+            }
+          },
+        );
+        
+        // Também iniciar polling com intervalo maior como backup
+        // (caso WebSocket falhe silenciosamente)
+        _startPollingFallback(cleanCode, intervalSeconds: 60);
+        
+      } else {
+        debugPrint('⚠️ [RefuelingCodePage] Token não disponível, usando polling');
+        _startPollingFallback(cleanCode);
+      }
+    } catch (e) {
+      debugPrint('❌ [RefuelingCodePage] Erro ao conectar WebSocket: $e');
+      _startPollingFallback(cleanCode);
+    }
+  }
+  
+  /// Fallback de polling quando WebSocket não está disponível
+  void _startPollingFallback(String cleanCode, {int intervalSeconds = 15}) {
+    if (_pollingService.isPolling) {
+      debugPrint('⚠️ [RefuelingCodePage] Polling já está ativo');
+      return;
+    }
+    
+    debugPrint('🔄 [RefuelingCodePage] Iniciando polling (fallback) a cada ${intervalSeconds}s');
+    
     _pollingService.startPolling(
       refuelingId: _refuelingId,
       refuelingCode: cleanCode.isNotEmpty ? cleanCode : null,
-      intervalSeconds: 15, // Verificar a cada 15 segundos
+      intervalSeconds: intervalSeconds,
       onStatusChanged: (refuelingId) {
-        debugPrint('🎯 [RefuelingCodePage] Callback onStatusChanged chamado com refuelingId: $refuelingId');
-        // Quando status mudar para AGUARDANDO_VALIDACAO_MOTORISTA
+        debugPrint('🎯 [Polling] Status mudou para refuelingId: $refuelingId');
+        
         if (mounted) {
-          // Parar polling
           _pollingService.stopPolling();
+          _webSocketService.disconnect();
           
-          debugPrint('🚀 [RefuelingCodePage] Navegando para /refueling-waiting com refuelingId: $refuelingId');
-          
-          // Navegar para tela de validação com os dados necessários
           context.go(
             '/refueling-waiting',
             extra: {
@@ -604,8 +683,6 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
               'station_data': _stationData,
             },
           );
-        } else {
-          debugPrint('⚠️ [RefuelingCodePage] Widget não está mais montado, não navegando');
         }
       },
     );
