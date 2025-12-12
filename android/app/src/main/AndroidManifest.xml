@@ -65,10 +65,9 @@
         </service>
         
         <!-- Google Maps API Key -->
-        <!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
-        <!-- Ou configure via build.gradle usando resValue ou manifestPlaceholders -->
+        <!-- Configurada via local.properties e manifestPlaceholders no build.gradle -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q" />
+            android:value="${GOOGLE_MAPS_API_KEY}" />
     </application>
 </manifest>
