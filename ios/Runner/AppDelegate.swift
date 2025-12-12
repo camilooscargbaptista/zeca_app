@@ -4,7 +4,8 @@ import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
 import CoreLocation
-import GoogleMaps
+// GoogleMaps REMOVIDO - google_maps_flutter desativado
+// import GoogleMaps
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -15,14 +16,14 @@ import GoogleMaps
   ) -> Bool {
     print("🚀 Iniciando AppDelegate com Push Notifications")
     
-    // Inicializar Google Maps SDK ANTES de qualquer outra coisa
-    // CRÍTICO: Deve ser chamado antes de registrar plugins Flutter
-    if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String {
-      GMSServices.provideAPIKey(apiKey)
-      print("✅ Google Maps SDK inicializado com API Key")
-    } else {
-      print("❌ GMSApiKey não encontrado no Info.plist")
-    }
+    // Google Maps SDK REMOVIDO - google_maps_flutter desativado
+    // if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String {
+    //   GMSServices.provideAPIKey(apiKey)
+    //   print("✅ Google Maps SDK inicializado com API Key")
+    // } else {
+    //   print("❌ GMSApiKey não encontrado no Info.plist")
+    // }
+    print("⚠️ Google Maps SDK desativado")
     
     // Firebase já é inicializado no Flutter (main.dart)
     // Mas precisamos configurar o delegate para push notifications
