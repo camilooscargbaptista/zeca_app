@@ -34,12 +34,14 @@
 	<string>Este app precisa salvar fotos na sua galeria</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ZECA precisa acessar sua localização para registrar pontos de GPS durante a jornada de trabalho e encontrar postos próximos.</string>
+	<!-- Permissões de background REMOVIDAS (flutter_background_geolocation removido)
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>ZECA precisa acessar sua localização continuamente para rastrear sua jornada de trabalho mesmo quando o app estiver em segundo plano. Isso garante o registro correto dos pontos de GPS e quilometragem percorrida.</string>
+	<string>...</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>ZECA precisa acessar sua localização continuamente, mesmo em segundo plano, para rastrear sua jornada de trabalho, registrar pontos de GPS e calcular a quilometragem percorrida com precisão.</string>
+	<string>...</string>
 	<key>NSMotionUsageDescription</key>
-	<string>ZECA usa os sensores de movimento do seu dispositivo para detectar automaticamente quando você está dirigindo ou parado, otimizando o rastreamento da jornada e economizando bateria.</string>
+	<string>...</string>
+	-->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>FirebaseAppDelegateProxyEnabled</key>
@@ -47,14 +49,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>location</string>
-		<string>fetch</string>
-		<string>processing</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.zeca.app.refresh</string>
-		<string>com.zeca.app.processing</string>
+		<!-- location REMOVIDO (flutter_background_geolocation removido) -->
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

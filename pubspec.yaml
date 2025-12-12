@@ -51,12 +51,12 @@ dependencies:
   permission_handler: ^11.0.1
   
   # Location
-  geolocator: ^10.1.0  # Manter por enquanto (fallback)
+  geolocator: ^10.1.0  # Localização básica (foreground only)
   geocoding: ^2.1.1
-  flutter_background_geolocation: ^4.18.1  # Tracking robusto em background
+  # flutter_background_geolocation: ^4.18.1  # REMOVIDO - incompatibilidade 16KB + permissões sensíveis
   
-  # Maps
-  google_maps_flutter: ^2.5.0
+  # Maps - REMOVIDO (incompatibilidade 16KB)
+  # google_maps_flutter: ^2.5.0
   
   # Device Info (para JWT Sliding Window)
   device_info_plus: ^10.1.0
