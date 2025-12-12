@@ -4,7 +4,8 @@ import FirebaseCore
 import FirebaseMessaging
 import UserNotifications
 import CoreLocation
-import GoogleMaps
+// GoogleMaps REMOVIDO - google_maps_flutter desativado
+// import GoogleMaps
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -15,14 +16,14 @@ import GoogleMaps
   ) -> Bool {
     print("🚀 Iniciando AppDelegate com Push Notifications")
     
-    // Inicializar Google Maps SDK ANTES de qualquer outra coisa
-    // CRÍTICO: Deve ser chamado antes de registrar plugins Flutter
-    if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String {
-      GMSServices.provideAPIKey(apiKey)
-      print("✅ Google Maps SDK inicializado com API Key")
-    } else {
-      print("❌ GMSApiKey não encontrado no Info.plist")
-    }
+    // Google Maps SDK REMOVIDO - google_maps_flutter desativado
+    // if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String {
+    //   GMSServices.provideAPIKey(apiKey)
+    //   print("✅ Google Maps SDK inicializado com API Key")
+    // } else {
+    //   print("❌ GMSApiKey não encontrado no Info.plist")
+    // }
+    print("⚠️ Google Maps SDK desativado")
     
     // Firebase já é inicializado no Flutter (main.dart)
     // Mas precisamos configurar o delegate para push notifications
@@ -78,12 +79,13 @@ import GoogleMaps
     locationManager?.desiredAccuracy = kCLLocationAccuracyBest
     locationManager?.distanceFilter = 30 // 30 metros
     
-    // CRÍTICO: Habilitar rastreamento em background
-    locationManager?.allowsBackgroundLocationUpdates = true
-    locationManager?.pausesLocationUpdatesAutomatically = false
-    locationManager?.showsBackgroundLocationIndicator = true
+    // BACKGROUND LOCATION DESATIVADO (flutter_background_geolocation removido)
+    // Estas linhas causam crash sem UIBackgroundModes location no Info.plist
+    // locationManager?.allowsBackgroundLocationUpdates = true
+    // locationManager?.pausesLocationUpdatesAutomatically = false
+    // locationManager?.showsBackgroundLocationIndicator = true
     
-    print("✅ Location Manager configurado para background tracking")
+    print("⚠️ Location Manager configurado (foreground only)")
     
     // Verificar status de autorização e solicitar se necessário
     checkLocationAuthorization()

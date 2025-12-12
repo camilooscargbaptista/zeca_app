@@ -282,6 +282,25 @@ class ApiService {
     _refreshToken = null;
   }
 
+  /// Obter token de autenticação atual (para WebSocket)
+  Future<String?> getToken() async {
+    if (_authToken != null) {
+      return _authToken;
+    }
+    // Se não tem em memória, buscar do storage
+    try {
+      final storageService = getIt<StorageService>();
+      final token = await storageService.getAccessToken();
+      if (token != null) {
+        _authToken = token;
+      }
+      return token;
+    } catch (e) {
+      debugPrint('⚠️ Erro ao obter token: $e');
+      return null;
+    }
+  }
+
   /// Limpar todos os dados de autenticação (tokens e credenciais)
   Future<void> clearAllAuth() async {
     clearAuthToken();

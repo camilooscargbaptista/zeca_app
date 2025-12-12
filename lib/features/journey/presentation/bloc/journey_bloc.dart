@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_background_geolocation/flutter_background_geolocation.dart' as bg;
+// flutter_background_geolocation REMOVIDO - usando placeholder
+// import 'package:flutter_background_geolocation/flutter_background_geolocation.dart' as bg;
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/services/token_manager_service.dart';
@@ -496,6 +497,9 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
     });
 
       // Configurar listener para receber localizações do plugin
+      // DESATIVADO: flutter_background_geolocation foi removido
+      // TODO: Implementar usando geolocator quando reativar tracking
+      /*
       bg.BackgroundGeolocation.onLocation((bg.Location location) {
         if (!_isTracking) return;
         
@@ -528,6 +532,8 @@ class JourneyBloc extends Bloc<JourneyEvent, JourneyState> {
           timestamp: timestampLocal, // ✅ Usar hora local do dispositivo
         ));
       });
+      */
+      debugPrint('⚠️ [Tracking] PLACEHOLDER - Tracking em background desativado');
 
       // Iniciar tracking com o BackgroundGeolocationService
       await _bgGeoService.startTracking(journey.id);

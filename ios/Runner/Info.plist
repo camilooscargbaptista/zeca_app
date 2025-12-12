@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Zeca App</string>
+	<string>ZECA</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,19 +27,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Este app precisa acessar a câmera para capturar fotos dos comprovantes de abastecimento.</string>
+	<string>Este app pode usar a câmera para capturar fotos de comprovantes de abastecimento em versões futuras.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Este app precisa acessar a galeria para selecionar imagens dos comprovantes de abastecimento.</string>
+	<string>Este app pode acessar a galeria para selecionar imagens de comprovantes em versões futuras.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Este app precisa salvar fotos na sua galeria</string>
+	<string>Este app pode salvar fotos na galeria em versões futuras.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ZECA precisa acessar sua localização para registrar pontos de GPS durante a jornada de trabalho e encontrar postos próximos.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>ZECA precisa acessar sua localização continuamente para rastrear sua jornada de trabalho mesmo quando o app estiver em segundo plano. Isso garante o registro correto dos pontos de GPS e quilometragem percorrida.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>ZECA precisa acessar sua localização continuamente, mesmo em segundo plano, para rastrear sua jornada de trabalho, registrar pontos de GPS e calcular a quilometragem percorrida com precisão.</string>
-	<key>NSMotionUsageDescription</key>
-	<string>ZECA usa os sensores de movimento do seu dispositivo para detectar automaticamente quando você está dirigindo ou parado, otimizando o rastreamento da jornada e economizando bateria.</string>
+	<string>ZECA pode acessar sua localização para registrar pontos de GPS durante a jornada de trabalho. Isso permite encontrar postos próximos e validar abastecimentos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>FirebaseAppDelegateProxyEnabled</key>
@@ -47,14 +43,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>location</string>
-		<string>fetch</string>
-		<string>processing</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.zeca.app.refresh</string>
-		<string>com.zeca.app.processing</string>
+		<!-- location REMOVIDO (flutter_background_geolocation removido) -->
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -76,8 +65,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>GMSApiKey</key>
-	<!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
-	<!-- Ou configure via script de build usando sed/xcodebuild -->
-	<string>AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q</string>
+	<!-- Configurada via build settings do Xcode: GOOGLE_MAPS_API_KEY -->
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>
 </plist>

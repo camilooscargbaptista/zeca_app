@@ -1,32 +1,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.zeca.app">
-    <!-- Compatibilidade com páginas de memória de 16 KB -->
-    <!-- Configurado via build.gradle (ndk abiFilters) -->
-    <!-- Permissões necessárias -->
+    <!-- Permissões de Câmera/Galeria DESATIVADAS (não utilizadas nesta versão)
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Permissão para rastreamento em background (Android 10+) -->
+    <!-- Permissões sensíveis REMOVIDAS (flutter_background_geolocation removido)
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <!-- Permissões para Foreground Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Permissões adicionais para flutter_background_geolocation -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
     <application
-        android:label="ZECA App"
+        android:label="ZECA"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         tools:replace="android:label">
@@ -66,11 +63,10 @@
             </intent-filter>
         </service>
         
-        <!-- Google Maps API Key -->
-        <!-- IMPORTANTE: Substitua GOOGLE_MAPS_API_KEY_PLACEHOLDER pela chave real antes de fazer build -->
-        <!-- Ou configure via build.gradle usando resValue ou manifestPlaceholders -->
+        <!-- Google Maps API Key - REMOVIDO (google_maps_flutter removido)
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCTlAYLa9K04yfP65Qjg83vqoXhjee5Z2Q" />
+            android:value="${GOOGLE_MAPS_API_KEY}" />
+        -->
     </application>
 </manifest>

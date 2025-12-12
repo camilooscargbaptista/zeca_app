@@ -7,9 +7,9 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// flutter_background_geolocation
-Project background_geolocation = project(':flutter_background_geolocation')
-apply from: "${background_geolocation.projectDir}/background_geolocation.gradle"
+// flutter_background_geolocation - REMOVIDO (incompatibilidade + permissões sensíveis)
+// Project background_geolocation = project(':flutter_background_geolocation')
+// apply from: "${background_geolocation.projectDir}/background_geolocation.gradle"
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
@@ -29,25 +29,18 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-// Carregar propriedades do keystore (se existir)
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
-
 android {
     namespace "com.zeca.app"
     compileSdk 36
-    ndkVersion "27.0.12077973"  // NDK r27+ requerido para suporte a 16 KB (mínimo: 26.1.10909125)
+    ndkVersion "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
 
     sourceSets {
@@ -57,45 +50,36 @@ android {
     defaultConfig {
         applicationId "com.zeca.app"
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 35
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         
-        // Compatibilidade com páginas de memória de 16 KB
-        // Removendo ABIs 32-bit (armeabi-v7a e x86) para reduzir incompatibilidades
-        // Dispositivos 32-bit são muito raros hoje em dia
-        ndk {
-            abiFilters 'arm64-v8a', 'x86_64'  // Apenas 64-bit
-        }
-    }
-
-    signingConfigs {
-        release {
-            if (keystorePropertiesFile.exists()) {
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-            }
-        }
+        // Injetar variáveis de forma segura via manifestPlaceholders
+        def googleMapsApiKey = localProperties.getProperty('GOOGLE_MAPS_API_KEY', '')
+        manifestPlaceholders = [
+            GOOGLE_MAPS_API_KEY: googleMapsApiKey,
+            applicationName: "io.flutter.embedding.android.FlutterApplication"
+        ]
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false   // <-- REQUIRED for flutter_background_geolocation
-            // Desabilitar strip de símbolos de debug (resolve erro comum)
-            ndk {
-                debugSymbolLevel 'NONE'
-            }
         }
     }
     
-    // Configuração para evitar erro de strip de símbolos de debug
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging = true
+    // Configuração de splits para App Bundle (resolve erro de pacotes de apps)
+    bundle {
+        language {
+            enableSplit = false  // Incluir todos os idiomas em um único pacote
+        }
+        density {
+            enableSplit = false  // Incluir todas as densidades em um único pacote
+        }
+        abi {
+            enableSplit = true  // Separar por ABI (arm64-v8a, x86_64)
         }
     }
 }

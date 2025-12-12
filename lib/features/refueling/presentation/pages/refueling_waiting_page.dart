@@ -50,7 +50,14 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     // Salvar estado de validação pendente para recuperar após login se necessário
     _savePendingValidationState();
     
-    _startPolling();
+    // Se já temos o refuelingId, carregar dados imediatamente (caso veio do WebSocket)
+    if (widget.refuelingId.isNotEmpty) {
+      debugPrint('🚀 [RefuelingWaitingPage] refuelingId presente, carregando dados imediatamente: ${widget.refuelingId}');
+      _loadRefuelingData(widget.refuelingId);
+    } else {
+      // Caso contrário, iniciar polling para aguardar registro
+      _startPolling();
+    }
   }
   
   /// Salvar estado de validação pendente para recuperar após login

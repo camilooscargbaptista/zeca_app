@@ -1,7 +1,7 @@
 name: zeca_app
 description: Sistema de abastecimento corporativo ZECA - white-label
 publish_to: 'none'
-version: 1.0.3+72
+version: 1.0.3+77
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -43,19 +43,19 @@ dependencies:
   camera: ^0.10.5+5
   image_cropper: ^11.0.0
   
-  # OCR - Google ML Kit - REMOVIDO (não está sendo usado e causa incompatibilidade 16 KB)
-  # google_mlkit_text_recognition: ^0.15.0
-  # image: ^4.1.7  # Para pré-processamento de imagens
+  # OCR - Google ML Kit
+  google_mlkit_text_recognition: ^0.11.0
+  image: ^4.1.7  # Para pré-processamento de imagens
   
   # Permissions
   permission_handler: ^11.0.1
   
   # Location
-  geolocator: ^10.1.0  # Manter por enquanto (fallback)
+  geolocator: ^10.1.0  # Localização básica (foreground only)
   geocoding: ^2.1.1
-  flutter_background_geolocation: ^4.18.2  # Tracking robusto em background
+  # flutter_background_geolocation: ^4.18.1  # REMOVIDO - incompatibilidade 16KB + permissões sensíveis
   
-  # Maps - REMOVIDO (não está sendo usado e causa incompatibilidade 16 KB)
+  # Maps - REMOVIDO (incompatibilidade 16KB)
   # google_maps_flutter: ^2.5.0
   
   # Device Info (para JWT Sliding Window)
@@ -69,8 +69,7 @@ dependencies:
   
   # QR Code
   qr_flutter: ^4.1.0
-  # mobile_scanner - REMOVIDO (não está sendo usado e causa incompatibilidade 16 KB via ML Kit)
-  # mobile_scanner: ^3.5.2
+  mobile_scanner: ^3.5.2
   
   # Validação e Formatação
   mask_text_input_formatter: ^2.5.0
@@ -79,6 +78,9 @@ dependencies:
   # Utils
   intl: ^0.18.1
   logger: ^2.0.2+1
+  
+  # WebSocket - Comunicação em tempo real
+  socket_io_client: ^2.0.3+1
   dartz: ^0.10.1
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
@@ -127,14 +129,14 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/common/zeca_logo.png"
+  image_path: "assets/images/icon/app_icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   # Configuração para Android Adaptive Icon
   adaptive_icon_background: "#FFFFFF" # Fundo branco
-  adaptive_icon_foreground: "assets/images/common/zeca_logo.png" # Logo maior no foreground
+  adaptive_icon_foreground: "assets/images/icon/app_icon.png" # Logo maior no foreground
   # Garantir fundo branco e logo maior
   android_adaptive_icon_background: "#FFFFFF"
-  android_adaptive_icon_foreground: "assets/images/common/zeca_logo.png"
+  android_adaptive_icon_foreground: "assets/images/icon/app_icon.png"
   # iOS - remover transparência e garantir fundo branco
   remove_alpha_ios: true
   ios_background_color: "#FFFFFF" # Fundo branco para iOS

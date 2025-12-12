@@ -6,7 +6,7 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
-// Google Maps removido - não está sendo usado e causa incompatibilidade 16 KB
+// google_maps_flutter REMOVIDO - usando GeoPosition local
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
@@ -22,11 +22,9 @@ import '../../../../core/services/places_service.dart';
 import '../../../../core/services/directions_service.dart';
 import '../../data/services/journey_storage_service.dart';
 import '../../domain/entities/journey_entity.dart';
-// OdometerCameraPage removido - não está sendo usado e causa incompatibilidade 16 KB
-// import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 import '../../../../shared/widgets/places_autocomplete_field.dart';
-// RouteMapView removido - Google Maps não está sendo usado
-// import '../../../../shared/widgets/route_map_view.dart';
+import '../../../../shared/widgets/route_map_view.dart';
 import '../../widgets/navigation_info_card.dart';
 import '../../widgets/speed_card.dart';
 import '../../widgets/route_summary_card.dart';
@@ -246,21 +244,21 @@ class _JourneyPageState extends State<JourneyPage> {
     }
   }
 
-  /// Abre a tela de câmera para capturar odômetro - REMOVIDO (não está sendo usado)
-  // Future<void> _openOdometerCamera() async {
-  //   final result = await Navigator.of(context).push<String>(
-  //     MaterialPageRoute(
-  //       builder: (context) => const OdometerCameraPage(),
-  //     ),
-  //   );
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
 
-  //   if (result != null && mounted) {
-  //     // Preencher campo com valor extraído
-  //     setState(() {
-  //       _odometroController.text = result;
-  //     });
-  //   }
-  // }
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
+      setState(() {
+        _odometroController.text = result;
+      });
+    }
+  }
 
   /// Chamado quando um lugar é selecionado no autocomplete
   /// Calcula automaticamente a rota e preenche o campo de KM
@@ -339,8 +337,7 @@ class _JourneyPageState extends State<JourneyPage> {
           String? originName;
           try {
             originName = await geocodingService.getStreetName(
-              currentLocation.latitude,
-              currentLocation.longitude,
+              GeoPosition(currentLocation.latitude, currentLocation.longitude),
             );
           } catch (e) {
             debugPrint('⚠️ [Journey] Erro ao obter nome da origem: $e');
@@ -677,12 +674,11 @@ class _JourneyPageState extends State<JourneyPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: const Icon(Icons.speed, color: AppColors.zecaBlue),
-                          // Ícone de câmera removido - funcionalidade não está sendo usada
-                          // suffixIcon: IconButton(
-                          //   icon: const Icon(Icons.camera_alt, color: AppColors.zecaBlue),
-                          //   onPressed: _openOdometerCamera,
-                          //   tooltip: 'Capturar odômetro com câmera',
-                          // ),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.camera_alt, color: AppColors.zecaBlue),
+                            onPressed: _openOdometerCamera,
+                            tooltip: 'Capturar odômetro com câmera',
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -872,29 +868,73 @@ class _JourneyPageState extends State<JourneyPage> {
         child: Stack(
           children: [
             // Mapa ocupando toda a tela
-            // Google Maps removido - não está sendo usado e causa incompatibilidade 16 KB
-            Container(
-              color: Colors.grey[200],
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.map_outlined, size: 64, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'Mapa não disponível',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Google Maps foi removido para compatibilidade 16 KB',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+            if (_routeOriginLat != null && 
+                _routeOriginLng != null && 
+                _routeDestLat != null && 
+                _routeDestLng != null)
+              RouteMapView(
+                originLat: _routeOriginLat!,
+                originLng: _routeOriginLng!,
+                destLat: _routeDestLat!,
+                destLng: _routeDestLng!,
+                polyline: _routePolyline,
+                destinationName: _routeDestinationName,
+                isNavigationMode: _isNavigationMode,
+                currentPosition: _currentLocation != null 
+                    ? GeoPosition(_currentLocation!.latitude, _currentLocation!.longitude)
+                    : null,
+              )
+            else
+              // Se não houver rota, mostrar mapa com localização atual
+              FutureBuilder<Position?>(
+                future: _locationService.getCurrentPosition(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      color: Colors.white,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Obtendo localização...'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  if (snapshot.hasError) {
+                    debugPrint('❌ [Journey] Erro ao obter localização: ${snapshot.error}');
+                    // Tentar usar uma localização padrão (centro do Brasil) se houver erro
+                    return RouteMapView(
+                      originLat: -14.2350, // Centro do Brasil
+                      originLng: -51.9253,
+                      destLat: -14.2350,
+                      destLng: -51.9253,
+                    );
+                  }
+                  
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final position = snapshot.data!;
+                    return RouteMapView(
+                      originLat: position.latitude,
+                      originLng: position.longitude,
+                      destLat: position.latitude,
+                      destLng: position.longitude,
+                    );
+                  }
+                  
+                  // Fallback: mostrar mapa com localização padrão
+                  return RouteMapView(
+                    originLat: -14.2350, // Centro do Brasil
+                    originLng: -51.9253,
+                    destLat: -14.2350,
+                    destLng: -51.9253,
+                  );
+                },
               ),
-            ),
 
             // Header compacto no topo
             Positioned(
@@ -1437,8 +1477,7 @@ class _JourneyPageState extends State<JourneyPage> {
         // Obter nome da rua atual
         try {
           final streetName = await geocodingService.getStreetName(
-            position.latitude,
-            position.longitude,
+            GeoPosition(position.latitude, position.longitude),
           );
           if (mounted && streetName != null) {
             setState(() {
@@ -1547,8 +1586,7 @@ class _JourneyPageState extends State<JourneyPage> {
           if (_isNavigationMode) {
             try {
               final streetName = await geocodingService.getStreetName(
-                position.latitude,
-                position.longitude,
+                GeoPosition(position.latitude, position.longitude),
               );
               if (mounted && streetName != null) {
                 setState(() {
