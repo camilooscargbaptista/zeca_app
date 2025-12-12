@@ -54,9 +54,12 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         
-        // Injetar API Key de forma segura via local.properties
+        // Injetar variáveis de forma segura via manifestPlaceholders
         def googleMapsApiKey = localProperties.getProperty('GOOGLE_MAPS_API_KEY', '')
-        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: googleMapsApiKey]
+        manifestPlaceholders = [
+            GOOGLE_MAPS_API_KEY: googleMapsApiKey,
+            applicationName: "io.flutter.embedding.android.FlutterApplication"
+        ]
     }
 
     buildTypes {

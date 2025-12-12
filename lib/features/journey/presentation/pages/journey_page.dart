@@ -6,7 +6,8 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+// google_maps_flutter REMOVIDO - usando GeoPosition local
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../core/di/injection.dart';
@@ -336,7 +337,7 @@ class _JourneyPageState extends State<JourneyPage> {
           String? originName;
           try {
             originName = await geocodingService.getStreetName(
-              LatLng(currentLocation.latitude, currentLocation.longitude),
+              GeoPosition(currentLocation.latitude, currentLocation.longitude),
             );
           } catch (e) {
             debugPrint('⚠️ [Journey] Erro ao obter nome da origem: $e');
@@ -880,7 +881,7 @@ class _JourneyPageState extends State<JourneyPage> {
                 destinationName: _routeDestinationName,
                 isNavigationMode: _isNavigationMode,
                 currentPosition: _currentLocation != null 
-                    ? LatLng(_currentLocation!.latitude, _currentLocation!.longitude)
+                    ? GeoPosition(_currentLocation!.latitude, _currentLocation!.longitude)
                     : null,
               )
             else
@@ -1476,7 +1477,7 @@ class _JourneyPageState extends State<JourneyPage> {
         // Obter nome da rua atual
         try {
           final streetName = await geocodingService.getStreetName(
-            LatLng(position.latitude, position.longitude),
+            GeoPosition(position.latitude, position.longitude),
           );
           if (mounted && streetName != null) {
             setState(() {
@@ -1585,7 +1586,7 @@ class _JourneyPageState extends State<JourneyPage> {
           if (_isNavigationMode) {
             try {
               final streetName = await geocodingService.getStreetName(
-                LatLng(position.latitude, position.longitude),
+                GeoPosition(position.latitude, position.longitude),
               );
               if (mounted && streetName != null) {
                 setState(() {
