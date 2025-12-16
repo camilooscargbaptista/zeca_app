@@ -24,8 +24,8 @@
 
     <application
         android:label="ZECA"
-        android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:extractNativeLibs="false"
         tools:replace="android:label">
         <activity
             android:name="com.zeca.app.MainActivity"
