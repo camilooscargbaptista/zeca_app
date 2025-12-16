@@ -35,7 +35,8 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
   @override
   void initState() {
     super.initState();
-    _requestLocationPermission();
+    // Permissão de localização já é solicitada no splash_page.dart
+    // Não chamar aqui para evitar race condition
     _loadRememberedCpf();
   }
 
