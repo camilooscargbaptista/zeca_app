@@ -29,18 +29,16 @@ class AuthRepositoryImpl implements AuthRepository {
       // Em produção, isso seria uma tela de login com senha
       final password = 'default_password'; // Isso deve vir da UI
       
-      // Fazer login OAuth
-      final tokenResponse = await remoteDataSource.loginWithOAuth(cpf, password);
+      // Fazer login OAuth - agora retorna todos os dados do usuário
+      final loginResponse = await remoteDataSource.loginWithOAuth(cpf, password);
       
-      // Obter informações do usuário
-      final userInfo = await remoteDataSource.getUserInfo(tokenResponse.accessToken);
-      
-      // Converter para UserModel
-      final userModel = UserModel.fromOAuthUserInfo(userInfo);
+      // Converter para UserModel diretamente da resposta de login
+      // Não precisa mais chamar /oauth/userinfo!
+      final userModel = UserModel.fromLoginResponse(loginResponse.user);
       
       // Salvar tokens
-      await storageService.saveAccessToken(tokenResponse.accessToken);
-      await storageService.saveRefreshToken(tokenResponse.refreshToken);
+      await storageService.saveAccessToken(loginResponse.accessToken);
+      await storageService.saveRefreshToken(loginResponse.refreshToken);
       
       // Cachear usuário
       await localDataSource.cacheUser(userModel);

@@ -71,6 +71,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     _loadPendingRefuelingsCount();
   }
   
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -577,10 +578,38 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       setState(() {
         _isLoading = false;
       });
+      
+      // Extrair mensagem de erro do backend
+      String errorTitle = 'Erro na Validação';
+      String errorMessage = 'Erro ao validar posto';
+      
+      final errorStr = e.toString();
+      
+      // Tentar extrair a mensagem JSON do backend
+      final messageMatch = RegExp(r'"message"\s*:\s*"([^"]+)"').firstMatch(errorStr);
+      if (messageMatch != null) {
+        errorMessage = messageMatch.group(1) ?? errorMessage;
+        
+        // Customizar título baseado no tipo de erro
+        if (errorMessage.contains('não aceita') && errorMessage.contains('autônomo')) {
+          errorTitle = 'Posto Não Disponível';
+        } else if (errorMessage.contains('preços') || errorMessage.contains('combustível')) {
+          errorTitle = 'Combustível Não Disponível';
+        } else if (errorMessage.contains('não encontrado')) {
+          errorTitle = 'Posto Não Encontrado';
+        }
+      } else if (errorStr.contains('404')) {
+        errorTitle = 'Posto Não Encontrado';
+        errorMessage = 'CNPJ não encontrado na base de postos.';
+      } else if (errorStr.contains('400')) {
+        errorTitle = 'Validação Falhou';
+        errorMessage = 'Não foi possível validar este posto para abastecimento.';
+      }
+      
       ErrorDialog.show(
         context,
-        title: 'Erro na Validação',
-        message: 'Erro ao validar posto: $e',
+        title: errorTitle,
+        message: errorMessage,
       );
     }
   }
@@ -616,11 +645,15 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         fuelTypeApi = 'DIESEL_S10'; // Default para Diesel S10
       }
       
+      // Verificar se é autônomo baseado no partnership.type retornado pelo backend
+      final isAutonomous = _stationData!['partnership']?['type'] == 'AUTONOMOUS';
+      
       final codeResponse = await apiService.generateRefuelingCode(
         vehiclePlate: _vehicleData!['placa'],
         fuelType: fuelTypeApi,
         stationCnpj: _stationData!['cnpj'],
         abastecerArla: _abastecerArla,
+        isAutonomous: isAutonomous,
       );
 
       if (codeResponse['success'] == true) {
@@ -1023,14 +1056,18 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: _stationData!['partnership']['is_active'] 
-                                            ? Colors.green 
+                                            ? (_stationData!['partnership']['type'] == 'AUTONOMOUS' 
+                                                ? Colors.blue 
+                                                : Colors.green)
                                             : Colors.red,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        _stationData!['partnership']['is_active'] 
-                                            ? 'Parceria Ativa' 
-                                            : 'Parceria Inativa',
+                                        _stationData!['partnership']['type'] == 'AUTONOMOUS'
+                                            ? 'Preço Autônomo'
+                                            : (_stationData!['partnership']['is_active'] 
+                                                ? 'Parceria Ativa' 
+                                                : 'Parceria Inativa'),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,

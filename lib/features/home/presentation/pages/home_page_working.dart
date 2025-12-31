@@ -603,7 +603,7 @@ class _HomePageWorkingState extends State<HomePageWorking> {
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

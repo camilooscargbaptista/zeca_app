@@ -16,6 +16,7 @@ _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
       companyId: json['company_id'] as String,
       companyName: json['company_name'] as String,
       companyCnpj: json['company_cnpj'] as String?,
+      companyType: json['company_type'] as String?,
       lastLogin: json['last_login'] == null
           ? null
           : DateTime.parse(json['last_login'] as String),
@@ -54,6 +55,7 @@ Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
       'company_id': instance.companyId,
       'company_name': instance.companyName,
       'company_cnpj': instance.companyCnpj,
+      'company_type': instance.companyType,
       'last_login': instance.lastLogin?.toIso8601String(),
       'roles': instance.roles,
       'permissions': instance.permissions,

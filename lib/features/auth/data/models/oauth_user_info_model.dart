@@ -14,6 +14,7 @@ class OAuthUserInfoModel with _$OAuthUserInfoModel {
     @JsonKey(name: 'company_id') required String companyId,
     @JsonKey(name: 'company_name') required String companyName,
     @JsonKey(name: 'company_cnpj') String? companyCnpj,
+    @JsonKey(name: 'company_type') String? companyType,
     @JsonKey(name: 'roles') @Default([]) List<String> roles,
     @JsonKey(name: 'permissions') @Default([]) List<String> permissions,
     @JsonKey(name: 'last_login') DateTime? lastLogin,

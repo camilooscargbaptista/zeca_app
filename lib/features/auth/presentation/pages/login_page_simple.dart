@@ -8,6 +8,7 @@ import '../../../../core/services/pending_validation_storage.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/token_manager_service.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../shared/widgets/dialogs/success_dialog.dart';
 
@@ -238,6 +239,48 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
                   },
                   child: const Text('Esqueci minha senha'),
                 ),
+                
+                const SizedBox(height: 16),
+                
+                // Divisor
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey[300])),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'ou',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey[300])),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Link para cadastro autônomo
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Não tem conta? ',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        context.push('/autonomous/register');
+                      },
+                      child: const Text(
+                        'Cadastre como autônomo',
+                        style: TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 ],
               ),
             ),
@@ -370,13 +413,51 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
               );
             }
           } else {
-            // Sem validação pendente - navegar para tela de início de jornada
-            SuccessDialog.show(
-              context,
-              title: 'Login Realizado',
-              message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
-            );
-            context.go('/journey-start');
+            // Sem validação pendente - verificar tipo de usuário
+            final companyType = userData['user']?['company']?['type'] as String?;
+            final isAutonomo = companyType == 'AUTONOMO';
+            
+            debugPrint('🚗 Company type: $companyType, isAutonomo: $isAutonomo');
+            
+            if (isAutonomo) {
+              // Usuário autônomo - verificar se tem veículos cadastrados
+              try {
+                final vehicleCount = await apiService.countAutonomousVehicles();
+                final count = vehicleCount['data']?['count'] as int? ?? 0;
+                
+                debugPrint('🚗 Veículos do autônomo: $count');
+                
+                if (count == 0) {
+                  // Sem veículos - ir para tela de primeiro acesso
+                  SuccessDialog.show(
+                    context,
+                    title: 'Login Realizado',
+                    message: 'Bem-vindo! Cadastre seu primeiro veículo.',
+                  );
+                  context.go('/autonomous/first-access');
+                } else {
+                  // Tem veículos - ir para tela de início de jornada autônomo
+                  SuccessDialog.show(
+                    context,
+                    title: 'Login Realizado',
+                    message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
+                  );
+                  context.go('/autonomous/journey-start');
+                }
+              } catch (e) {
+                debugPrint('⚠️ Erro ao verificar veículos: $e');
+                // Em caso de erro, ir para first-access por segurança
+                context.go('/autonomous/first-access');
+              }
+            } else {
+              // Usuário normal - ir para tela de início de jornada
+              SuccessDialog.show(
+                context,
+                title: 'Login Realizado',
+                message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
+              );
+              context.go('/journey-start');
+            }
           }
         }
       } else {

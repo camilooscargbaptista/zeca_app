@@ -616,7 +616,7 @@ class _HomePageCorrectedState extends State<HomePageCorrected> {
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

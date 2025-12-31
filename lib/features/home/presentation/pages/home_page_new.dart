@@ -612,7 +612,7 @@ class _HomePageNewState extends State<HomePageNew> {
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

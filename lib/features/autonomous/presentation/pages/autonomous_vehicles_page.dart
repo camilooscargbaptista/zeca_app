@@ -1,0 +1,393 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/flavor_config.dart';
+import '../../../../core/services/api_service.dart';
+
+class AutonomousVehiclesPage extends StatefulWidget {
+  const AutonomousVehiclesPage({Key? key}) : super(key: key);
+
+  @override
+  State<AutonomousVehiclesPage> createState() => _AutonomousVehiclesPageState();
+}
+
+class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
+  bool _isLoading = true;
+  String? _error;
+  List<Map<String, dynamic>> _vehicles = [];
+  int _vehicleLimit = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final apiService = ApiService();
+      final response = await apiService.get('/autonomous/vehicles');
+      
+      if (response['success'] == true) {
+        final List<dynamic> data = response['data'] ?? [];
+        setState(() {
+          _vehicles = data.map((v) => {
+            'id': v['id']?.toString() ?? '',
+            'plate': v['plate'] ?? '',
+            'brand': v['brand'] ?? '',
+            'model': v['model'] ?? '',
+            'year': v['year'] ?? 0,
+            'fuelType': _formatFuelType(v['fuel_type'] ?? ''),
+            'odometer': v['odometer'] ?? 0,
+          }).toList();
+          _isLoading = false;
+        });
+        
+        // Buscar limite de veículos
+        final countResponse = await apiService.countAutonomousVehicles();
+        if (countResponse['success'] == true) {
+          setState(() {
+            _vehicleLimit = countResponse['data']?['limit'] ?? 3;
+          });
+        }
+      } else {
+        setState(() {
+          _error = response['error'] ?? 'Erro ao carregar veículos';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erro de conexão: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatFuelType(String type) {
+    switch (type) {
+      case 'DIESEL_S10': return 'Diesel S10';
+      case 'DIESEL_S500': return 'Diesel S500';
+      case 'GASOLINA': return 'Gasolina';
+      case 'ETANOL': return 'Etanol';
+      default: return type;
+    }
+  }
+
+  void _deleteVehicle(String vehicleId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Veículo'),
+        content: const Text('Tem certeza que deseja excluir este veículo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _vehicles.removeWhere((v) => v['id'] == vehicleId);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Veículo excluído'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatOdometer(int odometer) {
+    return odometer.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryColor = FlavorConfig.instance.primaryColor;
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFA),
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Meus Veículos',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.white),
+            onPressed: () => context.push('/autonomous/vehicles/add'),
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Info box
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3F2FD),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: primaryColor, size: 18),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${_vehicles.length} de 3 veículos cadastrados',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Lista de veículos
+                  if (_vehicles.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhum veículo cadastrado',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Adicione seu primeiro veículo',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ..._vehicles.map((vehicle) => _buildVehicleCard(vehicle)),
+                ],
+              ),
+            ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: () => context.push('/autonomous/vehicles/add'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildVehicleCard(Map<String, dynamic> vehicle) {
+    final primaryColor = FlavorConfig.instance.primaryColor;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header: ícone, info, ações
+          Row(
+            children: [
+              // Ícone do veículo
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.local_shipping, color: primaryColor, size: 24),
+              ),
+              const SizedBox(width: 12),
+              
+              // Info do veículo
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vehicle['plate'],
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF212121),
+                      ),
+                    ),
+                    Text(
+                      '${vehicle['brand']} ${vehicle['model']}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF757575),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Ações
+              Row(
+                children: [
+                  // Editar
+                  _buildActionButton(
+                    icon: Icons.edit,
+                    color: primaryColor,
+                    backgroundColor: const Color(0xFFE3F2FD),
+                    onTap: () => context.push('/autonomous/vehicles/edit/${vehicle['id']}'),
+                  ),
+                  const SizedBox(width: 8),
+                  // Excluir
+                  _buildActionButton(
+                    icon: Icons.delete,
+                    color: const Color(0xFFE53935),
+                    backgroundColor: const Color(0xFFFFEBEE),
+                    onTap: () => _deleteVehicle(vehicle['id']),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Detalhes
+          Container(
+            padding: const EdgeInsets.only(top: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+            ),
+            child: Row(
+              children: [
+                // Combustível
+                _buildDetailItem(
+                  icon: Icons.local_gas_station,
+                  value: vehicle['fuelType'],
+                  isBadge: true,
+                ),
+                const SizedBox(width: 12),
+                // Ano
+                _buildDetailItem(
+                  icon: Icons.calendar_today,
+                  value: vehicle['year'].toString(),
+                ),
+                const SizedBox(width: 12),
+                // Quilometragem
+                _buildDetailItem(
+                  icon: Icons.speed,
+                  value: '${_formatOdometer(vehicle['odometer'])} km',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 16),
+      ),
+    );
+  }
+
+  Widget _buildDetailItem({
+    required IconData icon,
+    required String value,
+    bool isBadge = false,
+  }) {
+    final primaryColor = FlavorConfig.instance.primaryColor;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: primaryColor, size: 12),
+        const SizedBox(width: 6),
+        if (isBadge)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFE65100),
+              ),
+            ),
+          )
+        else
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF757575),
+            ),
+          ),
+      ],
+    );
+  }
+}
