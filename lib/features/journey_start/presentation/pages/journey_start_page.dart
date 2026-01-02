@@ -290,8 +290,8 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
     // TODO: Implementar navegação para tela de cadastro de veículo
     ErrorDialog.show(
       context,
-      title: 'Em Desenvolvimento',
-      message: 'A tela de cadastro de veículo será implementada em breve.',
+      title: 'Cadastro de Veículo',
+      message: 'Para cadastrar um novo veículo, acesse o portal web em abastecacomzeca.com.br ou entre em contato com o suporte.',
     );
   }
 
@@ -808,12 +808,19 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
         const SizedBox(height: 12),
         
         // Botão adicionar novo veículo
-        OutlinedButton.icon(
-          onPressed: _navigateToAddVehicle,
-          icon: const Icon(Icons.add),
-          label: const Text('Adicionar Novo Veículo'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _navigateToAddVehicle,
+            icon: const Icon(Icons.add, size: 20),
+            label: const Text(
+              'Adicionar Novo Veículo',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
+              minimumSize: const Size(double.infinity, 52),
+            ),
           ),
         ),
       ],
