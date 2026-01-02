@@ -157,8 +157,8 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
             'fuelType': fuelType,
           };
           
-          // Preencher controllers para salvar (mesmo que não esteja na lista, salva)
-          _brandController.text = brand.isEmpty ? '' : (_brands.contains(brand) ? brand : 'Outro');
+          // Preencher controllers para salvar - usar valor da API diretamente
+          _brandController.text = brand;
           _modelController.text = model;
           _yearController.text = year;
           _colorController.text = color;
