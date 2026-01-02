@@ -15,8 +15,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
-// OdometerCameraPage removido - não está sendo usado e causa incompatibilidade 16 KB
-// import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 
 class HomePageSimple extends StatefulWidget {
   const HomePageSimple({Key? key}) : super(key: key);
@@ -69,14 +68,48 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     super.initState();
     _loadUserData();
     _loadPendingRefuelingsCount();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadJourneyOnStart();
+    });
   }
-  
   
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Recarregar contador quando voltar para a tela
     _loadPendingRefuelingsCount();
+  }
+
+  Future<void> _loadJourneyOnStart() async {
+    try {
+      final storage = getIt<StorageService>();
+      final vehicleData = await storage.getJourneyVehicleData();
+      
+      if (vehicleData != null && mounted) {
+        debugPrint('🚗 [HomePage] Dados da jornada carregados: ${vehicleData['placa']}');
+        setState(() {
+          _vehicleData = vehicleData;
+          _placaController.text = vehicleData['placa'] ?? '';
+          _kmController.text = vehicleData['km_atual']?.toString() ?? '';
+          
+          // Tentar extrair combustivel (pode vir como 'tipo_combustivel' ou 'fuel_type')
+          String fuel = vehicleData['tipo_combustivel'] ?? vehicleData['fuel_type'] ?? 'Diesel';
+          // Validar se fuel está na lista de available, se não, adicionar
+          if (!_availableFuels.contains(fuel)) {
+             _availableFuels = [fuel, 'Diesel', 'Gasolina', 'Etanol']; 
+          }
+          _selectedFuel = fuel;
+          
+          _vehicleSearched = true;
+          _vehicleConfirmed = true; // Auto-confirmar para habilitar o fluxo
+        });
+      } else {
+        debugPrint('⚠️ [HomePage] Nenhuma jornada ativa encontrada no storage.');
+        // Opcional: Redirecionar para seleção de jornada ou mostrar aviso
+      }
+    } catch (e) {
+      debugPrint('❌ [HomePage] Erro ao carregar jornada: $e');
+    }
   }
 
 
@@ -88,6 +121,31 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
   }
+  
+  Widget _buildVehicleDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   /// Carregar dados do usuário logado do token JWT e UserService
@@ -97,14 +155,17 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       final storageService = getIt<StorageService>();
       final storedUserData = storageService.getUserData();
       
-      // Tentar obter CNPJ do token JWT
+      // Tentar obter CNPJ e is_autonomous do token JWT
       String? cnpjFromToken;
+      bool isAutonomousFromToken = false;
       try {
         final token = await storageService.getAccessToken();
         if (token != null) {
           final decoded = _decodeJwtToken(token);
           cnpjFromToken = decoded['company_cnpj'] as String?;
+          isAutonomousFromToken = decoded['is_autonomous'] == true;
           debugPrint('🔍 CNPJ do token JWT: $cnpjFromToken');
+          debugPrint('🔍 is_autonomous do token: $isAutonomousFromToken');
         }
       } catch (e) {
         debugPrint('⚠️ Erro ao decodificar token JWT: $e');
@@ -120,9 +181,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'cnpj': userService.transporterCnpj ?? cnpjFromToken ?? storedUserData?['company']?['cnpj'] ?? storedUserData?['cnpj'] ?? '---',
             'telefone': storedUserData?['phone'] ?? storedUserData?['telefone'] ?? '---',
             'email': storedUserData?['email'] ?? '---',
+            // Priorizar is_autonomous do JWT token (mais confiável)
+            'isAutonomous': isAutonomousFromToken || storedUserData?['is_autonomous'] == true,
           };
         });
-        debugPrint('✅ Dados do usuário carregados do UserService');
+        debugPrint('✅ Dados do usuário carregados do UserService (isAutonomous: ${_userData!['isAutonomous']})');
       } else if (storedUserData != null && storedUserData.isNotEmpty) {
         setState(() {
           _userData = {
@@ -132,9 +195,10 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'cnpj': cnpjFromToken ?? storedUserData['company']?['cnpj'] ?? storedUserData['cnpj'] ?? '---',
             'telefone': storedUserData['phone'] ?? storedUserData['telefone'] ?? '---',
             'email': storedUserData['email'] ?? '---',
+            'isAutonomous': isAutonomousFromToken || storedUserData['is_autonomous'] == true,
           };
         });
-        debugPrint('✅ Dados do usuário carregados do storage');
+        debugPrint('✅ Dados do usuário carregados do storage (isAutonomous: ${_userData!['isAutonomous']})');
       } else {
         // Fallback: tentar apenas do token JWT
         if (cnpjFromToken != null) {
@@ -146,9 +210,10 @@ class _HomePageSimpleState extends State<HomePageSimple> {
               'cnpj': cnpjFromToken,
               'telefone': '---',
               'email': '---',
+              'isAutonomous': isAutonomousFromToken,
             };
           });
-          debugPrint('✅ CNPJ carregado do token JWT');
+          debugPrint('✅ CNPJ carregado do token JWT (isAutonomous: $isAutonomousFromToken)');
         } else {
           debugPrint('⚠️ Nenhum dado do usuário encontrado');
         }
@@ -393,120 +458,25 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     super.dispose();
   }
 
-  /// Abre a tela de câmera para capturar odômetro - REMOVIDO (não está sendo usado)
-  // Future<void> _openOdometerCamera() async {
-  //   final result = await Navigator.of(context).push<String>(
-  //     MaterialPageRoute(
-  //       builder: (context) => const OdometerCameraPage(),
-  //     ),
-  //   );
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
 
-  //   if (result != null && mounted) {
-  //     // Preencher campo com valor extraído
-  //     setState(() {
-  //       _kmController.text = result;
-  //     });
-  //   }
-  // }
-
-
-  Future<void> _searchVehicle() async {
-    if (_placaController.text.isEmpty) {
-      ErrorDialog.show(
-        context,
-        title: 'Placa Obrigatória',
-        message: 'Por favor, digite a placa do veículo',
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final apiService = ApiService();
-      final response = await apiService.searchVehicle(_placaController.text);
-      
-      if (response['success'] == true && response['data']['vehicles'].isNotEmpty) {
-        final vehicle = response['data']['vehicles'][0];
-        
-        // Mapear os dados da API real para o formato esperado pela UI
-        setState(() {
-          _vehicleData = {
-            'placa': vehicle['plate'],
-            'marca': vehicle['brand'],
-            'modelo': vehicle['model'],
-            'ano': vehicle['year'],
-            'cor': vehicle['color'],
-            'capacidade': vehicle['capacity'],
-            'tipoCombustivel': vehicle['fuel_types']?.isNotEmpty == true 
-                ? vehicle['fuel_types'][0]['name'] 
-                : 'Diesel S10',
-            'tiposCombustivel': vehicle['fuel_types']?.map<String>((fuel) => fuel['name'] as String).toList() ?? ['Diesel S10'],
-            'fuel_types': vehicle['fuel_types'], // Manter os dados originais para uso posterior
-            'kmAtual': 0, // KM não vem da API, será preenchido pelo usuário
-            'transporter': vehicle['transporter'],
-            'is_active': vehicle['is_active'],
-          };
-          _vehicleSearched = true;
-          _vehicleConfirmed = false;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        ErrorDialog.show(
-          context,
-          title: 'Veículo Não Encontrado',
-          message: response['error'] ?? 'Nenhum veículo encontrado com a placa informada.',
-        );
-      }
-    } catch (e) {
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
       setState(() {
-        _isLoading = false;
-      });
-      ErrorDialog.show(
-        context,
-        title: 'Erro na Busca',
-        message: 'Erro ao buscar veículo: $e',
-      );
-    }
-  }
-
-  void _confirmVehicle() {
-    if (_vehicleData != null) {
-      // Usar os fuel_types originais da API
-      final fuelTypes = _vehicleData!['fuel_types'] as List?;
-      setState(() {
-        _vehicleConfirmed = true;
-        if (fuelTypes != null && fuelTypes.isNotEmpty) {
-          _availableFuels = fuelTypes.map<String>((fuel) => fuel['name'] as String).toList();
-          _selectedFuel = _availableFuels.first;
-        } else {
-          _availableFuels = ['Diesel S10'];
-          _selectedFuel = 'Diesel S10';
-        }
-        _kmController.clear(); // Campo KM deve ficar vazio para o usuário preencher
+        _kmController.text = result;
       });
     }
   }
 
-  void _cancelVehicle() {
-    setState(() {
-      _vehicleSearched = false;
-      _vehicleConfirmed = false;
-      _vehicleData = null;
-      _availableFuels = [];
-      _placaController.clear();
-      _kmController.clear();
-      // Limpar também os dados do posto quando trocar veículo
-      _isStationValidated = false;
-      _stationData = null;
-      _cnpjPostoController.clear();
-    });
-  }
+
+  // Métodos de busca manual removidos em favor do carregamento automático da jornada
+  // _searchVehicle, _confirmVehicle, _cancelVehicle foram obsoletados.
 
   Future<void> _validateStation() async {
     // Fechar teclado ao validar
@@ -535,6 +505,16 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         final data = response['data'];
         
         // Mapear os dados da API real para o formato esperado pela UI
+        // Obter preços brutos
+        final rawFuelPrices = data['fuel_prices'] as List?;
+        
+        // Determinar combustível do veículo (da jornada)
+        // Se _vehicleData for null, fallback para _selectedFuel atual (que é Diesel por padrão)
+        final vehicleFuelType = _vehicleData?['tipoCombustivel'] ?? _vehicleData?['fuel_type'] ?? 'Diesel';
+        
+        // Filtrar combustíveis compatíveis
+        final compatibleFuels = _getCompatibleFuels(vehicleFuelType, rawFuelPrices);
+        
         setState(() {
           _stationData = {
             'nome': data['station']['name'],
@@ -543,13 +523,52 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'cnpj': data['station']['cnpj'],
             'partnership': data['partnership'],
             'terms': data['terms'],
-            'fuel_prices': data['fuel_prices'],
-            // Preços dos combustíveis - pegar o primeiro preço disponível como exemplo
-            'preco': data['fuel_prices']?.isNotEmpty == true
-                ? double.parse(data['fuel_prices'][0]['price_per_liter'])
-                : 0.0,
+            'fuel_prices': rawFuelPrices,
+            // Preço de referência (apenas visual, será atualizado pelo dropdown)
+            'preco': 0.0,
             'precoArla': 8.50, // ARLA não vem da API, manter valor fixo por enquanto
           };
+          
+          _availableFuels = compatibleFuels;
+          
+          // Selecionar automaticamente o primeiro compatível, se houver
+          // Selecionar automaticamente o combustível mais apropriado
+          if (_availableFuels.isNotEmpty) {
+             // 1. Tentar manter o veículo fuel type exato se possível
+             // Normalizar vehicleFuelType para comparação (Title Case ou como estiver na lista)
+             String? bestMatch;
+             
+             // Tentar encontrar match exato ou parcial com a preferência do veículo
+             try {
+                bestMatch = _availableFuels.firstWhere(
+                  (f) => f.toLowerCase() == vehicleFuelType.toLowerCase(),
+                  orElse: () => _availableFuels.firstWhere(
+                    (f) => f.toLowerCase().contains(vehicleFuelType.toLowerCase()) || 
+                           vehicleFuelType.toLowerCase().contains(f.toLowerCase()),
+                    orElse: () => _availableFuels.first
+                  )
+                );
+             } catch (e) {
+                bestMatch = _availableFuels.first;
+             }
+             
+             _selectedFuel = bestMatch ?? _availableFuels.first;
+
+             // Atualizar preço de referência com base na seleção automática
+             if (rawFuelPrices != null) {
+                final priceObj = rawFuelPrices.firstWhere(
+                  (fp) => fp['fuel_type']['name'] == _selectedFuel,
+                  orElse: () => null
+                );
+                if (priceObj != null) {
+                  _stationData!['preco'] = double.tryParse(priceObj['price_per_liter'].toString()) ?? 0.0;
+                }
+             }
+          } else {
+            // Nenhum combustível compatível encontrado
+            _selectedFuel = ''; // Indica estado inválido
+          }
+          
           _isStationValidated = true;
           _isLoading = false;
         });
@@ -578,40 +597,56 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       setState(() {
         _isLoading = false;
       });
-      
-      // Extrair mensagem de erro do backend
-      String errorTitle = 'Erro na Validação';
-      String errorMessage = 'Erro ao validar posto';
-      
-      final errorStr = e.toString();
-      
-      // Tentar extrair a mensagem JSON do backend
-      final messageMatch = RegExp(r'"message"\s*:\s*"([^"]+)"').firstMatch(errorStr);
-      if (messageMatch != null) {
-        errorMessage = messageMatch.group(1) ?? errorMessage;
-        
-        // Customizar título baseado no tipo de erro
-        if (errorMessage.contains('não aceita') && errorMessage.contains('autônomo')) {
-          errorTitle = 'Posto Não Disponível';
-        } else if (errorMessage.contains('preços') || errorMessage.contains('combustível')) {
-          errorTitle = 'Combustível Não Disponível';
-        } else if (errorMessage.contains('não encontrado')) {
-          errorTitle = 'Posto Não Encontrado';
-        }
-      } else if (errorStr.contains('404')) {
-        errorTitle = 'Posto Não Encontrado';
-        errorMessage = 'CNPJ não encontrado na base de postos.';
-      } else if (errorStr.contains('400')) {
-        errorTitle = 'Validação Falhou';
-        errorMessage = 'Não foi possível validar este posto para abastecimento.';
-      }
-      
       ErrorDialog.show(
         context,
-        title: errorTitle,
-        message: errorMessage,
+        title: 'Erro na Validação',
+        message: 'Erro ao validar posto: $e',
       );
     }
+  }
+  
+  /// Retorna lista de combustíveis do posto compatíveis com o veículo
+  List<String> _getCompatibleFuels(String vehicleFuel, List<dynamic>? stationPrices) {
+    if (stationPrices == null || stationPrices.isEmpty) return [];
+    
+    final vFuel = vehicleFuel.toLowerCase();
+    final stationFuels = stationPrices.map((p) => p['fuel_type']['name'].toString()).toList();
+    
+    // Lista para armazenar matches
+    Set<String> matches = {};
+    
+    for (var sFuelName in stationFuels) {
+      final sFuel = sFuelName.toLowerCase();
+      
+      if (vFuel.contains('diesel')) {
+        // Veículo Diesel -> Aceita qualquer Diesel (S10, S500, Aditivado, Comum)
+        if (sFuel.contains('diesel')) {
+          matches.add(sFuelName);
+        }
+      } else if (vFuel.contains('gasolina')) {
+        // Veículo Gasolina -> Aceita qualquer Gasolina (Comum, Aditivada, Premium)
+        if (sFuel.contains('gasolina')) {
+           matches.add(sFuelName);
+        }
+      } else if (vFuel.contains('etanol') || vFuel.contains('álcool')) {
+        // Veículo Etanol -> Aceita Etanol
+        if (sFuel.contains('etanol') || sFuel.contains('álcool')) {
+          matches.add(sFuelName);
+        }
+      } else if (vFuel.contains('flex')) {
+        // Veículo Flex -> Aceita Gasolina E Etanol
+        if (sFuel.contains('gasolina') || sFuel.contains('etanol') || sFuel.contains('álcool')) {
+          matches.add(sFuelName);
+        }
+      } else {
+        // Outros casos: tenta match exato ou "contains" genérico
+        if (sFuel.contains(vFuel) || vFuel.contains(sFuel)) {
+          matches.add(sFuelName);
+        }
+      }
+    }
+    
+    return matches.toList()..sort();
   }
 
   Future<void> _handleGenerateCode() async {
@@ -645,15 +680,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         fuelTypeApi = 'DIESEL_S10'; // Default para Diesel S10
       }
       
-      // Verificar se é autônomo baseado no partnership.type retornado pelo backend
-      final isAutonomous = _stationData!['partnership']?['type'] == 'AUTONOMOUS';
-      
       final codeResponse = await apiService.generateRefuelingCode(
         vehiclePlate: _vehicleData!['placa'],
         fuelType: fuelTypeApi,
         stationCnpj: _stationData!['cnpj'],
         abastecerArla: _abastecerArla,
-        isAutonomous: isAutonomous,
       );
 
       if (codeResponse['success'] == true) {
@@ -898,18 +929,21 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             ),
             
             // Card de Busca de Veículo
+            // Card de Dados do Veículo (Automático da Jornada)
             Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.directions_car, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text(
-                          'CONFIRME A PLACA',
+                        Icon(Icons.directions_car, color: AppColors.zecaBlue),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'DADOS DO VEÍCULO',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -918,77 +952,73 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _placaController,
-                            inputFormatters: [_placaMaskFormatter],
-                            decoration: const InputDecoration(
-                              labelText: 'Placa',
-                              hintText: 'ABC-1234',
-                              border: OutlineInputBorder(),
-                            ),
-                            enabled: !_vehicleSearched,
-                            textCapitalization: TextCapitalization.characters,
+                    
+                    if (_vehicleData != null) ...[
+                      // Placa em destaque
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[400]!),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _vehicleSearched ? null : _searchVehicle,
-                          child: const Text('Buscar'),
-                        ),
-                      ],
-                    ),
-                    if (_vehicleSearched && _vehicleData != null) ...[
-                      const SizedBox(height: 16),
-                      Card(
-                        color: Colors.grey[100],
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_vehicleData!['marca']} ${_vehicleData!['modelo']} ${_vehicleData!['ano']}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text('Combustível: ${_vehicleData!['tipoCombustivel']}'),
-                              Text('Último KM: ${_vehicleData!['kmAtual']}'),
-                            ],
+                          child: Text(
+                            _vehicleData!['placa'] ?? '---',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      if (!_vehicleConfirmed)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _cancelVehicle,
-                                child: const Text('Cancelar'),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: _confirmVehicle,
-                                child: const Text('Confirmar'),
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _cancelVehicle,
-                            child: const Text('Trocar Veículo'),
-                          ),
+                      const SizedBox(height: 24),
+                      
+                      // Detalhes do veículo
+                      _buildVehicleDetailRow('Modelo', '${_vehicleData!['marca'] ?? ''} ${_vehicleData!['modelo'] ?? ''} ${_vehicleData!['ano'] ?? ''}'),
+                      const Divider(),
+                      _buildVehicleDetailRow('Combustível', _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Não informado'),
+                      const Divider(),
+                      _buildVehicleDetailRow('Último KM', _vehicleData!['kmAtual']?.toString() ?? _vehicleData!['last_odometer']?.toString() ?? '---'),
+                      
+                    ] else ...[
+                      // Caso de erro: Sem jornada ativa
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red[200]!),
                         ),
+                        child: Column(
+                          children: [
+                             const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
+                             const SizedBox(height: 8),
+                             const Text(
+                               'Nenhuma jornada ativa encontrada',
+                               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                             ),
+                             const SizedBox(height: 4),
+                             const Text(
+                               'É necessário iniciar uma jornada para abastecer.',
+                               textAlign: TextAlign.center,
+                               style: TextStyle(fontSize: 12),
+                             ),
+                             const SizedBox(height: 16),
+                             ElevatedButton.icon(
+                               onPressed: () => context.go('/journey'),
+                               icon: const Icon(Icons.play_arrow),
+                               label: const Text('Iniciar Jornada'),
+                               style: ElevatedButton.styleFrom(
+                                 backgroundColor: Colors.red,
+                                 foregroundColor: Colors.white,
+                               ),
+                             ),
+                          ],
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -1052,28 +1082,89 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                                         ),
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _stationData!['partnership']['is_active'] 
-                                            ? (_stationData!['partnership']['type'] == 'AUTONOMOUS' 
-                                                ? Colors.blue 
-                                                : Colors.green)
-                                            : Colors.red,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        _stationData!['partnership']['type'] == 'AUTONOMOUS'
-                                            ? 'Preço Autônomo'
-                                            : (_stationData!['partnership']['is_active'] 
-                                                ? 'Parceria Ativa' 
-                                                : 'Parceria Inativa'),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+                                    // Badge de tipo: Autônomo > Parceria > Frota
+                                    Builder(
+                                      builder: (context) {
+                                        // Verificar se é autônomo primeiro
+                                        final isAutonomous = _userData?['isAutonomous'] == true;
+                                        
+                                        if (isAutonomous) {
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.orange,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.person, color: Colors.white, size: 12),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  'Autônomo',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                        
+                                        // Para frota, verificar parceria
+                                        final hasPartnership = _stationData!['partnership']?['is_active'] == true;
+                                        
+                                        if (hasPartnership) {
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.handshake, color: Colors.white, size: 12),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  'Parceria Ativa',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                        
+                                        // Frota sem parceria
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.local_shipping, color: Colors.white, size: 12),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'Frota',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -1260,12 +1351,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                           border: const OutlineInputBorder(),
                           hintText: '0',
                           helperText: 'Digite apenas números (ex: 123456 = 123.456)',
-                          // Ícone de câmera removido - funcionalidade não está sendo usada
-                          // suffixIcon: IconButton(
-                          //   icon: const Icon(Icons.camera_alt, color: Colors.red),
-                          //   onPressed: _openOdometerCamera,
-                          //   tooltip: 'Capturar odômetro com câmera',
-                          // ),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.camera_alt, color: Colors.red),
+                            onPressed: _openOdometerCamera,
+                            tooltip: 'Capturar odômetro com câmera',
+                          ),
                         ),
                       ),
                       if (_vehicleData != null)
@@ -1274,12 +1364,50 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       const SizedBox(height: 16),
-                      if (_availableFuels.length > 1)
+                      
+                      // Lógica de UI para Combustível Compatível
+                      if (_selectedFuel.isEmpty) ...[
+                        // Nenhum combustível compatível
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red[200]!),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Colors.red),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Posto sem combustível compatível',
+                                      style: TextStyle(
+                                        color: Colors.red[800],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'O veículo utiliza ${_vehicleData?['tipoCombustivel'] ?? 'Desconhecido'}, mas o posto só oferece: ${(_stationData?['fuel_prices'] as List?)?.map((f) => f['fuel_type']['name']).join(', ') ?? 'Nenhum'}',
+                                style: TextStyle(color: Colors.red[800], fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (_availableFuels.length > 1) ...[
+                        // Múltiplos compatíveis -> Dropdown
                         DropdownButtonFormField<String>(
                           value: _selectedFuel,
                           decoration: const InputDecoration(
                             labelText: 'Combustível',
                             border: OutlineInputBorder(),
+                            helperText: 'Escolha um combustível compatível',
                           ),
                           items: _availableFuels.map((fuel) {
                             return DropdownMenuItem(value: fuel, child: Text(fuel));
@@ -1289,18 +1417,22 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                               _selectedFuel = value!;
                             });
                           },
-                        )
-                      else
+                        ),
+                      ] else ...[
+                        // Apenas 1 compatível -> Readonly
                         TextFormField(
                           initialValue: _selectedFuel,
                           readOnly: true,
                           decoration: const InputDecoration(
-                            labelText: 'Combustível',
+                            labelText: 'Combustível (Compatível)',
                             border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.check_circle, color: Colors.green),
                           ),
                         ),
+                      ],
+                      
                       const SizedBox(height: 16),
-                      if (_selectedFuel.toLowerCase().contains('diesel'))
+                      if (_selectedFuel.isNotEmpty && _selectedFuel.toLowerCase().contains('diesel')) ...[
                         Row(
                           children: [
                             Checkbox(
@@ -1314,6 +1446,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                             const Text('Abastecer ARLA 32'),
                           ],
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -1324,7 +1457,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             if (_vehicleConfirmed && _isStationValidated) ...[
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isLoading ? null : _handleGenerateCode,
+                onPressed: (_isLoading || _selectedFuel.isEmpty) ? null : _handleGenerateCode,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
