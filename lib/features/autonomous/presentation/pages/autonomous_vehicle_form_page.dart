@@ -130,7 +130,10 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       final apiService = ApiService();
       final response = await apiService.get('/vehicles/plate/$plate');
 
-      if (response['success'] == true && response['data'] != null) {
+      debugPrint('[PlateAutoFill] Response success: ${response['success']}');
+
+      // IMPORTANT: Check ONLY success == true, not data presence
+      if (response['success'] == true) {
         final data = response['data'];
         
         final brand = _normalizeBrand(data['brand']?.toString() ?? '');
