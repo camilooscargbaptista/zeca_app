@@ -20,7 +20,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
   final _brandController = TextEditingController();
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
-  final _renavamController = TextEditingController();
+
   final _odometerController = TextEditingController();
   Set<String> _selectedFuelTypes = {'DIESEL_S10'}; // Múltiplos combustíveis
   bool _hasArla = false; // Checkbox para ARLA (diesel)
@@ -84,7 +84,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
     _brandController.text = 'Scania';
     _modelController.text = 'R450';
     _yearController.text = '2022';
-    _renavamController.text = '';
+
     _odometerController.text = '245320';
     setState(() {
       _selectedFuelTypes = {'DIESEL_S10'};
@@ -98,7 +98,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
     _brandController.dispose();
     _modelController.dispose();
     _yearController.dispose();
-    _renavamController.dispose();
+
     _odometerController.dispose();
     super.dispose();
   }
@@ -118,7 +118,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
           'fuel_types': _selectedFuelTypes.toList(), // Array de combustíveis
           'fuel_type': _selectedFuelTypes.first, // Para compatibilidade
           'has_arla': _hasArla, // Se usa ARLA
-          'renavam': _renavamController.text.isEmpty ? null : _renavamController.text,
+
           'odometer': int.tryParse(_odometerController.text) ?? 0,
         };
 
@@ -353,19 +353,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
                         controller: _modelController,
                         decoration: _inputDecoration('Ex: R450, FH 540, Actros'),
                       ),
-                      const SizedBox(height: 16),
 
-                      // RENAVAM
-                      _buildLabel('RENAVAM'),
-                      TextFormField(
-                        controller: _renavamController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(11),
-                        ],
-                        decoration: _inputDecoration('00000000000'),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),

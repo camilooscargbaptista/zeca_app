@@ -1,11 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/di/injection.dart';
 
 /// Tela exibida quando o autônomo faz login pela primeira vez
 /// e ainda não tem nenhum veículo cadastrado.
 class AutonomousFirstAccessPage extends StatelessWidget {
   const AutonomousFirstAccessPage({Key? key}) : super(key: key);
+
+  Future<void> _logout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair'),
+        content: const Text('Deseja realmente sair do aplicativo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true && context.mounted) {
+      final storage = getIt<StorageService>();
+      await storage.clearTokens();
+      await storage.clearUserData();
+      await storage.clearJourneyVehicleData();
+      if (context.mounted) {
+        context.go('/login');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,12 +49,11 @@ class AutonomousFirstAccessPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {
-            // TODO: Abrir menu lateral
-            Scaffold.of(context).openDrawer();
-          },
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         title: const Text(
           'Bem-vindo!',
@@ -40,6 +72,48 @@ class AutonomousFirstAccessPage extends StatelessWidget {
             },
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: primaryColor,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: const [
+                  Icon(Icons.account_circle, size: 60, color: Colors.white),
+                  SizedBox(height: 8),
+                  Text(
+                    'Motorista Autônomo',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home, color: primaryColor),
+              title: const Text('Início'),
+              onTap: () => Navigator.of(context).pop(),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Sair', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.of(context).pop();
+                _logout(context);
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
