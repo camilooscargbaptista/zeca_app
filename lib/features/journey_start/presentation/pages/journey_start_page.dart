@@ -68,7 +68,7 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
       // Verificar se é autônomo via token JWT
       bool isAutonomousFromToken = false;
       try {
-        final token = apiService.getAuthToken();
+        final token = await apiService.getToken();
         if (token != null && token.isNotEmpty) {
           final parts = token.split('.');
           if (parts.length == 3) {
@@ -174,24 +174,12 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
     
     try {
       final apiService = ApiService();
-      final response = await apiService.get('/vehicles');
+      final response = await apiService.getMyVehicles();
       
-      debugPrint('📦 Resposta GET /vehicles: $response');
+      debugPrint('📦 Resposta getMyVehicles: $response');
       
-      if (response != null) {
-        List<dynamic> vehiclesList = [];
-        
-        if (response is List) {
-          vehiclesList = response;
-        } else if (response is Map && response['data'] != null) {
-          if (response['data'] is List) {
-            vehiclesList = response['data'];
-          } else if (response['data']['vehicles'] is List) {
-            vehiclesList = response['data']['vehicles'];
-          }
-        } else if (response is Map && response['vehicles'] is List) {
-          vehiclesList = response['vehicles'];
-        }
+      if (response['success'] == true && response['data'] != null) {
+        final vehiclesList = response['data']['vehicles'] as List<dynamic>? ?? [];
         
         setState(() {
           _autonomousVehicles = vehiclesList.map<Map<String, dynamic>>((v) {
@@ -212,6 +200,11 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
         });
         
         debugPrint('✅ ${_autonomousVehicles.length} veículos ativos carregados');
+      } else {
+        debugPrint('⚠️ Nenhum veículo encontrado ou erro: ${response['error']}');
+        setState(() {
+          _loadingVehicles = false;
+        });
       }
     } catch (e) {
       debugPrint('❌ Erro ao carregar veículos: $e');
