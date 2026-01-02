@@ -57,7 +57,9 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
   final List<String> _brands = [
     'Scania', 'Volvo', 'Mercedes-Benz', 'DAF', 'Iveco', 'Volkswagen', 'MAN',
     'Ford', 'Chevrolet', 'Fiat', 'Toyota', 'Honda', 'Hyundai', 'Renault',
-    'Nissan', 'Kia', 'Peugeot', 'Citroën', 'Jeep', 'Mitsubishi', 'Outro',
+    'Nissan', 'Kia', 'Peugeot', 'Citroën', 'Jeep', 'Mitsubishi',
+    'BMW', 'Audi', 'Land Rover', 'Porsche', 'Jaguar', 'Subaru', 'Suzuki',
+    'Outro',
   ];
 
   @override
@@ -142,6 +144,8 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
         final color = data['color']?.toString() ?? '';
         final fuelType = data['fuelType']?.toString().toUpperCase() ?? '';
 
+        debugPrint('[PlateAutoFill] Data: brand=$brand, model=$model, year=$year, fuel=$fuelType');
+
         setState(() {
           _plateLookupDone = true;
           _plateLookupSuccess = true;
@@ -153,16 +157,15 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
             'fuelType': fuelType,
           };
           
-          // Preencher controllers para salvar
-          if (_brands.contains(brand)) {
-            _brandController.text = brand;
-          }
+          // Preencher controllers para salvar (mesmo que não esteja na lista, salva)
+          _brandController.text = brand.isEmpty ? '' : (_brands.contains(brand) ? brand : 'Outro');
           _modelController.text = model;
           _yearController.text = year;
           _colorController.text = color;
           
           // Mapear combustível
           _selectedFuelTypes = _mapFuelType(fuelType);
+          debugPrint('[PlateAutoFill] Selected fuels: $_selectedFuelTypes');
         });
       } else {
         // Falha na consulta - mostrar campos manuais
@@ -194,6 +197,8 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       'TOYOTA': 'Toyota', 'HONDA': 'Honda', 'HYUNDAI': 'Hyundai', 'RENAULT': 'Renault',
       'NISSAN': 'Nissan', 'KIA': 'Kia', 'PEUGEOT': 'Peugeot',
       'CITROËN': 'Citroën', 'CITROEN': 'Citroën', 'JEEP': 'Jeep', 'MITSUBISHI': 'Mitsubishi',
+      'BMW': 'BMW', 'AUDI': 'Audi', 'LAND ROVER': 'Land Rover', 'PORSCHE': 'Porsche',
+      'JAGUAR': 'Jaguar', 'SUBARU': 'Subaru', 'SUZUKI': 'Suzuki',
     };
     return brandMap[upper] ?? brand;
   }
