@@ -132,7 +132,56 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       final apiService = ApiService();
       final response = await apiService.get('/vehicles/plate/$plate');
 
-      debugPrint('[PlateAutoFill] Response success: ${response['success']}');\n\n      // IMPORTANT: Check ONLY success == true, not data presence\n      if (response['success'] == true) {\n        // ApiService wraps API response in {'success': true, 'data': API_RESPONSE}\n        // API returns: {'success': true, 'data': {vehicle_info}}\n        // So we need response['data']['data'] for actual vehicle data\n        final apiResponse = response['data'];\n        final apiSuccess = apiResponse['success'] == true;\n        final vehicleData = apiResponse['data'];\n        \n        debugPrint('[PlateAutoFill] API success: $apiSuccess, vehicleData: $vehicleData');\n        \n        if (apiSuccess && vehicleData != null) {\n          final brand = _normalizeBrand(vehicleData['brand']?.toString() ?? '');\n          final model = vehicleData['model']?.toString() ?? '';\n          final year = vehicleData['year']?.toString() ?? '';\n          final color = vehicleData['color']?.toString() ?? '';\n          final fuelType = vehicleData['fuelType']?.toString().toUpperCase() ?? '';\n\n          debugPrint('[PlateAutoFill] Data: brand=$brand, model=$model, year=$year, fuel=$fuelType');\n\n          setState(() {\n            _plateLookupDone = true;\n            _plateLookupSuccess = true;\n            _vehicleData = {\n              'brand': brand,\n              'model': model,\n              'year': year,\n              'color': color,\n              'fuelType': fuelType,\n            };\n            \n            // Preencher controllers para salvar - usar valor da API diretamente\n            _brandController.text = brand;\n            _modelController.text = model;\n            _yearController.text = year;\n            _colorController.text = color;\n            \n            // Mapear combustível\n            _selectedFuelTypes = _mapFuelType(fuelType);\n            debugPrint('[PlateAutoFill] Selected fuels: $_selectedFuelTypes');\n          });\n        } else {\n          // API retornou sucesso no HTTP mas falha no payload\n          setState(() {\n            _plateLookupDone = true;\n            _plateLookupSuccess = false;\n          });\n        }
+      debugPrint('[PlateAutoFill] Response success: ${response['success']}');
+
+      // IMPORTANT: Check ONLY success == true, not data presence
+      if (response['success'] == true) {
+        // ApiService wraps API response in {'success': true, 'data': API_RESPONSE}
+        // API returns: {'success': true, 'data': {vehicle_info}}
+        // So we need response['data']['data'] for actual vehicle data
+        final apiResponse = response['data'];
+        final apiSuccess = apiResponse['success'] == true;
+        final vehicleData = apiResponse['data'];
+        
+        debugPrint('[PlateAutoFill] API success: $apiSuccess, vehicleData: $vehicleData');
+        
+        if (apiSuccess && vehicleData != null) {
+          final brand = _normalizeBrand(vehicleData['brand']?.toString() ?? '');
+          final model = vehicleData['model']?.toString() ?? '';
+          final year = vehicleData['year']?.toString() ?? '';
+          final color = vehicleData['color']?.toString() ?? '';
+          final fuelType = vehicleData['fuelType']?.toString().toUpperCase() ?? '';
+
+          debugPrint('[PlateAutoFill] Data: brand=$brand, model=$model, year=$year, fuel=$fuelType');
+
+          setState(() {
+            _plateLookupDone = true;
+            _plateLookupSuccess = true;
+            _vehicleData = {
+              'brand': brand,
+              'model': model,
+              'year': year,
+              'color': color,
+              'fuelType': fuelType,
+            };
+            
+            // Preencher controllers para salvar - usar valor da API diretamente
+            _brandController.text = brand;
+            _modelController.text = model;
+            _yearController.text = year;
+            _colorController.text = color;
+            
+            // Mapear combustível
+            _selectedFuelTypes = _mapFuelType(fuelType);
+            debugPrint('[PlateAutoFill] Selected fuels: $_selectedFuelTypes');
+          });
+        } else {
+          // API retornou sucesso no HTTP mas falha no payload
+          setState(() {
+            _plateLookupDone = true;
+            _plateLookupSuccess = false;
+          });
+        }
       } else {
         // Falha na consulta - mostrar campos manuais
         setState(() {
