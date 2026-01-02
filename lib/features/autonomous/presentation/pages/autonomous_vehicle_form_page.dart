@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +26,8 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
   Set<String> _selectedFuelTypes = {'DIESEL_S10'}; // Múltiplos combustíveis
   bool _hasArla = false; // Checkbox para ARLA (diesel)
   bool _isLoading = false;
+  bool _isLoadingPlate = false;
+  Timer? _debounceTimer;
 
   bool get _isEditing => widget.vehicleId != null;
 
@@ -87,20 +90,146 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
 
     _odometerController.text = '245320';
     setState(() {
-      _selectedFuelTypes = {'DIESEL_S10'};
+      _selectedFuelTypes = {};
       _hasArla = false;
     });
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _plateController.dispose();
     _brandController.dispose();
     _modelController.dispose();
     _yearController.dispose();
-
     _odometerController.dispose();
     super.dispose();
+  }
+
+  /// Consulta a placa na API e preenche os campos automaticamente
+  void _onPlateChanged(String value) {
+    // Não buscar se estiver editando
+    if (_isEditing) return;
+
+    // Cancelar debounce anterior
+    _debounceTimer?.cancel();
+
+    // Extrair apenas letras e números
+    final plate = value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+
+    // Só buscar se tiver 7 caracteres válidos
+    if (plate.length != 7) return;
+
+    // Validar formato (antigo ou Mercosul)
+    if (!RegExp(r'^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$').hasMatch(plate)) return;
+
+    // Debounce 500ms
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _lookupPlate(plate);
+    });
+  }
+
+  Future<void> _lookupPlate(String plate) async {
+    setState(() => _isLoadingPlate = true);
+
+    try {
+      final apiService = ApiService();
+      final response = await apiService.get('/vehicles/plate/$plate');
+
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'];
+
+        // Auto-preencher marca (se existir na lista)
+        final brand = data['brand']?.toString() ?? '';
+        final normalizedBrand = _normalizeBrand(brand);
+        if (_brands.contains(normalizedBrand)) {
+          _brandController.text = normalizedBrand;
+        }
+
+        // Auto-preencher modelo
+        if (data['model'] != null) {
+          _modelController.text = data['model'].toString();
+        }
+
+        // Auto-preencher ano
+        if (data['year'] != null) {
+          _yearController.text = data['year'].toString();
+        }
+
+        // Auto-preencher combustível
+        final fuelType = data['fuelType']?.toString().toUpperCase() ?? '';
+        setState(() {
+          _selectedFuelTypes = _mapFuelType(fuelType);
+        });
+      }
+      // Se erro, silencioso - usuário preenche manual
+    } catch (e) {
+      // Silencioso - usuário preenche manual
+      debugPrint('[PlateAutoFill] Erro: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingPlate = false);
+      }
+    }
+  }
+
+  /// Normaliza o nome da marca para corresponder à lista _brands
+  String _normalizeBrand(String brand) {
+    final upper = brand.toUpperCase().trim();
+
+    // Mapeamento de variações comuns
+    const brandMap = {
+      'VW': 'Volkswagen',
+      'VOLKSWAGEN': 'Volkswagen',
+      'MB': 'Mercedes-Benz',
+      'MERCEDES BENZ': 'Mercedes-Benz',
+      'MERCEDES-BENZ': 'Mercedes-Benz',
+      'SCANIA': 'Scania',
+      'VOLVO': 'Volvo',
+      'DAF': 'DAF',
+      'IVECO': 'Iveco',
+      'MAN': 'MAN',
+      'FORD': 'Ford',
+      'CHEVROLET': 'Chevrolet',
+      'GM': 'Chevrolet',
+      'FIAT': 'Fiat',
+      'TOYOTA': 'Toyota',
+      'HONDA': 'Honda',
+      'HYUNDAI': 'Hyundai',
+      'RENAULT': 'Renault',
+      'NISSAN': 'Nissan',
+      'KIA': 'Kia',
+      'PEUGEOT': 'Peugeot',
+      'CITROËN': 'Citroën',
+      'CITROEN': 'Citroën',
+      'JEEP': 'Jeep',
+      'MITSUBISHI': 'Mitsubishi',
+    };
+
+    return brandMap[upper] ?? brand;
+  }
+
+  /// Mapeia o fuelType da API para os valores do formulário
+  Set<String> _mapFuelType(String fuelType) {
+    final normalized = fuelType.toUpperCase();
+
+    if (normalized.contains('FLEX') ||
+        normalized.contains('ALCOOL') && normalized.contains('GASOLINA') ||
+        normalized == 'ALCOOL / GASOLINA') {
+      return {'GASOLINA', 'ETANOL'};
+    }
+    if (normalized == 'GASOLINA') {
+      return {'GASOLINA'};
+    }
+    if (normalized == 'ALCOOL' || normalized == 'ETANOL') {
+      return {'ETANOL'};
+    }
+    if (normalized.contains('DIESEL')) {
+      return {'DIESEL_S10'};
+    }
+
+    // Default: não altera (retorna vazio para manter seleção atual)
+    return _selectedFuelTypes;
   }
 
   void _onSave() async {
@@ -274,7 +403,19 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
                         textCapitalization: TextCapitalization.characters,
                         enabled: !_isEditing,
                         validator: _validatePlate,
-                        decoration: _inputDecoration('ABC-1234'),
+                        onChanged: _onPlateChanged,
+                        decoration: _inputDecoration('ABC-1234').copyWith(
+                          suffixIcon: _isLoadingPlate
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                       const Padding(
                         padding: EdgeInsets.only(top: 6, left: 4),
