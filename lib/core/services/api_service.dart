@@ -129,6 +129,17 @@ class ApiService {
         
         // Se erro 401 (não autorizado), tentar refresh token
         if (error.response?.statusCode == 401) {
+          final requestPath = error.requestOptions.path;
+          
+          // NÃO tentar refresh se o erro foi em rotas de autenticação
+          // - /auth/login: erro é "senha incorreta", não token expirado
+          // - /auth/refresh: evitar loop infinito
+          if (requestPath.contains('/auth/login') || requestPath.contains('/auth/refresh')) {
+            print('⏭️ Ignorando refresh para rota de auth: $requestPath');
+            handler.next(error);
+            return;
+          }
+          
           try {
             print('🔄 Tentando refresh token após erro 401...');
             
@@ -579,11 +590,13 @@ class ApiService {
       final normalizedDriverCpf = userService.driverCpf!.replaceAll(RegExp(r'[^\d]'), '');
       
       // Validar comprimentos
-      if (normalizedTransporterCnpj.length != 14) {
-        debugPrint('❌ [API] CNPJ da transportadora inválido: ${normalizedTransporterCnpj.length} dígitos');
+      // Validar comprimentos
+      // Transportadora pode ser CNPJ (14) ou CPF (11) no caso de autônomo
+      if (normalizedTransporterCnpj.length != 14 && normalizedTransporterCnpj.length != 11) {
+        debugPrint('❌ [API] Documento da transportadora inválido: ${normalizedTransporterCnpj.length} dígitos (esperado 11 ou 14)');
         return {
           'success': false,
-          'error': 'CNPJ da transportadora inválido',
+          'error': 'CNPJ/CPF da transportadora inválido',
         };
       }
       
@@ -604,8 +617,11 @@ class ApiService {
       }
       
       // Formatar CNPJ e CPF para o formato esperado pelo backend (com formatação)
-      // Backend aceita ambos os formatos, mas vamos enviar formatado para garantir
-      final formattedTransporterCnpj = _formatCnpj(normalizedTransporterCnpj);
+      // Transportadora pode ser CPF ou CNPJ
+      final formattedTransporterCnpj = normalizedTransporterCnpj.length == 11
+          ? _formatCpf(normalizedTransporterCnpj)
+          : _formatCnpj(normalizedTransporterCnpj);
+          
       final formattedStationCnpj = _formatCnpj(normalizedStationCnpj);
       final formattedDriverCpf = _formatCpf(normalizedDriverCpf);
 
@@ -950,6 +966,40 @@ class ApiService {
         queryParameters: {
           'status': 'AGUARDANDO_VALIDACAO_MOTORISTA',
           'limit': 100, // Limite alto para pegar todos os pendentes
+          'sortBy': 'created_at',
+          'sortOrder': 'DESC',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Buscar últimos abastecimentos (para verificar sucesso mesmo se código falhar)
+  /// GET /api/v1/refueling?limit=5&sortBy=created_at&sortOrder=DESC
+  Future<Map<String, dynamic>> getLastRefuelings({int limit = 5}) async {
+    try {
+      final response = await _dio.get(
+        '/refueling',
+        queryParameters: {
+          'limit': limit,
           'sortBy': 'created_at',
           'sortOrder': 'DESC',
         },

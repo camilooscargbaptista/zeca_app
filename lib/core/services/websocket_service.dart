@@ -22,6 +22,7 @@ class WebSocketService {
   
   // Callbacks para eventos
   Function(Map<String, dynamic>)? _onRefuelingPendingValidation;
+  Function(Map<String, dynamic>)? _onAutonomousPaymentConfirmed;
   Function()? _onConnected;
   Function(String)? _onError;
   Function()? _onDisconnected;
@@ -40,20 +41,28 @@ class WebSocketService {
   void connect({
     required String token,
     Function(Map<String, dynamic>)? onRefuelingPendingValidation,
+    Function(Map<String, dynamic>)? onAutonomousPaymentConfirmed,
     Function()? onConnected,
     Function(String)? onError,
     Function()? onDisconnected,
   }) {
+    // Atualizar callbacks sempre (mesmo se já conectado)
+    _onRefuelingPendingValidation = onRefuelingPendingValidation;
+    _onAutonomousPaymentConfirmed = onAutonomousPaymentConfirmed;
+    _onConnected = onConnected;
+    _onError = onError;
+    _onDisconnected = onDisconnected;
+
     if (_isConnecting || _isConnected) {
-      debugPrint('⚠️ [WebSocket] Já conectado ou conectando...');
+      debugPrint('⚠️ [WebSocket] Já conectado ou conectando... Apenas atualizando listeners.');
+      // Se tiver callback de conexão, chamar imediatamanete se já conectado
+      if (_isConnected) {
+         _onConnected?.call();
+      }
       return;
     }
 
     _isConnecting = true;
-    _onRefuelingPendingValidation = onRefuelingPendingValidation;
-    _onConnected = onConnected;
-    _onError = onError;
-    _onDisconnected = onDisconnected;
 
     try {
       // URL do servidor WebSocket (mesmo servidor da API, namespace /refueling)
@@ -97,6 +106,12 @@ class WebSocketService {
       _onConnected?.call();
     });
 
+    // Debug: Logar TODOS os eventos recebidos
+    _socket!.onAny((event, data) {
+      debugPrint('🕵️ [WebSocket] Evento raw recebido: "$event"');
+      if (data != null) debugPrint('   Dados: $data');
+    });
+
     // Evento de confirmação de conexão do servidor
     _socket!.on('connected', (data) {
       debugPrint('✅ [WebSocket] Confirmação do servidor: $data');
@@ -114,6 +129,18 @@ class WebSocketService {
         _onRefuelingPendingValidation?.call(data);
       } else if (data is Map) {
         _onRefuelingPendingValidation?.call(Map<String, dynamic>.from(data));
+      }
+    });
+
+    // 💰 EVENTO: Pagamento Autônomo Confirmado
+    _socket!.on('autonomous_payment_confirmed', (data) {
+      debugPrint('💰 [WebSocket] Evento recebido: autonomous_payment_confirmed');
+      debugPrint('📦 [WebSocket] Dados: $data');
+      
+      if (data is Map<String, dynamic>) {
+        _onAutonomousPaymentConfirmed?.call(data);
+      } else if (data is Map) {
+        _onAutonomousPaymentConfirmed?.call(Map<String, dynamic>.from(data));
       }
     });
 
@@ -204,5 +231,17 @@ class WebSocketService {
   void dispose() {
     disconnect();
     _connectionStatusController.close();
+  }
+
+  /// Registrar listener temporário para pagamento autônomo
+  /// Útil quando o callback não foi passado no connect ou precisa ser atualizado
+  void listenForAutonomousPaymentConfirmed(Function(Map<String, dynamic>) callback) {
+    _onAutonomousPaymentConfirmed = callback;
+  }
+
+  /// Registrar listener para validação pendente de FROTA
+  /// Quando o posto registra abastecimento e precisa validação do motorista
+  void listenForFleetPendingValidation(Function(Map<String, dynamic>) callback) {
+    _onRefuelingPendingValidation = callback;
   }
 }

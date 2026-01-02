@@ -7,6 +7,8 @@ import '../features/home/presentation/pages/home_page_simple.dart';
 import '../features/refueling/presentation/pages/refueling_code_page_simple.dart';
 import '../features/refueling/presentation/pages/refueling_waiting_page.dart';
 import '../features/refueling/presentation/pages/pending_refuelings_page.dart';
+import '../features/refueling/presentation/pages/autonomous_payment_success_page.dart';
+import '../features/refueling/data/models/payment_confirmed_model.dart';
 import '../features/journey/presentation/pages/journey_page.dart';
 import '../features/journey/presentation/bloc/journey_bloc.dart';
 import '../features/journey/presentation/bloc/journey_event.dart';
@@ -63,6 +65,38 @@ class AppRouter {
         path: '/pending-refuelings',
         name: 'pending-refuelings',
         builder: (context, state) => const PendingRefuelingsPage(),
+      ),
+      GoRoute(
+        path: '/autonomous-success',
+        name: 'autonomous-success',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final refuelingCode = extra?['refuelingCode'] as String?;
+          
+          PaymentConfirmedModel? data;
+          
+          // Só construir o model se tivermos dados reais do pagamento
+          if (extra != null && extra.containsKey('totalValue')) {
+             data = PaymentConfirmedModel(
+              refuelingCode: refuelingCode ?? '',
+              status: extra['status'] ?? 'CONCLUIDO',
+              totalValue: (extra['totalValue'] as num?)?.toDouble() ?? 0.0,
+              quantityLiters: (extra['quantityLiters'] as num?)?.toDouble() ?? 0.0,
+              pricePerLiter: (extra['pricePerLiter'] as num?)?.toDouble() ?? 0.0,
+              pumpPrice: (extra['pumpPrice'] as num?)?.toDouble() ?? 0.0,
+              savings: (extra['savings'] as num?)?.toDouble() ?? 0.0,
+              stationName: extra['stationName'] ?? 'Posto',
+              vehiclePlate: extra['vehiclePlate'] ?? '',
+              fuelType: extra['fuelType'] ?? 'Combustível',
+              timestamp: extra['timestamp'] ?? DateTime.now().toIso8601String(),
+            );
+          }
+
+          return AutonomousPaymentSuccessPage(
+            data: data,
+            refuelingCode: refuelingCode,
+          );
+        },
       ),
       GoRoute(
         path: '/journey-start',

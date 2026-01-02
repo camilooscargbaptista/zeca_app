@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Sucesso Autônomo</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .device-frame {
+            width: 375px;
+            height: 812px;
+            background-color: #fff;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 12px solid #333;
+            position: relative;
+        }
+
+        .device-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background-color: #333;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 10;
+        }
+
+        .app-bar {
+            height: 60px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            padding: 30px 16px 0 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .app-bar h1 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-left: 16px;
+            flex-grow: 1;
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #757575;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .savings-card {
+            background-color: #E8F5E9;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #C8E6C9;
+        }
+
+        .savings-label {
+            font-size: 16px;
+            color: #2E7D32;
+            margin-bottom: 8px;
+        }
+
+        .savings-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2E7D32;
+        }
+
+        .details-card {
+            padding: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .detail-label {
+            color: #757575;
+        }
+
+        .detail-value {
+            font-weight: 500;
+            color: #212121;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 8px 0;
+        }
+
+        .btn {
+            width: 100%;
+            height: 48px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="device-frame">
+        <div class="device-notch"></div>
+
+        <header class="app-bar">
+            <span class="material-icons">arrow_back</span>
+            <h1>Abastecimento Concluído</h1>
+        </header>
+
+        <main class="content">
+            <span class="material-icons success-icon">check_circle</span>
+            <div class="title">Pagamento Confirmado!</div>
+            <div class="subtitle">Obrigado por usar o ZECA!</div>
+
+            <!-- Card de Economia -->
+            <div class="card savings-card">
+                <div class="savings-label">💰 Você economizou:</div>
+                <div class="savings-value">R$ 44,74</div>
+            </div>
+
+            <!-- Card de Detalhes -->
+            <div class="card details-card">
+                <div class="detail-row">
+                    <span class="detail-label">Preço bomba:</span>
+                    <span class="detail-value">R$ 6,49/L</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Seu preço:</span>
+                    <span class="detail-value">R$ 5,89/L</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Economia/litro:</span>
+                    <span class="detail-value">R$ 0,60/L</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Litros:</span>
+                    <span class="detail-value">74,56L</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Posto:</span>
+                    <span class="detail-value">Posto ZECA</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Veículo:</span>
+                    <span class="detail-value">ABC-1230</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Combustível:</span>
+                    <span class="detail-value">Gasolina</span>
+                </div>
+            </div>
+
+            <button class="btn">Voltar para Início</button>
+        </main>
+    </div>
+
+</body>
+
+</html>

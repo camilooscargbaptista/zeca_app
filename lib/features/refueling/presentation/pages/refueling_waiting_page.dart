@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+import 'dart:convert';
 import '../../../../core/services/refueling_polling_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/services/pending_validation_storage.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../shared/widgets/dialogs/success_dialog.dart';
+import '../../../../core/services/websocket_service.dart';
+import '../../data/models/payment_confirmed_model.dart';
+import 'autonomous_payment_success_page.dart';
 
 class RefuelingWaitingPage extends StatefulWidget {
   final String refuelingId;
   final String refuelingCode;
   final Map<String, dynamic>? vehicleData;
   final Map<String, dynamic>? stationData;
+  final bool isAutonomous;
   
   const RefuelingWaitingPage({
     Key? key,
@@ -20,6 +27,7 @@ class RefuelingWaitingPage extends StatefulWidget {
     required this.refuelingCode,
     this.vehicleData,
     this.stationData,
+    this.isAutonomous = false,
   }) : super(key: key);
 
   @override
@@ -50,14 +58,134 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     // Salvar estado de validação pendente para recuperar após login se necessário
     _savePendingValidationState();
     
-    // Se já temos o refuelingId, carregar dados imediatamente (caso veio do WebSocket)
-    if (widget.refuelingId.isNotEmpty) {
-      debugPrint('🚀 [RefuelingWaitingPage] refuelingId presente, carregando dados imediatamente: ${widget.refuelingId}');
-      _loadRefuelingData(widget.refuelingId);
-    } else {
-      // Caso contrário, iniciar polling para aguardar registro
-      _startPolling();
+    // Inicializar após obter is_autonomous do JWT
+    _initializeWithJwtData();
+  }
+  
+  /// Inicializa a página lendo is_autonomous do JWT token
+  Future<void> _initializeWithJwtData() async {
+    bool isAutonomous = widget.isAutonomous; // fallback para widget parameter
+    
+    debugPrint('🔍 [RefuelingWaitingPage] _initializeWithJwtData - INICIANDO');
+    debugPrint('🔍 [RefuelingWaitingPage] widget.isAutonomous = ${widget.isAutonomous}');
+    
+    try {
+      final storageService = getIt<StorageService>();
+      final token = await storageService.getAccessToken();
+      
+      debugPrint('🔍 [RefuelingWaitingPage] Token obtido: ${token != null ? 'SIM' : 'NÃO'}');
+      
+      if (token != null) {
+        // Decodificar JWT para ler is_autonomous
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+          final decoded = jsonDecode(payload) as Map<String, dynamic>;
+          
+          debugPrint('🔍 [JWT] Payload completo: $decoded');
+          debugPrint('🔍 [JWT] is_autonomous raw value: ${decoded['is_autonomous']}');
+          debugPrint('🔍 [JWT] role: ${decoded['role']}');
+          
+          // Verificar is_autonomous OU role MOTORISTA_AUTONOMO
+          isAutonomous = decoded['is_autonomous'] == true || 
+                         decoded['role'] == 'MOTORISTA_AUTONOMO';
+          debugPrint('🔑 [JWT] is_autonomous FINAL: $isAutonomous');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ [JWT] Erro ao decodificar token: $e, usando widget.isAutonomous: ${widget.isAutonomous}');
     }
+    
+    debugPrint('🎯 [RefuelingWaitingPage] Decisão final isAutonomous: $isAutonomous');
+    
+    if (isAutonomous) {
+      // AUTÔNOMO: WebSocket como principal + polling como fallback (verifica CONCLUIDO)
+      debugPrint('🚗 [RefuelingWaitingPage] AUTÔNOMO - configurando WebSocket + polling fallback');
+      _setupWebSocketListener();
+      // Polling fallback: verifica status CONCLUIDO
+      _startPollingForAutonomous();
+    } else {
+      // FROTA: WebSocket como principal + polling como fallback (AGUARDANDO_VALIDACAO_MOTORISTA)
+      debugPrint('🚛 [RefuelingWaitingPage] FROTA - configurando WebSocket + polling fallback');
+      _setupFleetWebSocketListener();
+      
+      // Se já temos o refuelingId, carregar dados imediatamente
+      if (widget.refuelingId.isNotEmpty) {
+        debugPrint('🚀 [RefuelingWaitingPage] refuelingId presente, carregando dados imediatamente: ${widget.refuelingId}');
+        _loadRefuelingData(widget.refuelingId);
+        // Verificar também se já está CONCLUIDO (caso seja autônomo mal detectado)
+        _checkIfAlreadyCompleted(widget.refuelingId);
+      } else if (widget.refuelingCode.isNotEmpty) {
+         // Se tem código, verificar status pelo código
+         _checkIfAlreadyCompletedByCode(widget.refuelingCode);
+         
+        // Polling fallback: verifica status AGUARDANDO_VALIDACAO_MOTORISTA
+        debugPrint('🔄 [RefuelingWaitingPage] FROTA - iniciando polling fallback...');
+        _startPolling();
+      } else {
+         debugPrint('🔄 [RefuelingWaitingPage] FROTA - iniciando polling fallback...');
+         _startPolling();
+      }
+    }
+  }
+
+  /// Verificar se abastecimento já está concluído (fallback de segurança)
+  Future<void> _checkIfAlreadyCompleted(String refuelingId) async {
+      try {
+        final response = await _apiService.getRefuelingStatus(refuelingId);
+        if (response['success'] == true && response['data'] != null) {
+            final data = response['data'];
+            if (data['status'] == 'CONCLUIDO') {
+                debugPrint('✅ [RefuelingWaitingPage] Detectado status CONCLUIDO na inicialização! Navegando...');
+                _navigateToSuccess(data);
+            }
+        }
+      } catch (e) {
+          debugPrint('⚠️ Erro ao verificar status inicial: $e');
+      }
+  }
+
+  Future<void> _checkIfAlreadyCompletedByCode(String code) async {
+      try {
+        final response = await _apiService.getRefuelingByCode(code);
+        if (response['success'] == true && response['data'] != null) {
+            final data = response['data'];
+            if (data['status'] == 'CONCLUIDO') {
+                debugPrint('✅ [RefuelingWaitingPage] Detectado status CONCLUIDO por código! Navegando...');
+                _navigateToSuccess(data);
+            }
+        }
+      } catch (e) {
+          debugPrint('⚠️ Erro ao verificar status por código: $e');
+      }
+  }
+
+  void _navigateToSuccess(Map<String, dynamic> data) {
+      if (!mounted) return;
+      _pollingService.stopPolling();
+      WebSocketService().disconnect();
+      
+      // Helper para parsear valores
+      double parseDouble(dynamic value) {
+        if (value == null) return 0.0;
+        if (value is num) return value.toDouble();
+        if (value is String) return double.tryParse(value) ?? 0.0;
+        return 0.0;
+      }
+
+      context.go('/autonomous-success', extra: {
+        'refuelingCode': widget.refuelingCode,
+        'status': data['status']?.toString() ?? 'CONCLUIDO',
+        'totalValue': parseDouble(data['total_amount']),
+        'quantityLiters': parseDouble(data['quantity_liters']),
+        'pricePerLiter': parseDouble(data['unit_price']),
+        'pumpPrice': parseDouble(data['pump_price']),
+        'savings': parseDouble(data['savings']),
+        'stationName': data['station_name']?.toString() ?? widget.stationData?['nome'] ?? 'Posto',
+        'vehiclePlate': data['vehicle_plate']?.toString() ?? widget.vehicleData?['placa'] ?? '',
+        'fuelType': data['fuel_type']?.toString() ?? 'Combustível',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
   }
   
   /// Salvar estado de validação pendente para recuperar após login
@@ -70,6 +198,74 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         stationData: widget.stationData,
       );
     }
+  }
+
+  void _setupWebSocketListener() {
+    debugPrint('🔌 [RefuelingWaitingPage] Configurando listener para pagamento autônomo. Código: ${widget.refuelingCode}');
+    
+    WebSocketService().listenForAutonomousPaymentConfirmed((data) {
+      debugPrint('💰 [RefuelingWaitingPage] Pagamento confirmado recebido via WebSocket: $data');
+      
+      try {
+        final payload = data['data'] ?? data;
+        final model = PaymentConfirmedModel.fromJson(Map<String, dynamic>.from(payload));
+        
+        if (model.refuelingCode == widget.refuelingCode) {
+          debugPrint('✅ [RefuelingWaitingPage] Código confirmado! Navegando para sucesso...');
+          
+          if (mounted) {
+            _pollingService.stopPolling();
+            
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AutonomousPaymentSuccessPage(data: model),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ [RefuelingWaitingPage] Erro ao processar evento de pagamento: $e');
+      }
+    });
+  }
+
+  /// Configurar WebSocket listener para FROTA (refueling:pending_validation)
+  void _setupFleetWebSocketListener() {
+    debugPrint('🔌 [RefuelingWaitingPage] Configurando listener para validação de FROTA. Código: ${widget.refuelingCode}');
+    
+    WebSocketService().listenForFleetPendingValidation((data) {
+      debugPrint('📋 [RefuelingWaitingPage] Validação pendente recebida via WebSocket: $data');
+      
+      try {
+        // O evento pode vir com refueling_code ou refuelingCode
+        final eventCode = data['refueling_code']?.toString() ?? data['refuelingCode']?.toString() ?? '';
+        
+        if (eventCode == widget.refuelingCode) {
+          debugPrint('✅ [RefuelingWaitingPage] Código de FROTA confirmado! Carregando dados...');
+          
+          if (mounted) {
+            _pollingService.stopPolling();
+            
+            // Obter refueling_id do evento
+            final refuelingId = data['refueling_id']?.toString() ?? data['refuelingId']?.toString() ?? '';
+            
+            if (refuelingId.isNotEmpty) {
+              _loadRefuelingData(refuelingId);
+            } else {
+              debugPrint('⚠️ [RefuelingWaitingPage] refueling_id não encontrado no evento, usando código');
+              // Se não temos o ID, tentar buscar pelos dados já recebidos
+              setState(() {
+                _refuelingData = data;
+                _isPolling = false;
+              });
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ [RefuelingWaitingPage] Erro ao processar evento de validação FROTA: $e');
+      }
+    });
   }
 
   @override
@@ -104,6 +300,65 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
           
           // Buscar dados completos do abastecimento
           await _loadRefuelingData(refuelingId);
+        }
+      },
+    );
+  }
+
+  /// Polling fallback para AUTÔNOMO - verifica status CONCLUIDO
+  /// Autônomo não passa por AGUARDANDO_VALIDACAO_MOTORISTA, vai direto para CONCLUIDO
+  void _startPollingForAutonomous() {
+    if (widget.refuelingCode.isEmpty) {
+      debugPrint('❌ [POLLING AUTÔNOMO] Código de abastecimento vazio');
+      return;
+    }
+
+    setState(() {
+      _isPolling = true;
+    });
+
+    debugPrint('🔄 [POLLING AUTÔNOMO] Iniciando polling fallback para código: ${widget.refuelingCode}');
+
+    _pollingService.startPollingForStatus(
+      refuelingCode: widget.refuelingCode,
+      targetStatus: 'CONCLUIDO',
+      intervalSeconds: 15,
+      onStatusReached: (data) async {
+        debugPrint('✅ [POLLING AUTÔNOMO] Status CONCLUIDO detectado! Navegando para sucesso...');
+        if (mounted) {
+          _pollingService.stopPolling();
+          WebSocketService().disconnect();
+          
+          // Helper para parsear valores que podem ser String ou num
+          double parseDouble(dynamic value) {
+            if (value == null) return 0.0;
+            if (value is num) return value.toDouble();
+            if (value is String) return double.tryParse(value) ?? 0.0;
+            return 0.0;
+          }
+          
+          // Usar addPostFrameCallback para garantir navegação no main thread
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              debugPrint('🚀 [RefuelingWaitingPage AUTÔNOMO] Executando navegação para /autonomous-success...');
+              // Navegar para tela de sucesso usando GoRouter
+              context.go('/autonomous-success', extra: {
+                'refuelingCode': widget.refuelingCode,
+                'status': data['status']?.toString() ?? 'CONCLUIDO',
+                'totalValue': parseDouble(data['total_amount']),
+                'quantityLiters': parseDouble(data['quantity_liters']),
+                'pricePerLiter': parseDouble(data['unit_price']),
+                'pumpPrice': parseDouble(data['pump_price']),
+                'savings': parseDouble(data['savings']),
+                'stationName': data['station_name']?.toString() ?? widget.stationData?['nome'] ?? 'Posto',
+                'vehiclePlate': data['vehicle_plate']?.toString() ?? widget.vehicleData?['placa'] ?? '',
+                'fuelType': data['fuel_type']?.toString() ?? 'Combustível',
+                'timestamp': DateTime.now().toIso8601String(),
+              });
+            } else {
+              debugPrint('⚠️ [RefuelingWaitingPage AUTÔNOMO] Widget não está mais mounted, navegação cancelada');
+            }
+          });
         }
       },
     );
