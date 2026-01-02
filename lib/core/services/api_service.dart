@@ -1770,6 +1770,47 @@ class ApiService {
     }
   }
 
+  /// Buscar veículos do motorista logado
+  /// GET /api/v1/vehicles
+  Future<Map<String, dynamic>> getMyVehicles() async {
+    try {
+      final response = await _dio.get('/vehicles');
+
+      if (response.statusCode == 200) {
+        // Normalizar resposta para sempre ter 'vehicles' como array
+        List<dynamic> vehicles = [];
+        if (response.data is List) {
+          vehicles = response.data;
+        } else if (response.data is Map) {
+          if (response.data['data'] is List) {
+            vehicles = response.data['data'];
+          } else if (response.data['vehicles'] is List) {
+            vehicles = response.data['vehicles'];
+          } else if (response.data['data']?['vehicles'] is List) {
+            vehicles = response.data['data']['vehicles'];
+          }
+        }
+        
+        return {
+          'success': true,
+          'data': {'vehicles': vehicles},
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
   /// Método GET genérico para requisições HTTP
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
