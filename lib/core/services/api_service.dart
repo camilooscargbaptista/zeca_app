@@ -407,15 +407,32 @@ class ApiService {
           await storageService.saveRefreshToken(data['refresh_token']);
         }
         
-        // Salvar dados do usuário
-        if (data['user'] != null) {
-          UserService().setUserData(
-            driverCpf: cpf,
-            transporterCnpj: data['user']['company']?['cnpj'] ?? '',
-            userName: data['user']['name'] ?? data['user']['nome'],
-            isAutonomous: data['user']['is_autonomous'] == true,
-          );
+        // Decodificar JWT para extrair is_autonomous
+        bool isAutonomousFromToken = false;
+        String? cnpjFromToken;
+        if (data['access_token'] != null) {
+          try {
+            final jwtPayload = _decodeJwtPayload(data['access_token']);
+            isAutonomousFromToken = jwtPayload['is_autonomous'] == true;
+            cnpjFromToken = jwtPayload['company_cnpj'] as String?;
+            debugPrint('🔐 JWT decodificado - is_autonomous: $isAutonomousFromToken, company_cnpj: $cnpjFromToken');
+          } catch (e) {
+            debugPrint('⚠️ Erro ao decodificar JWT: $e');
+          }
         }
+        
+        // Salvar dados do usuário
+        // Priorizar dados do JWT para is_autonomous e cnpj
+        final transporterCnpj = cnpjFromToken ?? data['user']?['company']?['cnpj'] ?? '';
+        
+        UserService().setUserData(
+          driverCpf: cpf,
+          transporterCnpj: transporterCnpj,
+          userName: data['user']?['name'] ?? data['user']?['nome'],
+          isAutonomous: isAutonomousFromToken || data['user']?['is_autonomous'] == true,
+        );
+        
+        debugPrint('✅ UserService configurado - isAutonomous: ${UserService().isAutonomous}, transporterCnpj: ${UserService().transporterCnpj}');
         
         // Salvar credenciais para re-login automático (apenas durante jornada)
         try {
@@ -1919,6 +1936,33 @@ class ApiService {
         'success': false,
         'error': 'Erro inesperado: $e',
       };
+    }
+  }
+
+  /// Decodificar payload do JWT
+  Map<String, dynamic> _decodeJwtPayload(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return {};
+      }
+
+      // Decodificar payload (parte 2 do JWT)
+      final payload = parts[1];
+      // Adicionar padding se necessário
+      final normalizedPayload = payload.padRight(
+        (payload.length + 3) ~/ 4 * 4,
+        '=',
+      );
+      
+      final decodedBytes = base64Url.decode(normalizedPayload);
+      final decodedString = utf8.decode(decodedBytes);
+      final payloadMap = jsonDecode(decodedString) as Map<String, dynamic>;
+      
+      return payloadMap;
+    } catch (e) {
+      debugPrint('⚠️ Erro ao decodificar token JWT: $e');
+      return {};
     }
   }
 }
