@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/user_entity.dart';
 import 'oauth_user_info_model.dart';
+import 'login_response_model.dart';
 
 part 'user_model.freezed.dart';
 part 'user_model.g.dart';
@@ -18,6 +19,7 @@ class UserModel with _$UserModel {
     @JsonKey(name: 'company_id') required String companyId,
     @JsonKey(name: 'company_name') required String companyName,
     @JsonKey(name: 'company_cnpj') String? companyCnpj,
+    @JsonKey(name: 'company_type') String? companyType,
     @JsonKey(name: 'last_login') DateTime? lastLogin,
     @JsonKey(name: 'roles') @Default([]) List<String> roles,
     @JsonKey(name: 'permissions') @Default([]) List<String> permissions,
@@ -41,6 +43,7 @@ class UserModel with _$UserModel {
       cpf: cpf,
       empresaId: companyId,
       empresaNome: companyName,
+      empresaTipo: companyType,
       email: email,
       telefone: phone,
       ultimoLogin: lastLogin,
@@ -70,6 +73,7 @@ class UserModel with _$UserModel {
       companyId: oauthUser.companyId,
       companyName: oauthUser.companyName,
       companyCnpj: oauthUser.companyCnpj,
+      companyType: oauthUser.companyType,
       email: oauthUser.email,
       phone: oauthUser.phoneNumber,
       lastLogin: oauthUser.lastLogin,
@@ -77,6 +81,21 @@ class UserModel with _$UserModel {
       permissions: oauthUser.permissions,
       emailVerified: oauthUser.emailVerified,
       phoneVerified: oauthUser.phoneVerified,
+    );
+  }
+  
+  // Criar a partir da resposta de login (sem precisar chamar /oauth/userinfo)
+  factory UserModel.fromLoginResponse(LoginUserModel loginUser) {
+    return UserModel(
+      id: loginUser.id,
+      name: loginUser.name,
+      cpf: loginUser.cpf ?? '',
+      companyId: loginUser.company.id,
+      companyName: loginUser.company.name,
+      companyCnpj: loginUser.company.cnpj,
+      companyType: loginUser.company.type,
+      email: loginUser.email,
+      phone: loginUser.phone,
     );
   }
 }

@@ -31,6 +31,8 @@ mixin _$UserModel {
   String get companyName => throw _privateConstructorUsedError;
   @JsonKey(name: 'company_cnpj')
   String? get companyCnpj => throw _privateConstructorUsedError;
+  @JsonKey(name: 'company_type')
+  String? get companyType => throw _privateConstructorUsedError;
   @JsonKey(name: 'last_login')
   DateTime? get lastLogin => throw _privateConstructorUsedError;
   @JsonKey(name: 'roles')
@@ -72,6 +74,7 @@ abstract class $UserModelCopyWith<$Res> {
       @JsonKey(name: 'company_id') String companyId,
       @JsonKey(name: 'company_name') String companyName,
       @JsonKey(name: 'company_cnpj') String? companyCnpj,
+      @JsonKey(name: 'company_type') String? companyType,
       @JsonKey(name: 'last_login') DateTime? lastLogin,
       @JsonKey(name: 'roles') List<String> roles,
       @JsonKey(name: 'permissions') List<String> permissions,
@@ -108,6 +111,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? companyId = null,
     Object? companyName = null,
     Object? companyCnpj = freezed,
+    Object? companyType = freezed,
     Object? lastLogin = freezed,
     Object? roles = null,
     Object? permissions = null,
@@ -151,6 +155,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
       companyCnpj: freezed == companyCnpj
           ? _value.companyCnpj
           : companyCnpj // ignore: cast_nullable_to_non_nullable
+              as String?,
+      companyType: freezed == companyType
+          ? _value.companyType
+          : companyType // ignore: cast_nullable_to_non_nullable
               as String?,
       lastLogin: freezed == lastLogin
           ? _value.lastLogin
@@ -237,6 +245,7 @@ abstract class _$$UserModelImplCopyWith<$Res>
       @JsonKey(name: 'company_id') String companyId,
       @JsonKey(name: 'company_name') String companyName,
       @JsonKey(name: 'company_cnpj') String? companyCnpj,
+      @JsonKey(name: 'company_type') String? companyType,
       @JsonKey(name: 'last_login') DateTime? lastLogin,
       @JsonKey(name: 'roles') List<String> roles,
       @JsonKey(name: 'permissions') List<String> permissions,
@@ -273,6 +282,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? companyId = null,
     Object? companyName = null,
     Object? companyCnpj = freezed,
+    Object? companyType = freezed,
     Object? lastLogin = freezed,
     Object? roles = null,
     Object? permissions = null,
@@ -316,6 +326,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
       companyCnpj: freezed == companyCnpj
           ? _value.companyCnpj
           : companyCnpj // ignore: cast_nullable_to_non_nullable
+              as String?,
+      companyType: freezed == companyType
+          ? _value.companyType
+          : companyType // ignore: cast_nullable_to_non_nullable
               as String?,
       lastLogin: freezed == lastLogin
           ? _value.lastLogin
@@ -373,6 +387,7 @@ class _$UserModelImpl extends _UserModel {
       @JsonKey(name: 'company_id') required this.companyId,
       @JsonKey(name: 'company_name') required this.companyName,
       @JsonKey(name: 'company_cnpj') this.companyCnpj,
+      @JsonKey(name: 'company_type') this.companyType,
       @JsonKey(name: 'last_login') this.lastLogin,
       @JsonKey(name: 'roles') final List<String> roles = const [],
       @JsonKey(name: 'permissions') final List<String> permissions = const [],
@@ -409,6 +424,9 @@ class _$UserModelImpl extends _UserModel {
   @override
   @JsonKey(name: 'company_cnpj')
   final String? companyCnpj;
+  @override
+  @JsonKey(name: 'company_type')
+  final String? companyType;
   @override
   @JsonKey(name: 'last_login')
   final DateTime? lastLogin;
@@ -454,7 +472,7 @@ class _$UserModelImpl extends _UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name, cpf: $cpf, email: $email, phone: $phone, companyId: $companyId, companyName: $companyName, companyCnpj: $companyCnpj, lastLogin: $lastLogin, roles: $roles, permissions: $permissions, emailVerified: $emailVerified, phoneVerified: $phoneVerified, isActive: $isActive, profile: $profile, preferences: $preferences, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'UserModel(id: $id, name: $name, cpf: $cpf, email: $email, phone: $phone, companyId: $companyId, companyName: $companyName, companyCnpj: $companyCnpj, companyType: $companyType, lastLogin: $lastLogin, roles: $roles, permissions: $permissions, emailVerified: $emailVerified, phoneVerified: $phoneVerified, isActive: $isActive, profile: $profile, preferences: $preferences, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -473,6 +491,8 @@ class _$UserModelImpl extends _UserModel {
                 other.companyName == companyName) &&
             (identical(other.companyCnpj, companyCnpj) ||
                 other.companyCnpj == companyCnpj) &&
+            (identical(other.companyType, companyType) ||
+                other.companyType == companyType) &&
             (identical(other.lastLogin, lastLogin) ||
                 other.lastLogin == lastLogin) &&
             const DeepCollectionEquality().equals(other._roles, _roles) &&
@@ -495,26 +515,28 @@ class _$UserModelImpl extends _UserModel {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      name,
-      cpf,
-      email,
-      phone,
-      companyId,
-      companyName,
-      companyCnpj,
-      lastLogin,
-      const DeepCollectionEquality().hash(_roles),
-      const DeepCollectionEquality().hash(_permissions),
-      emailVerified,
-      phoneVerified,
-      isActive,
-      profile,
-      preferences,
-      createdAt,
-      updatedAt);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        name,
+        cpf,
+        email,
+        phone,
+        companyId,
+        companyName,
+        companyCnpj,
+        companyType,
+        lastLogin,
+        const DeepCollectionEquality().hash(_roles),
+        const DeepCollectionEquality().hash(_permissions),
+        emailVerified,
+        phoneVerified,
+        isActive,
+        profile,
+        preferences,
+        createdAt,
+        updatedAt
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -540,6 +562,7 @@ abstract class _UserModel extends UserModel {
           @JsonKey(name: 'company_id') required final String companyId,
           @JsonKey(name: 'company_name') required final String companyName,
           @JsonKey(name: 'company_cnpj') final String? companyCnpj,
+          @JsonKey(name: 'company_type') final String? companyType,
           @JsonKey(name: 'last_login') final DateTime? lastLogin,
           @JsonKey(name: 'roles') final List<String> roles,
           @JsonKey(name: 'permissions') final List<String> permissions,
@@ -575,6 +598,9 @@ abstract class _UserModel extends UserModel {
   @override
   @JsonKey(name: 'company_cnpj')
   String? get companyCnpj;
+  @override
+  @JsonKey(name: 'company_type')
+  String? get companyType;
   @override
   @JsonKey(name: 'last_login')
   DateTime? get lastLogin;

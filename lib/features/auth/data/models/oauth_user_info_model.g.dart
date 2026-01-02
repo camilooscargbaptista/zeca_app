@@ -17,6 +17,7 @@ _$OAuthUserInfoModelImpl _$$OAuthUserInfoModelImplFromJson(
       companyId: json['company_id'] as String,
       companyName: json['company_name'] as String,
       companyCnpj: json['company_cnpj'] as String?,
+      companyType: json['company_type'] as String?,
       roles:
           (json['roles'] as List<dynamic>?)?.map((e) => e as String).toList() ??
               const [],
@@ -42,6 +43,7 @@ Map<String, dynamic> _$$OAuthUserInfoModelImplToJson(
       'company_id': instance.companyId,
       'company_name': instance.companyName,
       'company_cnpj': instance.companyCnpj,
+      'company_type': instance.companyType,
       'roles': instance.roles,
       'permissions': instance.permissions,
       'last_login': instance.lastLogin?.toIso8601String(),

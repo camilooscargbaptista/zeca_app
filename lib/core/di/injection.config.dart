@@ -31,6 +31,14 @@ import 'package:zeca_app/features/auth/domain/usecases/refresh_token_usecase.dar
     as _i978;
 import 'package:zeca_app/features/auth/presentation/bloc/auth_bloc.dart'
     as _i589;
+import 'package:zeca_app/features/autonomous/data/datasources/autonomous_remote_datasource.dart'
+    as _i106;
+import 'package:zeca_app/features/autonomous/data/repositories/autonomous_repository_impl.dart'
+    as _i649;
+import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_registration_bloc.dart'
+    as _i545;
+import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart'
+    as _i56;
 import 'package:zeca_app/features/home/data/datasources/fuel_station_remote_datasource.dart'
     as _i787;
 import 'package:zeca_app/features/home/data/datasources/vehicle_remote_datasource.dart'
@@ -117,6 +125,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i493.DocumentRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i787.FuelStationRemoteDataSource>(
         () => _i787.FuelStationRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.factory<_i106.AutonomousRemoteDataSource>(
+        () => _i106.AutonomousRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i857.AuthRemoteDataSource>(
         () => _i857.AuthRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i218.NotificationRemoteDataSource>(
@@ -127,6 +137,12 @@ extension GetItInjectableX on _i174.GetIt {
         _i93.RefuelingRepositoryImpl(gh<_i133.RefuelingRemoteDataSource>()));
     gh.factory<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
+    gh.factory<_i649.AutonomousRepository>(() =>
+        _i649.AutonomousRepositoryImpl(gh<_i106.AutonomousRemoteDataSource>()));
+    gh.factory<_i56.AutonomousVehiclesBloc>(
+        () => _i56.AutonomousVehiclesBloc(gh<_i649.AutonomousRepository>()));
+    gh.factory<_i545.AutonomousRegistrationBloc>(() =>
+        _i545.AutonomousRegistrationBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i1001.VehicleRepository>(
         () => _i404.VehicleRepositoryImpl(gh<_i921.VehicleRemoteDataSource>()));
     gh.factory<_i222.FuelStationRepository>(() =>

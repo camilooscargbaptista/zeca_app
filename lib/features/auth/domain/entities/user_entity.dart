@@ -6,6 +6,7 @@ class UserEntity extends Equatable {
   final String cpf;
   final String empresaId;
   final String empresaNome;
+  final String? empresaTipo;
   final String? email;
   final String? telefone;
   final DateTime? ultimoLogin;
@@ -16,10 +17,14 @@ class UserEntity extends Equatable {
     required this.cpf,
     required this.empresaId,
     required this.empresaNome,
+    this.empresaTipo,
     this.email,
     this.telefone,
     this.ultimoLogin,
   });
+  
+  /// Verifica se o usuário é autônomo
+  bool get isAutonomo => empresaTipo == 'AUTONOMO';
   
   @override
   List<Object?> get props => [
@@ -28,6 +33,7 @@ class UserEntity extends Equatable {
     cpf,
     empresaId,
     empresaNome,
+    empresaTipo,
     email,
     telefone,
     ultimoLogin,

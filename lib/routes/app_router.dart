@@ -19,6 +19,15 @@ import '../features/journey/presentation/pages/journey_segments_page.dart';
 import '../core/services/api_service.dart';
 import '../core/services/location_service.dart';
 import '../features/journey/data/services/journey_storage_service.dart';
+import '../core/di/injection.dart';
+// Autonomous imports
+import '../features/autonomous/presentation/pages/autonomous_register_page.dart';
+import '../features/autonomous/presentation/pages/autonomous_vehicles_page.dart';
+import '../features/autonomous/presentation/pages/autonomous_vehicle_form_page.dart';
+import '../features/autonomous/presentation/pages/autonomous_journey_start_page.dart';
+import '../features/autonomous/presentation/pages/autonomous_first_access_page.dart';
+import '../features/autonomous/presentation/bloc/autonomous_registration_bloc.dart';
+import '../features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -132,6 +141,58 @@ class AppRouter {
           final journeyId = state.pathParameters['journeyId']!;
           return JourneySegmentsPage(journeyId: journeyId);
         },
+      ),
+      // Rotas para Motorista Autônomo
+      GoRoute(
+        path: '/autonomous/register',
+        name: 'autonomous-register',
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => getIt<AutonomousRegistrationBloc>(),
+            child: const AutonomousRegisterPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/autonomous/vehicles',
+        name: 'autonomous-vehicles',
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => getIt<AutonomousVehiclesBloc>(),
+            child: const AutonomousVehiclesPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/autonomous/vehicles/add',
+        name: 'autonomous-vehicles-add',
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => getIt<AutonomousVehiclesBloc>(),
+            child: const AutonomousVehicleFormPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/autonomous/vehicles/edit/:vehicleId',
+        name: 'autonomous-vehicles-edit',
+        builder: (context, state) {
+          final vehicleId = state.pathParameters['vehicleId']!;
+          return BlocProvider(
+            create: (context) => getIt<AutonomousVehiclesBloc>(),
+            child: AutonomousVehicleFormPage(vehicleId: vehicleId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/autonomous/journey-start',
+        name: 'autonomous-journey-start',
+        builder: (context, state) => const AutonomousJourneyStartPage(),
+      ),
+      GoRoute(
+        path: '/autonomous/first-access',
+        name: 'autonomous-first-access',
+        builder: (context, state) => const AutonomousFirstAccessPage(),
       ),
     ],
     errorBuilder: (context, state) {

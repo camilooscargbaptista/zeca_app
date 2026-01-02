@@ -612,7 +612,7 @@ class _HomePageFixedState extends State<HomePageFixed> {
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

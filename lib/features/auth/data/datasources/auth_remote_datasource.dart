@@ -4,9 +4,10 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../models/oauth_token_model.dart';
 import '../models/oauth_user_info_model.dart';
+import '../models/login_response_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<OAuthTokenModel> loginWithOAuth(String cpf, String password);
+  Future<LoginResponseModel> loginWithOAuth(String cpf, String password);
   Future<OAuthTokenModel> refreshOAuthToken(String refreshToken);
   Future<OAuthUserInfoModel> getUserInfo(String accessToken);
   Future<void> revokeToken(String token);
@@ -19,7 +20,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this._client);
   
   @override
-  Future<OAuthTokenModel> loginWithOAuth(String cpf, String password) async {
+  Future<LoginResponseModel> loginWithOAuth(String cpf, String password) async {
     final response = await _client.post(
       ApiConstants.oauthToken,
       data: {
@@ -31,7 +32,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       },
     );
     
-    return OAuthTokenModel.fromJson(response.data);
+    return LoginResponseModel.fromJson(response.data);
   }
   
   @override

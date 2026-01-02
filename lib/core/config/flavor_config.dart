@@ -47,7 +47,7 @@ class FlavorConfig {
           name: 'brandA',
           appName: 'ZECA A',
           baseUrl: 'https://api-branda.zeca.com',
-          primaryColor: const Color(0xFF2E86AB), // Azul médio do logo
+          primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/brand_a/logo.png',
           theme: BrandATheme.theme,
         );
@@ -71,7 +71,7 @@ class FlavorConfig {
           name: 'dev',
           appName: 'ZECA DEV',
           baseUrl: 'https://api-dev.zeca.com',
-          primaryColor: const Color(0xFF2E86AB), // Azul do logo
+          primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
         );
@@ -83,7 +83,7 @@ class FlavorConfig {
           name: 'staging',
           appName: 'ZECA STAGING',
           baseUrl: 'https://api-staging.zeca.com',
-          primaryColor: const Color(0xFF2E86AB), // Azul do logo
+          primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
         );
@@ -95,7 +95,7 @@ class FlavorConfig {
           name: 'prod',
           appName: 'ZECA',
           baseUrl: 'https://api.zeca.com',
-          primaryColor: const Color(0xFF2E86AB), // Azul médio do logo
+          primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
         );

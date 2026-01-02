@@ -134,7 +134,8 @@ class ZecaApp extends StatelessWidget {
           title: config.appName,
           theme: config.theme,
           routerConfig: router.router,
-          debugShowCheckedModeBanner: config.isDevelopment,
+          // debugShowCheckedModeBanner: config.isDevelopment,
+          debugShowCheckedModeBanner: false,
         ),
       );
     } catch (e, stackTrace) {

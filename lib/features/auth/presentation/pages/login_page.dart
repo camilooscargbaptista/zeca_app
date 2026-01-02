@@ -78,7 +78,14 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            context.go('/home');
+            // Verificar se é autônomo
+            if (state.user.isAutonomo) {
+              // TODO: Verificar se tem veículos cadastrados
+              // Por enquanto, ir para tela de primeiro acesso
+              context.go('/autonomous/first-access');
+            } else {
+              context.go('/home');
+            }
           } else if (state is AuthError) {
             CustomToast.showError(context, state.message);
           }
