@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
 import '../../../../core/mock/mock_api_service.dart';
 import '../../../../core/services/refueling_polling_service.dart';
 import '../../../../core/services/websocket_service.dart';
 import '../../../../core/services/api_service.dart';
-import '../../../../core/services/storage_service.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
@@ -17,8 +14,6 @@ import '../../../../shared/widgets/permissions/permission_request_dialog.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../shared/widgets/dialogs/success_dialog.dart';
 import 'refueling_waiting_page.dart';
-import 'autonomous_payment_success_page.dart';
-import '../../data/models/payment_confirmed_model.dart';
 import 'dart:io';
 
 class RefuelingCodePageSimple extends StatefulWidget {
@@ -32,7 +27,6 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   String _refuelingCode = '';
   bool _isLoading = false;
   bool _isUploading = false;
-  bool _shouldStopServiceOnDispose = true; // Flag para controlar se serviços devem parar no dispose
   Map<String, dynamic>? _refuelingData;
   List<File> _attachedImages = [];
   int _maxImages = 3;
@@ -79,14 +73,8 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   @override
   void dispose() {
     // Parar polling e desconectar WebSocket quando sair da tela
-    // APENAS se não estivermos navegando para uma tela que continua o fluxo
-    if (_shouldStopServiceOnDispose) {
-      debugPrint('🛑 [RefuelingCodePage] Parando serviços no dispose');
-      _pollingService.stopPolling();
-      _webSocketService.disconnect();
-    } else {
-      debugPrint('⏩ [RefuelingCodePage] Mantendo serviços ativos após dispose (navegação)');
-    }
+    _pollingService.stopPolling();
+    _webSocketService.disconnect();
     super.dispose();
   }
 
@@ -270,7 +258,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                         if (_vehicleData != null && _stationData != null) ...[
                           _buildInfoRow('Veículo', _vehicleData!['placa'] ?? 'N/A'),
                           _buildInfoRow('Posto', _stationData!['nome'] ?? 'N/A'),
-                          _buildInfoRow('Combustível', _parseFuelTypeDisplay(_fuelType)),
+                          _buildInfoRow('Combustível', _fuelType.isNotEmpty ? _fuelType : 'N/A'),
                           _buildInfoRow('KM Atual', _kmAtual.isNotEmpty ? _kmAtual : 'N/A'),
                           if (_abastecerArla)
                             _buildInfoRow('ARLA 32', 'Sim'),
@@ -497,16 +485,6 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
     );
   }
 
-  String _parseFuelTypeDisplay(dynamic fuelType) {
-    if (fuelType == null) return 'N/A';
-    if (fuelType is String) return fuelType;
-    if (fuelType is Map) {
-      // Tentar campos comuns: 'name', 'nome', etc
-      return fuelType['name'] ?? fuelType['nome'] ?? fuelType['description'] ?? 'N/A';
-    }
-    return fuelType.toString();
-  }
-
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -625,10 +603,8 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
             }
             
             if (mounted) {
-              // NÃO desconectar WebSocket - a waiting page vai usar o mesmo
-              // NÃO desconectar WebSocket/Polling aqui explicitamente pois a próxima tela usará
-              // E marcar flag para não parar no dispose
-              _shouldStopServiceOnDispose = false;
+              _webSocketService.disconnect();
+              _pollingService.stopPolling();
               
               debugPrint('🚀 [WebSocket] Navegando para /refueling-waiting com refuelingId: $refuelingId');
               
@@ -642,58 +618,6 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                 },
               );
             }
-          },
-          onAutonomousPaymentConfirmed: (data) {
-             debugPrint('💰 [WebSocket/CodePage] Pagamento autônomo confirmado: $data');
-             
-             if (mounted) {
-               _shouldStopServiceOnDispose = false;
-               
-               // Helper para parse seguro
-               double parseDouble(dynamic value) {
-                 if (value == null) return 0.0;
-                 if (value is num) return value.toDouble();
-                 if (value is String) return double.tryParse(value) ?? 0.0;
-                 return 0.0;
-               }
-               
-               // Helper para parsear fuel_type que pode vir como string ou objeto
-               String parseFuelType(dynamic value) {
-                 if (value == null) return _fuelType ?? 'Combustível';
-                 if (value is String) {
-                   if (value.trim().startsWith('{')) {
-                     final nameMatch = RegExp(r"name:\s*([^,}]+)").firstMatch(value);
-                     if (nameMatch != null) {
-                       return nameMatch.group(1)?.trim() ?? 'Combustível';
-                     }
-                   }
-                   return value;
-                 }
-                 if (value is Map) {
-                   return value['name']?.toString() ?? 
-                          value['nome']?.toString() ?? 
-                          value['code']?.toString() ?? 
-                          'Combustível';
-                 }
-                 return _fuelType ?? 'Combustível';
-               }
-
-               debugPrint('🚀 [WebSocket/CodePage] Navegando para /autonomous-success (Automático)');
-               
-               context.go('/autonomous-success', extra: {
-                 'refuelingCode': _refuelingCode,
-                 'status': data['status']?.toString() ?? 'CONCLUIDO',
-                 'totalValue': parseDouble(data['total_amount']),
-                 'quantityLiters': parseDouble(data['quantity_liters']),
-                 'pricePerLiter': parseDouble(data['unit_price']),
-                 'pumpPrice': parseDouble(data['pump_price']),
-                 'savings': parseDouble(data['savings']),
-                 'stationName': data['station_name']?.toString() ?? _stationData?['nome'] ?? 'Posto',
-                 'vehiclePlate': data['vehicle_plate']?.toString() ?? _vehicleData?['placa'] ?? '',
-                 'fuelType': parseFuelType(data['fuel_type']),
-                 'timestamp': DateTime.now().toIso8601String(),
-               });
-             }
           },
           onConnected: () {
             debugPrint('✅ [WebSocket] Conectado! Usando WebSocket para notificações');
@@ -731,127 +655,37 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   }
   
   /// Fallback de polling quando WebSocket não está disponível
-  void _startPollingFallback(String cleanCode, {int intervalSeconds = 15}) async {
+  void _startPollingFallback(String cleanCode, {int intervalSeconds = 15}) {
     if (_pollingService.isPolling) {
       debugPrint('⚠️ [RefuelingCodePage] Polling já está ativo');
       return;
     }
     
-    // Verificar se é autônomo lendo JWT
-    bool isAutonomous = false;
-    try {
-      final storageService = getIt<StorageService>();
-      final token = await storageService.getAccessToken();
-      if (token != null) {
-        final parts = token.split('.');
-        if (parts.length == 3) {
-          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-          final decoded = jsonDecode(payload) as Map<String, dynamic>;
-          isAutonomous = decoded['is_autonomous'] == true || decoded['role'] == 'MOTORISTA_AUTONOMO';
-          debugPrint('🔑 [RefuelingCodePage] JWT is_autonomous: $isAutonomous, role: ${decoded['role']}');
+    debugPrint('🔄 [RefuelingCodePage] Iniciando polling (fallback) a cada ${intervalSeconds}s');
+    
+    _pollingService.startPolling(
+      refuelingId: _refuelingId,
+      refuelingCode: cleanCode.isNotEmpty ? cleanCode : null,
+      intervalSeconds: intervalSeconds,
+      onStatusChanged: (refuelingId) {
+        debugPrint('🎯 [Polling] Status mudou para refuelingId: $refuelingId');
+        
+        if (mounted) {
+          _pollingService.stopPolling();
+          _webSocketService.disconnect();
+          
+          context.go(
+            '/refueling-waiting',
+            extra: {
+              'refueling_id': refuelingId,
+              'refueling_code': _refuelingCode,
+              'vehicle_data': _vehicleData,
+              'station_data': _stationData,
+            },
+          );
         }
-      }
-    } catch (e) {
-      debugPrint('⚠️ [RefuelingCodePage] Erro ao ler JWT: $e');
-    }
-    
-    debugPrint('🔄 [RefuelingCodePage] Iniciando polling (fallback) a cada ${intervalSeconds}s - isAutonomous: $isAutonomous');
-    
-    if (isAutonomous) {
-      // AUTÔNOMO: Verificar status CONCLUIDO e navegar para tela de sucesso
-      _pollingService.startPollingForStatus(
-        refuelingCode: cleanCode,
-        targetStatus: 'CONCLUIDO',
-        intervalSeconds: intervalSeconds,
-        onStatusReached: (data) {
-          debugPrint('✅ [RefuelingCodePage AUTÔNOMO] Status CONCLUIDO detectado (CALLBACK AUTOMÁTICO)!');
-          
-          if (mounted) {
-            // Callback automático: Não parar polling aqui, pois vamos navegar e a proxima tela assume.
-            // Mas DEVEMOS proteger contra o dispose
-            _shouldStopServiceOnDispose = false;
-            
-            // Helper para parsear valores que podem ser String ou num
-            double parseDouble(dynamic value) {
-              if (value == null) return 0.0;
-              if (value is num) return value.toDouble();
-              if (value is String) return double.tryParse(value) ?? 0.0;
-              return 0.0;
-            }
-            
-            // Helper para parsear fuel_type que pode vir como string ou objeto
-            String parseFuelType(dynamic value) {
-              if (value == null) return _fuelType ?? 'Combustível';
-              if (value is String) {
-                // Se começa com {, é um objeto stringificado
-                if (value.trim().startsWith('{')) {
-                  // Tentar extrair o nome do objeto
-                  final nameMatch = RegExp(r"name:\s*([^,}]+)").firstMatch(value);
-                  if (nameMatch != null) {
-                    return nameMatch.group(1)?.trim() ?? 'Combustível';
-                  }
-                }
-                return value;
-              }
-              if (value is Map) {
-                return value['name']?.toString() ?? 
-                       value['nome']?.toString() ?? 
-                       value['code']?.toString() ?? 
-                       'Combustível';
-              }
-              return _fuelType ?? 'Combustível';
-            }
-             // Usar addPostFrameCallback para garantir navegação no main thread
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                // ... (código de navegação existente)
-
-                debugPrint('🚀 [RefuelingCodePage AUTÔNOMO] Executando navegação para /autonomous-success...');
-                context.go('/autonomous-success', extra: {
-                  'refuelingCode': _refuelingCode,
-                  'status': data['status']?.toString() ?? 'CONCLUIDO',
-                  'totalValue': parseDouble(data['total_amount']),
-                  'quantityLiters': parseDouble(data['quantity_liters']),
-                  'pricePerLiter': parseDouble(data['unit_price']),
-                  'pumpPrice': parseDouble(data['pump_price']),
-                  'savings': parseDouble(data['savings']),
-                  'stationName': data['station_name']?.toString() ?? _stationData?['nome'] ?? 'Posto',
-                  'vehiclePlate': data['vehicle_plate']?.toString() ?? _vehicleData?['placa'] ?? '',
-                  'fuelType': parseFuelType(data['fuel_type']),
-                  'timestamp': DateTime.now().toIso8601String(),
-                });
-              } else {
-                debugPrint('⚠️ [RefuelingCodePage AUTÔNOMO] Widget não está mais mounted, navegação cancelada');
-              }
-            });
-          }
-        },
-      );
-    } else {
-      // FROTA: Verificar status AGUARDANDO_VALIDACAO_MOTORISTA e navegar para tela de espera
-      _pollingService.startPolling(
-        refuelingId: _refuelingId,
-        refuelingCode: cleanCode.isNotEmpty ? cleanCode : null,
-        intervalSeconds: intervalSeconds,
-        onStatusChanged: (refuelingId) {
-          debugPrint('🎯 [Polling FROTA] Status mudou para refuelingId: $refuelingId');
-          
-          if (mounted) {
-            _pollingService.stopPolling();
-            
-            context.go(
-              '/refueling-waiting',
-              extra: {
-                'refueling_id': refuelingId,
-                'refueling_code': _refuelingCode,
-                'vehicle_data': _vehicleData,
-                'station_data': _stationData,
-              },
-            );
-          }
-        },
-      );
-    }
+      },
+    );
   }
 
   void _copyCode() {
@@ -1131,6 +965,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
         // Parar polling antes de navegar
         _pollingService.stopPolling();
         
+        // Preparar dados para navegação
         final navigationData = {
           'refueling_id': _refuelingId ?? '',
           'refueling_code': _refuelingCode,
@@ -1138,29 +973,8 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           'station_data': _stationData,
         };
         
-        // Verificar se é autônomo para decidir o fluxo
-        bool isAutonomous = false;
-        try {
-          final storageService = getIt<StorageService>();
-          final token = await storageService.getAccessToken();
-          if (token != null) {
-            final parts = token.split('.');
-            if (parts.length == 3) {
-              final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
-              final decoded = jsonDecode(payload) as Map<String, dynamic>;
-              isAutonomous = decoded['is_autonomous'] == true || decoded['role'] == 'MOTORISTA_AUTONOMO';
-            }
-          }
-        } catch (e) {
-          debugPrint('⚠️ Erro ao verificar autônomo na finalização: $e');
-        }
-        
-        debugPrint('👤 Tipo de usuário na finalização: ${isAutonomous ? 'AUTÔNOMO' : 'FROTISTA'}');
-        
-        // Se for Frotista, mostrar modal e navegar para WaitingPage
-        if (!isAutonomous) {
-          // Mostrar modal de sucesso e navegar após clicar em OK
-          if (mounted) {
+        // Mostrar modal de sucesso e navegar após clicar em OK
+        if (mounted) {
           // Log antes de mostrar o modal
           debugPrint('🔗 Preparando navegação para: /refueling-waiting');
           debugPrint('📦 Dados de navegação: $navigationData');
@@ -1272,26 +1086,6 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
               });
             },
           );
-        }
-      } else {
-          // ==============================================================================
-          // FLUXO AUTÔNOMO: Navegar direto para tela de sucesso (processamento)
-          // ==============================================================================
-          
-          // NÃO parar polling/websocket aqui. Deixar serviços ativos para a próxima tela assumir.
-          // Marcar flag para que o dispose NÃO mate os serviços durante a transição
-          _shouldStopServiceOnDispose = false;
-          
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              debugPrint('🚀 [AUTÔNOMO] Finalização manual: Navegando direto para /autonomous-success (mantendo serviços ativos)');
-              
-              context.go('/autonomous-success', extra: {
-                'refuelingCode': _refuelingCode,
-                // Não passamos dados completos ainda, a tela vai carregar via polling/ws
-              });
-            }
-          });
         }
       } else {
         ErrorDialog.show(

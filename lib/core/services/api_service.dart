@@ -129,17 +129,6 @@ class ApiService {
         
         // Se erro 401 (não autorizado), tentar refresh token
         if (error.response?.statusCode == 401) {
-          final requestPath = error.requestOptions.path;
-          
-          // NÃO tentar refresh se o erro foi em rotas de autenticação
-          // - /auth/login: erro é "senha incorreta", não token expirado
-          // - /auth/refresh: evitar loop infinito
-          if (requestPath.contains('/auth/login') || requestPath.contains('/auth/refresh')) {
-            print('⏭️ Ignorando refresh para rota de auth: $requestPath');
-            handler.next(error);
-            return;
-          }
-          
           try {
             print('🔄 Tentando refresh token após erro 401...');
             
@@ -424,6 +413,7 @@ class ApiService {
             driverCpf: cpf,
             transporterCnpj: data['user']['company']?['cnpj'] ?? '',
             userName: data['user']['name'] ?? data['user']['nome'],
+            isAutonomous: data['user']['is_autonomous'] == true,
           );
         }
         
@@ -536,6 +526,7 @@ class ApiService {
     required String fuelType,
     required String stationCnpj,
     bool abastecerArla = false,
+    bool? isAutonomous, // Novo parâmetro para forçar modo autônomo
     DateTime? dateTime,
   }) async {
     try {
@@ -557,12 +548,16 @@ class ApiService {
       // O backend aceita com ou sem hífen, então manter sem hífen é mais seguro
       final formattedPlate = normalizedPlate;
       
-      // Validar CNPJ e CPF antes de formatar
+      // Verificar se é autônomo (usar parâmetro se fornecido, senão UserService)
+      final isAutonomousUser = isAutonomous ?? userService.isAutonomous;
+      
+      // Validar CNPJ/CPF - transporterCnpj é obrigatório para TODOS
+      // Para frotas = CNPJ da empresa, Para autônomos = CPF do motorista (salvo como cnpj da empresa)
       if (userService.transporterCnpj == null || userService.transporterCnpj!.isEmpty) {
-        debugPrint('❌ [API] CNPJ da transportadora está vazio');
+        debugPrint('❌ [API] CNPJ/CPF da transportadora está vazio');
         return {
           'success': false,
-          'error': 'CNPJ da transportadora não encontrado. Faça login novamente.',
+          'error': 'Identificador da transportadora não encontrado. Faça login novamente.',
         };
       }
       
@@ -582,21 +577,22 @@ class ApiService {
         };
       }
       
-      // CNPJ: remover formatação (pontos, barras, hífens) e depois formatar
+      // Remover formatação
       final normalizedTransporterCnpj = userService.transporterCnpj!.replaceAll(RegExp(r'[^\d]'), '');
       final normalizedStationCnpj = stationCnpj.replaceAll(RegExp(r'[^\d]'), '');
-      
-      // CPF: remover formatação (pontos, hífens) e depois formatar
       final normalizedDriverCpf = userService.driverCpf!.replaceAll(RegExp(r'[^\d]'), '');
       
       // Validar comprimentos
-      // Validar comprimentos
-      // Transportadora pode ser CNPJ (14) ou CPF (11) no caso de autônomo
-      if (normalizedTransporterCnpj.length != 14 && normalizedTransporterCnpj.length != 11) {
-        debugPrint('❌ [API] Documento da transportadora inválido: ${normalizedTransporterCnpj.length} dígitos (esperado 11 ou 14)');
+      // Para autônomos: transporterCnpj contém CPF (11 dígitos)
+      // Para frotas: transporterCnpj contém CNPJ (14 dígitos)
+      final expectedTransporterLength = isAutonomousUser ? 11 : 14;
+      if (normalizedTransporterCnpj.length != expectedTransporterLength) {
+        debugPrint('❌ [API] Identificador da transportadora inválido: ${normalizedTransporterCnpj.length} dígitos (esperado: $expectedTransporterLength)');
         return {
           'success': false,
-          'error': 'CNPJ/CPF da transportadora inválido',
+          'error': isAutonomousUser 
+              ? 'CPF do autônomo inválido' 
+              : 'CNPJ da transportadora inválido',
         };
       }
       
@@ -616,12 +612,11 @@ class ApiService {
         };
       }
       
-      // Formatar CNPJ e CPF para o formato esperado pelo backend (com formatação)
-      // Transportadora pode ser CPF ou CNPJ
-      final formattedTransporterCnpj = normalizedTransporterCnpj.length == 11
-          ? _formatCpf(normalizedTransporterCnpj)
+      // Formatar para envio
+      // Para autônomos: formatar como CPF; Para frotas: formatar como CNPJ
+      final formattedTransporterCnpj = isAutonomousUser 
+          ? _formatCpf(normalizedTransporterCnpj) 
           : _formatCnpj(normalizedTransporterCnpj);
-          
       final formattedStationCnpj = _formatCnpj(normalizedStationCnpj);
       final formattedDriverCpf = _formatCpf(normalizedDriverCpf);
 
@@ -629,17 +624,19 @@ class ApiService {
         'vehicle_plate': formattedPlate,
         'driver_cpf': formattedDriverCpf,
         'fuel_type': fuelType,
-        'transporter_cnpj': formattedTransporterCnpj,
+        'transporter_cnpj': formattedTransporterCnpj, // Sempre envia (CPF ou CNPJ)
         'station_cnpj': formattedStationCnpj,
         'abastecer_arla': abastecerArla,
         'date_time': (dateTime ?? DateTime.now()).toIso8601String(),
         'platform': PlatformService.platformForApi,
+        'is_autonomous': isAutonomousUser,
       };
 
       debugPrint('📤 [API] Gerando código de abastecimento:');
       debugPrint('   Placa: $vehiclePlate -> $formattedPlate');
       debugPrint('   CPF: ${userService.driverCpf} -> $formattedDriverCpf');
-      debugPrint('   CNPJ Transportadora: ${userService.transporterCnpj} -> $formattedTransporterCnpj');
+      debugPrint('   Autônomo: $isAutonomousUser');
+      debugPrint('   ${isAutonomousUser ? "CPF" : "CNPJ"} Transportadora: ${userService.transporterCnpj} -> $formattedTransporterCnpj');
       debugPrint('   CNPJ Posto: $stationCnpj -> $formattedStationCnpj');
       debugPrint('   Combustível: $fuelType');
       debugPrint('   Plataforma: ${PlatformService.platformForApi}');
@@ -975,80 +972,6 @@ class ApiService {
         return {
           'success': true,
           'data': response.data,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Erro no servidor: ${response.statusCode}',
-        };
-      }
-    } on DioException catch (e) {
-      return _handleDioError(e);
-    } catch (e) {
-      return {
-        'success': false,
-        'error': 'Erro inesperado: $e',
-      };
-    }
-  }
-
-  /// Buscar últimos abastecimentos (para verificar sucesso mesmo se código falhar)
-  /// GET /api/v1/refueling?limit=5&sortBy=created_at&sortOrder=DESC
-  Future<Map<String, dynamic>> getLastRefuelings({int limit = 5}) async {
-    try {
-      final response = await _dio.get(
-        '/refueling',
-        queryParameters: {
-          'limit': limit,
-          'sortBy': 'created_at',
-          'sortOrder': 'DESC',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': response.data,
-        };
-      } else {
-        return {
-          'success': false,
-          'error': 'Erro no servidor: ${response.statusCode}',
-        };
-      }
-    } on DioException catch (e) {
-      return _handleDioError(e);
-    } catch (e) {
-      return {
-        'success': false,
-        'error': 'Erro inesperado: $e',
-      };
-    }
-  }
-
-  /// Buscar veículos do motorista logado
-  /// GET /api/v1/vehicles
-  Future<Map<String, dynamic>> getMyVehicles() async {
-    try {
-      final response = await _dio.get('/vehicles');
-
-      if (response.statusCode == 200) {
-        List<dynamic> vehicles = [];
-        if (response.data is List) {
-          vehicles = response.data;
-        } else if (response.data is Map) {
-          if (response.data['data'] is List) {
-            vehicles = response.data['data'];
-          } else if (response.data['vehicles'] is List) {
-            vehicles = response.data['vehicles'];
-          } else if (response.data['data']?['vehicles'] is List) {
-            vehicles = response.data['data']['vehicles'];
-          }
-        }
-        
-        return {
-          'success': true,
-          'data': {'vehicles': vehicles},
         };
       } else {
         return {
@@ -1798,6 +1721,111 @@ class ApiService {
         '/checklist-executions/$executionId/complete',
         data: requestData,
       );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Contar veículos do autônomo
+  /// Retorna a quantidade de veículos cadastrados pelo autônomo
+  Future<Map<String, dynamic>> countAutonomousVehicles() async {
+    try {
+      final response = await _dio.get('/autonomous/vehicles/count');
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Método GET genérico para requisições HTTP
+  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await _dio.get(path, queryParameters: queryParameters);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Método POST genérico para requisições HTTP
+  Future<Map<String, dynamic>> post(String path, {Map<String, dynamic>? data}) async {
+    try {
+      final response = await _dio.post(path, data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Método PUT genérico para requisições HTTP
+  Future<Map<String, dynamic>> put(String path, {Map<String, dynamic>? data}) async {
+    try {
+      final response = await _dio.put(path, data: data);
 
       if (response.statusCode == 200) {
         return {

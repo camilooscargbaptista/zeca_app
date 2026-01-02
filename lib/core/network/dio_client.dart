@@ -2,13 +2,19 @@ import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../errors/exceptions.dart';
+import '../config/api_config.dart';
 
 class DioClient {
   late Dio _dio;
   final Connectivity _connectivity = Connectivity();
 
   DioClient() {
-    _dio = Dio();
+    _dio = Dio(BaseOptions(
+      baseUrl: ApiConfig.apiUrl,
+      connectTimeout: ApiConfig.timeout,
+      receiveTimeout: ApiConfig.timeout,
+      headers: ApiConfig.defaultHeaders,
+    ));
     _setupInterceptors();
   }
 

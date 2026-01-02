@@ -33,6 +33,8 @@ mixin _$OAuthUserInfoModel {
   String get companyName => throw _privateConstructorUsedError;
   @JsonKey(name: 'company_cnpj')
   String? get companyCnpj => throw _privateConstructorUsedError;
+  @JsonKey(name: 'company_type')
+  String? get companyType => throw _privateConstructorUsedError;
   @JsonKey(name: 'roles')
   List<String> get roles => throw _privateConstructorUsedError;
   @JsonKey(name: 'permissions')
@@ -65,6 +67,7 @@ abstract class $OAuthUserInfoModelCopyWith<$Res> {
       @JsonKey(name: 'company_id') String companyId,
       @JsonKey(name: 'company_name') String companyName,
       @JsonKey(name: 'company_cnpj') String? companyCnpj,
+      @JsonKey(name: 'company_type') String? companyType,
       @JsonKey(name: 'roles') List<String> roles,
       @JsonKey(name: 'permissions') List<String> permissions,
       @JsonKey(name: 'last_login') DateTime? lastLogin,
@@ -93,6 +96,7 @@ class _$OAuthUserInfoModelCopyWithImpl<$Res, $Val extends OAuthUserInfoModel>
     Object? companyId = null,
     Object? companyName = null,
     Object? companyCnpj = freezed,
+    Object? companyType = freezed,
     Object? roles = null,
     Object? permissions = null,
     Object? lastLogin = freezed,
@@ -131,6 +135,10 @@ class _$OAuthUserInfoModelCopyWithImpl<$Res, $Val extends OAuthUserInfoModel>
       companyCnpj: freezed == companyCnpj
           ? _value.companyCnpj
           : companyCnpj // ignore: cast_nullable_to_non_nullable
+              as String?,
+      companyType: freezed == companyType
+          ? _value.companyType
+          : companyType // ignore: cast_nullable_to_non_nullable
               as String?,
       roles: null == roles
           ? _value.roles
@@ -173,6 +181,7 @@ abstract class _$$OAuthUserInfoModelImplCopyWith<$Res>
       @JsonKey(name: 'company_id') String companyId,
       @JsonKey(name: 'company_name') String companyName,
       @JsonKey(name: 'company_cnpj') String? companyCnpj,
+      @JsonKey(name: 'company_type') String? companyType,
       @JsonKey(name: 'roles') List<String> roles,
       @JsonKey(name: 'permissions') List<String> permissions,
       @JsonKey(name: 'last_login') DateTime? lastLogin,
@@ -199,6 +208,7 @@ class __$$OAuthUserInfoModelImplCopyWithImpl<$Res>
     Object? companyId = null,
     Object? companyName = null,
     Object? companyCnpj = freezed,
+    Object? companyType = freezed,
     Object? roles = null,
     Object? permissions = null,
     Object? lastLogin = freezed,
@@ -238,6 +248,10 @@ class __$$OAuthUserInfoModelImplCopyWithImpl<$Res>
           ? _value.companyCnpj
           : companyCnpj // ignore: cast_nullable_to_non_nullable
               as String?,
+      companyType: freezed == companyType
+          ? _value.companyType
+          : companyType // ignore: cast_nullable_to_non_nullable
+              as String?,
       roles: null == roles
           ? _value._roles
           : roles // ignore: cast_nullable_to_non_nullable
@@ -274,6 +288,7 @@ class _$OAuthUserInfoModelImpl implements _OAuthUserInfoModel {
       @JsonKey(name: 'company_id') required this.companyId,
       @JsonKey(name: 'company_name') required this.companyName,
       @JsonKey(name: 'company_cnpj') this.companyCnpj,
+      @JsonKey(name: 'company_type') this.companyType,
       @JsonKey(name: 'roles') final List<String> roles = const [],
       @JsonKey(name: 'permissions') final List<String> permissions = const [],
       @JsonKey(name: 'last_login') this.lastLogin,
@@ -306,6 +321,9 @@ class _$OAuthUserInfoModelImpl implements _OAuthUserInfoModel {
   @override
   @JsonKey(name: 'company_cnpj')
   final String? companyCnpj;
+  @override
+  @JsonKey(name: 'company_type')
+  final String? companyType;
   final List<String> _roles;
   @override
   @JsonKey(name: 'roles')
@@ -336,7 +354,7 @@ class _$OAuthUserInfoModelImpl implements _OAuthUserInfoModel {
 
   @override
   String toString() {
-    return 'OAuthUserInfoModel(sub: $sub, name: $name, cpf: $cpf, email: $email, phoneNumber: $phoneNumber, companyId: $companyId, companyName: $companyName, companyCnpj: $companyCnpj, roles: $roles, permissions: $permissions, lastLogin: $lastLogin, emailVerified: $emailVerified, phoneVerified: $phoneVerified)';
+    return 'OAuthUserInfoModel(sub: $sub, name: $name, cpf: $cpf, email: $email, phoneNumber: $phoneNumber, companyId: $companyId, companyName: $companyName, companyCnpj: $companyCnpj, companyType: $companyType, roles: $roles, permissions: $permissions, lastLogin: $lastLogin, emailVerified: $emailVerified, phoneVerified: $phoneVerified)';
   }
 
   @override
@@ -356,6 +374,8 @@ class _$OAuthUserInfoModelImpl implements _OAuthUserInfoModel {
                 other.companyName == companyName) &&
             (identical(other.companyCnpj, companyCnpj) ||
                 other.companyCnpj == companyCnpj) &&
+            (identical(other.companyType, companyType) ||
+                other.companyType == companyType) &&
             const DeepCollectionEquality().equals(other._roles, _roles) &&
             const DeepCollectionEquality()
                 .equals(other._permissions, _permissions) &&
@@ -379,6 +399,7 @@ class _$OAuthUserInfoModelImpl implements _OAuthUserInfoModel {
       companyId,
       companyName,
       companyCnpj,
+      companyType,
       const DeepCollectionEquality().hash(_roles),
       const DeepCollectionEquality().hash(_permissions),
       lastLogin,
@@ -410,6 +431,7 @@ abstract class _OAuthUserInfoModel implements OAuthUserInfoModel {
           @JsonKey(name: 'company_id') required final String companyId,
           @JsonKey(name: 'company_name') required final String companyName,
           @JsonKey(name: 'company_cnpj') final String? companyCnpj,
+          @JsonKey(name: 'company_type') final String? companyType,
           @JsonKey(name: 'roles') final List<String> roles,
           @JsonKey(name: 'permissions') final List<String> permissions,
           @JsonKey(name: 'last_login') final DateTime? lastLogin,
@@ -441,6 +463,9 @@ abstract class _OAuthUserInfoModel implements OAuthUserInfoModel {
   @override
   @JsonKey(name: 'company_cnpj')
   String? get companyCnpj;
+  @override
+  @JsonKey(name: 'company_type')
+  String? get companyType;
   @override
   @JsonKey(name: 'roles')
   List<String> get roles;

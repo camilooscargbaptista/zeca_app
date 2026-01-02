@@ -284,5 +284,6 @@ final GoRouter _router = GoRouter(
         ],
       ),
     ),
-  ),
+  );
+  },
 );
