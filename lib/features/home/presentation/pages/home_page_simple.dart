@@ -30,6 +30,8 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   final _cnpjPostoController = TextEditingController();
   String _selectedFuel = 'Diesel';
   bool _abastecerArla = false;
+  bool _hasArlaAvailable = false; // Indica se o posto tem ARLA disponível
+  double _arlaPrice = 0.0; // Preço do ARLA por litro
   bool _isLoading = false;
   
   // Dados do usuário logado
@@ -526,8 +528,15 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'fuel_prices': rawFuelPrices,
             // Preço de referência (apenas visual, será atualizado pelo dropdown)
             'preco': 0.0,
-            'precoArla': 8.50, // ARLA não vem da API, manter valor fixo por enquanto
           };
+          
+          // Ler has_arla_available e arla_price da resposta da API
+          _hasArlaAvailable = data['has_arla_available'] == true;
+          _arlaPrice = double.tryParse(data['arla_price']?.toString() ?? '0') ?? 0.0;
+          // Se ARLA não disponível, garantir que checkbox esteja desmarcado
+          if (!_hasArlaAvailable) {
+            _abastecerArla = false;
+          }
           
           _availableFuels = compatibleFuels;
           
@@ -1432,7 +1441,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                       ],
                       
                       const SizedBox(height: 16),
-                      if (_selectedFuel.isNotEmpty && _selectedFuel.toLowerCase().contains('diesel')) ...[
+                      if (_selectedFuel.isNotEmpty && _selectedFuel.toLowerCase().contains('diesel') && _hasArlaAvailable) ...[
                         Row(
                           children: [
                             Checkbox(
@@ -1443,7 +1452,12 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                                 });
                               },
                             ),
-                            const Text('Abastecer ARLA 32'),
+                            Expanded(
+                              child: Text(
+                                'Abastecer ARLA 32 (R\$ ${_arlaPrice.toStringAsFixed(2)}/litro)',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
                           ],
                         ),
                       ],
