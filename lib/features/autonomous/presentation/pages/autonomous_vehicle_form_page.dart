@@ -33,6 +33,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
   // Estado da consulta de placa
   bool _plateLookupDone = false;
   bool _plateLookupSuccess = false;
+  bool _plateAlreadyRegistered = false;
   Map<String, dynamic>? _vehicleData;
 
   bool get _isEditing => widget.vehicleId != null;
@@ -107,6 +108,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       setState(() {
         _plateLookupDone = false;
         _plateLookupSuccess = false;
+        _plateAlreadyRegistered = false;
         _vehicleData = null;
         _brandController.clear();
         _modelController.clear();
@@ -177,10 +179,29 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
           });
         } else {
           // API retornou sucesso no HTTP mas falha no payload
-          setState(() {
-            _plateLookupDone = true;
-            _plateLookupSuccess = false;
-          });
+          // Verificar se é ALREADY_REGISTERED
+          final reason = apiResponse['reason']?.toString() ?? '';
+          if (reason == 'ALREADY_REGISTERED') {
+            setState(() {
+              _plateLookupDone = true;
+              _plateLookupSuccess = false;
+              _plateAlreadyRegistered = true;
+            });
+            // Mostrar mensagem de erro
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Este veículo já está cadastrado no sistema.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          } else {
+            setState(() {
+              _plateLookupDone = true;
+              _plateLookupSuccess = false;
+            });
+          }
         }
       } else {
         // Falha na consulta - mostrar campos manuais
@@ -341,15 +362,17 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
 
                   // Dados do veículo (condicional)
                   if (_plateLookupDone) ...[
-                    if (_plateLookupSuccess)
+                    if (_plateAlreadyRegistered)
+                      _buildAlreadyRegisteredCard(primaryColor)
+                    else if (_plateLookupSuccess)
                       _buildVehicleDataCard(primaryColor)
                     else
                       _buildManualFieldsSection(primaryColor),
                     const SizedBox(height: 16),
                   ],
 
-                  // Combustível (sempre visível após lookup)
-                  if (_plateLookupDone) ...[
+                  // Combustível (sempre visível após lookup, exceto se já registrado)
+                  if (_plateLookupDone && !_plateAlreadyRegistered) ...[
                     _buildFuelSection(primaryColor),
                     const SizedBox(height: 16),
                   ],
@@ -364,8 +387,8 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
               child: const Center(child: CircularProgressIndicator()),
             ),
 
-          // Bottom bar (só mostra após lookup)
-          if (_plateLookupDone)
+          // Bottom bar (só mostra após lookup e se não for já registrado)
+          if (_plateLookupDone && !_plateAlreadyRegistered)
             Positioned(
               bottom: 0, left: 0, right: 0,
               child: Container(
@@ -444,6 +467,57 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
           child: Text('Formato: ABC-1234 ou ABC1D23 (Mercosul)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
         ),
       ],
+    );
+  }
+
+  Widget _buildAlreadyRegisteredCard(Color primaryColor) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200, width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.error_outline, color: Colors.red.shade700, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Veículo já cadastrado',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Este veículo já está registrado no sistema. Use outra placa ou contate o suporte.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.red.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
