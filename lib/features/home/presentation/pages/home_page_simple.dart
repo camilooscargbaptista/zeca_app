@@ -15,8 +15,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
-// OdometerCameraPage removido - não está sendo usado e causa incompatibilidade 16 KB
-// import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+import '../../../odometer/presentation/pages/odometer_camera_page.dart';
 
 class HomePageSimple extends StatefulWidget {
   const HomePageSimple({Key? key}) : super(key: key);
@@ -31,6 +30,8 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   final _cnpjPostoController = TextEditingController();
   String _selectedFuel = 'Diesel';
   bool _abastecerArla = false;
+  bool _hasArlaAvailable = false; // Indica se o posto tem ARLA disponível
+  double _arlaPrice = 0.0; // Preço do ARLA por litro
   bool _isLoading = false;
   
   // Dados do usuário logado
@@ -49,6 +50,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
   // Contador de abastecimentos pendentes
   int _pendingRefuelingsCount = 0;
   bool _isLoadingPendingCount = false;
+  
+  // Último KM registrado do veículo
+  double? _lastOdometer;
+  String? _lastOdometerDate;
+  bool _showKmWarning = false;
   
   // Máscara para placa (formato antigo e Mercosul)
   final _placaMaskFormatter = MaskTextInputFormatter(
@@ -73,7 +79,6 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       _loadJourneyOnStart();
     });
   }
-  
   
   @override
   void didChangeDependencies() {
@@ -105,6 +110,9 @@ class _HomePageSimpleState extends State<HomePageSimple> {
           _vehicleSearched = true;
           _vehicleConfirmed = true; // Auto-confirmar para habilitar o fluxo
         });
+        
+        // Buscar último KM registrado para este veículo
+        _fetchLastOdometer(vehicleData['placa'] ?? '');
       } else {
         debugPrint('⚠️ [HomePage] Nenhuma jornada ativa encontrada no storage.');
         // Opcional: Redirecionar para seleção de jornada ou mostrar aviso
@@ -297,6 +305,75 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     }
   }
 
+  /// Busca o último KM registrado do veículo
+  Future<void> _fetchLastOdometer(String plate) async {
+    try {
+      final apiService = getIt<ApiService>();
+      final cleanPlate = plate.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+      
+      debugPrint('🔍 [HomePage] Buscando último KM para placa: $cleanPlate');
+      final data = await apiService.get('/refuelings/last-odometer/$cleanPlate');
+      
+      debugPrint('📊 [HomePage] Resposta da API last-odometer: $data');
+      
+      if (mounted && data != null) {
+        if (data['last_odometer'] != null) {
+          setState(() {
+            _lastOdometer = double.tryParse(data['last_odometer'].toString());
+            _lastOdometerDate = data['refueling_datetime']?.toString();
+          });
+          debugPrint('✅ [HomePage] Último KM carregado: $_lastOdometer em $_lastOdometerDate');
+        } else {
+          setState(() {
+            _lastOdometer = null;
+            _lastOdometerDate = null;
+          });
+          debugPrint('⚠️ [HomePage] Nenhum KM anterior registrado para $cleanPlate');
+        }
+      } else {
+        debugPrint('⚠️ [HomePage] Resposta nula ou widget desmontado');
+      }
+    } catch (e) {
+      debugPrint('❌ [HomePage] Erro ao buscar último KM: $e');
+      // Não exibe erro ao usuário, apenas log
+    }
+  }
+
+  /// Valida se o KM atual é maior que o último registrado
+  void _validateKmInput() {
+    if (_lastOdometer == null) {
+      setState(() {
+        _showKmWarning = false;
+      });
+      return;
+    }
+    
+    final currentKmText = _kmController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (currentKmText.isEmpty) {
+      setState(() {
+        _showKmWarning = false;
+      });
+      return;
+    }
+    
+    final currentKm = double.tryParse(currentKmText) ?? 0;
+    setState(() {
+      _showKmWarning = currentKm <= _lastOdometer!;
+    });
+  }
+
+  /// Reseta a validação do posto para permitir trocar
+  void _resetStation() {
+    setState(() {
+      _isStationValidated = false;
+      _stationData = null;
+      _cnpjPostoController.clear();
+      _hasArlaAvailable = false;
+      _arlaPrice = 0.0;
+      _abastecerArla = false;
+    });
+  }
+
   /// Métodos de navegação do menu sanduíche
   void _navigateToGerarAbastecimento() {
     Navigator.of(context).pop(); // Fechar o drawer
@@ -460,21 +537,21 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     super.dispose();
   }
 
-  /// Abre a tela de câmera para capturar odômetro - REMOVIDO (não está sendo usado)
-  // Future<void> _openOdometerCamera() async {
-  //   final result = await Navigator.of(context).push<String>(
-  //     MaterialPageRoute(
-  //       builder: (context) => const OdometerCameraPage(),
-  //     ),
-  //   );
+  /// Abre a tela de câmera para capturar odômetro
+  Future<void> _openOdometerCamera() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const OdometerCameraPage(),
+      ),
+    );
 
-  //   if (result != null && mounted) {
-  //     // Preencher campo com valor extraído
-  //     setState(() {
-  //       _kmController.text = result;
-  //     });
-  //   }
-  // }
+    if (result != null && mounted) {
+      // Preencher campo com valor extraído
+      setState(() {
+        _kmController.text = result;
+      });
+    }
+  }
 
 
   // Métodos de busca manual removidos em favor do carregamento automático da jornada
@@ -528,8 +605,15 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'fuel_prices': rawFuelPrices,
             // Preço de referência (apenas visual, será atualizado pelo dropdown)
             'preco': 0.0,
-            'precoArla': 8.50, // ARLA não vem da API, manter valor fixo por enquanto
           };
+          
+          // Ler has_arla_available e arla_price da resposta da API
+          _hasArlaAvailable = data['has_arla_available'] == true;
+          _arlaPrice = double.tryParse(data['arla_price']?.toString() ?? '0') ?? 0.0;
+          // Se ARLA não disponível, garantir que checkbox esteja desmarcado
+          if (!_hasArlaAvailable) {
+            _abastecerArla = false;
+          }
           
           _availableFuels = compatibleFuels;
           
@@ -599,38 +683,10 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       setState(() {
         _isLoading = false;
       });
-      
-      // Extrair mensagem de erro do backend
-      String errorTitle = 'Erro na Validação';
-      String errorMessage = 'Erro ao validar posto';
-      
-      final errorStr = e.toString();
-      
-      // Tentar extrair a mensagem JSON do backend
-      final messageMatch = RegExp(r'"message"\s*:\s*"([^"]+)"').firstMatch(errorStr);
-      if (messageMatch != null) {
-        errorMessage = messageMatch.group(1) ?? errorMessage;
-        
-        // Customizar título baseado no tipo de erro
-        if (errorMessage.contains('não aceita') && errorMessage.contains('autônomo')) {
-          errorTitle = 'Posto Não Disponível';
-        } else if (errorMessage.contains('preços') || errorMessage.contains('combustível')) {
-          errorTitle = 'Combustível Não Disponível';
-        } else if (errorMessage.contains('não encontrado')) {
-          errorTitle = 'Posto Não Encontrado';
-        }
-      } else if (errorStr.contains('404')) {
-        errorTitle = 'Posto Não Encontrado';
-        errorMessage = 'CNPJ não encontrado na base de postos.';
-      } else if (errorStr.contains('400')) {
-        errorTitle = 'Validação Falhou';
-        errorMessage = 'Não foi possível validar este posto para abastecimento.';
-      }
-      
       ErrorDialog.show(
         context,
-        title: errorTitle,
-        message: errorMessage,
+        title: 'Erro na Validação',
+        message: 'Erro ao validar posto: $e',
       );
     }
   }
@@ -710,15 +766,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         fuelTypeApi = 'DIESEL_S10'; // Default para Diesel S10
       }
       
-      // Verificar se é autônomo baseado no partnership.type retornado pelo backend
-      final isAutonomous = _stationData!['partnership']?['type'] == 'AUTONOMOUS';
-      
       final codeResponse = await apiService.generateRefuelingCode(
         vehiclePlate: _vehicleData!['placa'],
         fuelType: fuelTypeApi,
         stationCnpj: _stationData!['cnpj'],
         abastecerArla: _abastecerArla,
-        isAutonomous: isAutonomous,
       );
 
       if (codeResponse['success'] == true) {
@@ -739,6 +791,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'fuel_type': _selectedFuel,
             'km_atual': OdometerFormatter.parseFormattedValue(_kmController.text), // Converter valor formatado para número
             'abastecer_arla': _abastecerArla,
+            'transporter_cnpj': _userData?['cnpj'] ?? '',  // CNPJ/CPF para NF
           });
         }
       } else {
@@ -929,127 +982,127 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                 ),
               ),
             ],
-            // Card de Boas-vindas
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bem-vindo!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.zecaBlue,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_userData != null) ...[
-                      Text(
-                        _userData!['nome'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text('CPF: ${_userData!['cpf']}'),
-                      Text(_userData!['empresa']),
-                      Text('CNPJ: ${_userData!['cnpj']}'),
-                    ],
-                  ],
-                ),
-              ),
-            ),
             
-            // Card de Busca de Veículo
-            // Card de Dados do Veículo (Automático da Jornada)
+            // ===== CARD: VEÍCULO SELECIONADO (Compacto) =====
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(14.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Header do card
                     Row(
                       children: [
-                        Icon(Icons.directions_car, color: AppColors.zecaBlue),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(Icons.local_shipping, color: AppColors.zecaBlue, size: 16),
+                        ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'DADOS DO VEÍCULO',
+                        Text(
+                          'VEÍCULO SELECIONADO',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     if (_vehicleData != null) ...[
-                      // Placa em destaque
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[400]!),
-                          ),
-                          child: Text(
-                            _vehicleData!['placa'] ?? '---',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.5,
-                              fontFamily: 'monospace',
+                      // Layout compacto: Placa + Info
+                      Row(
+                        children: [
+                          // Badge da Placa
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppColors.zecaBlue, Colors.blue[800]!],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _vehicleData!['placa'] ?? '---',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          // Info do veículo
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Diesel',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Consumo: ${_vehicleData!['consumo_medio']?.toStringAsFixed(1) ?? '--'} km/L',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      
-                      // Detalhes do veículo
-                      _buildVehicleDetailRow('Modelo', '${_vehicleData!['marca'] ?? ''} ${_vehicleData!['modelo'] ?? ''} ${_vehicleData!['ano'] ?? ''}'),
-                      const Divider(),
-                      _buildVehicleDetailRow('Combustível', _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Não informado'),
-                      const Divider(),
-                      _buildVehicleDetailRow('Último KM', _vehicleData!['kmAtual']?.toString() ?? _vehicleData!['last_odometer']?.toString() ?? '---'),
-                      
                     ] else ...[
-                      // Caso de erro: Sem jornada ativa
+                      // Sem jornada ativa
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.red[50],
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red[200]!),
                         ),
-                        child: Column(
+                        child: Row(
                           children: [
-                             const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
-                             const SizedBox(height: 8),
-                             const Text(
-                               'Nenhuma jornada ativa encontrada',
-                               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-                             ),
-                             const SizedBox(height: 4),
-                             const Text(
-                               'É necessário iniciar uma jornada para abastecer.',
-                               textAlign: TextAlign.center,
-                               style: TextStyle(fontSize: 12),
-                             ),
-                             const SizedBox(height: 16),
-                             ElevatedButton.icon(
-                               onPressed: () => context.go('/journey'),
-                               icon: const Icon(Icons.play_arrow),
-                               label: const Text('Iniciar Jornada'),
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: Colors.red,
-                                 foregroundColor: Colors.white,
-                               ),
-                             ),
+                            Icon(Icons.warning_amber_rounded, color: Colors.red[700], size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Nenhuma jornada ativa',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red[800],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Inicie uma jornada para abastecer.',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.red[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => context.go('/journey'),
+                              child: const Text('Iniciar'),
+                            ),
                           ],
                         ),
                       ),
@@ -1059,293 +1112,250 @@ class _HomePageSimpleState extends State<HomePageSimple> {
               ),
             ),
             
-            // Card de CNPJ do Posto (mostrar APENAS após confirmar veículo)
+            // ===== CARD: POSTO / CNPJ (Compacto) =====
             if (_vehicleConfirmed) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(14.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'CNPJ do Posto',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
+                      // Header do card
                       Row(
                         children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _cnpjPostoController,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [_cnpjMaskFormatter],
-                              decoration: const InputDecoration(
-                                labelText: 'CNPJ do Posto',
-                                hintText: '00.000.000/0000-00',
-                                border: OutlineInputBorder(),
-                              ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: _isStationValidated ? Colors.green[50] : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.local_gas_station,
+                              color: _isStationValidated ? Colors.green[700] : Colors.grey[600],
+                              size: 16,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _isStationValidated ? null : _validateStation,
-                            child: const Text('Validar'),
+                          Text(
+                            _isStationValidated ? 'POSTO VALIDADO' : 'CNPJ DO POSTO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _isStationValidated ? Colors.green[700] : Colors.grey[600],
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ],
                       ),
-                      if (_isStationValidated && _stationData != null) ...[
-                        const SizedBox(height: 16),
-                        Card(
-                          color: Colors.green[50],
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.local_gas_station, color: Colors.green[700]),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _stationData!['nome'],
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      
+                      // Input ou Info do Posto
+                      if (!_isStationValidated) ...[
+                        // Input CNPJ
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _cnpjPostoController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [_cnpjMaskFormatter],
+                                decoration: InputDecoration(
+                                  labelText: 'CNPJ do Posto',
+                                  hintText: '00.000.000/0000-00',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: _validateStation,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.zecaBlue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text('Validar'),
+                            ),
+                          ],
+                        ),
+                      ] else if (_stationData != null) ...[
+                        // Posto Validado - Layout Compacto
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _stationData!['nome'] ?? 'Posto',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    // Badge de tipo: Autônomo > Parceria > Frota
-                                    Builder(
-                                      builder: (context) {
-                                        // Verificar se é autônomo primeiro
-                                        final isAutonomous = _userData?['isAutonomous'] == true;
-                                        
-                                        if (isAutonomous) {
+                                      // Badge tipo
+                                      Builder(
+                                        builder: (context) {
+                                          final isAutonomous = _userData?['isAutonomous'] == true;
+                                          final hasPartnership = _stationData!['partnership']?['is_active'] == true;
+                                          
+                                          Color badgeColor = AppColors.zecaBlue;
+                                          String badgeText = 'Frota';
+                                          
+                                          if (isAutonomous) {
+                                            badgeColor = Colors.orange;
+                                            badgeText = 'Autônomo';
+                                          } else if (hasPartnership) {
+                                            badgeColor = Colors.green;
+                                            badgeText = 'Parceria';
+                                          }
+                                          
                                           return Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
-                                              color: Colors.orange,
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: badgeColor,
+                                              borderRadius: BorderRadius.circular(10),
                                             ),
-                                            child: const Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.person, color: Colors.white, size: 12),
-                                                SizedBox(width: 4),
-                                                Text(
-                                                  'Autônomo',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }
-                                        
-                                        // Para frota, verificar parceria
-                                        final hasPartnership = _stationData!['partnership']?['is_active'] == true;
-                                        
-                                        if (hasPartnership) {
-                                          return Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green,
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: const Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.handshake, color: Colors.white, size: 12),
-                                                SizedBox(width: 4),
-                                                Text(
-                                                  'Parceria Ativa',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }
-                                        
-                                        // Frota sem parceria
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.local_shipping, color: Colors.white, size: 12),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                'Frota',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                            child: Text(
+                                              badgeText,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
                                               ),
-                                            ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${_stationData!['endereco'] ?? ''} - ${_stationData!['cidade'] ?? ''}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Botão Trocar
+                            TextButton.icon(
+                              onPressed: _resetStation,
+                              icon: Icon(Icons.swap_horiz, size: 16, color: Colors.grey[600]),
+                              label: Text(
+                                'Trocar',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                minimumSize: Size.zero,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Fuel Price Chips
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            // Chip do combustível selecionado
+                            if (_stationData!['fuel_prices'] != null) ...[
+                              Builder(
+                                builder: (context) {
+                                  final fuelPrices = _stationData!['fuel_prices'] as List;
+                                  final selectedPrice = fuelPrices.firstWhere(
+                                    (fp) => fp['fuel_type']['name'] == _selectedFuel,
+                                    orElse: () => fuelPrices.isNotEmpty ? fuelPrices.first : null,
+                                  );
+                                  
+                                  if (selectedPrice != null) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [Colors.green[500]!, Colors.green[700]!],
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            selectedPrice['fuel_type']['name'],
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 10,
+                                            ),
                                           ),
-                                        );
-                                      },
+                                          Text(
+                                            'R\$ ${double.parse(selectedPrice['price_per_liter'].toString()).toStringAsFixed(2)}/L',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ],
+                            // Chip ARLA se disponível
+                            if (_hasArlaAvailable && _arlaPrice > 0) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.blue[500]!, Colors.blue[700]!],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      'ARLA 32',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                    Text(
+                                      'R\$ ${_arlaPrice.toStringAsFixed(2)}/L',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(_stationData!['endereco']),
-                                Text(_stationData!['cidade']),
-                                const SizedBox(height: 12),
-                                
-                                // Preço do combustível selecionado
-                                if (_stationData!['fuel_prices'] != null && 
-                                    (_stationData!['fuel_prices'] as List).isNotEmpty) ...[
-                                  Builder(
-                                    builder: (context) {
-                                      // Encontrar o preço do combustível selecionado
-                                      final selectedFuelPrice = (_stationData!['fuel_prices'] as List).firstWhere(
-                                        (fuelPrice) => fuelPrice['fuel_type']['name'] == _selectedFuel,
-                                        orElse: () => null,
-                                      );
-                                      
-                                      if (selectedFuelPrice != null) {
-                                        return Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [Colors.blue[300]!, Colors.blue[600]!],
-                                            ),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  selectedFuelPrice['fuel_type']['name'],
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                              Text(
-                                                'R\$ ${double.parse(selectedFuelPrice['price_per_liter']).toStringAsFixed(2)}/L',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      } else {
-                                        // Se não encontrar, mostrar o primeiro disponível
-                                        final firstFuelPrice = (_stationData!['fuel_prices'] as List).first;
-                                        return Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [Colors.blue[300]!, Colors.blue[600]!],
-                                            ),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  firstFuelPrice['fuel_type']['name'],
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                              Text(
-                                                'R\$ ${double.parse(firstFuelPrice['price_per_liter']).toStringAsFixed(2)}/L',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ] else ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [Colors.green[300]!, Colors.green[600]!],
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Text(
-                                          'Valor do Combustível',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          'R\$ ${_stationData!['preco']}/L',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                                
-                                if (_selectedFuel == 'Diesel' && _abastecerArla) ...[
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [Colors.orange[300]!, Colors.orange[600]!],
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Text(
-                                          'Valor do ARLA 32',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                        const Spacer(),
-                                        Text(
-                                          'R\$ ${_stationData!['precoArla']}/L',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ],
@@ -1374,30 +1384,133 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _kmController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [
-                          OdometerFormatter(),
+                      // KM Input com último registro e validação
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _kmController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                OdometerFormatter(),
+                              ],
+                              onChanged: (_) => _validateKmInput(),
+                              decoration: InputDecoration(
+                                labelText: 'KM Atual',
+                                border: const OutlineInputBorder(),
+                                hintText: '0',
+                                errorBorder: _showKmWarning ? OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.orange[700]!, width: 2),
+                                ) : null,
+                                focusedErrorBorder: _showKmWarning ? OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.orange[700]!, width: 2),
+                                ) : null,
+                              ),
+                            ),
+                          ),
+                          if (_lastOdometer != null) ...[
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFF2196F3), width: 1.5),
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Último',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    OdometerFormatter.formatValue(_lastOdometer!.toInt()),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2196F3),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
-                        decoration: InputDecoration(
-                          labelText: 'KM Atual',
-                          border: const OutlineInputBorder(),
-                          hintText: '0',
-                          helperText: 'Digite apenas números (ex: 123456 = 123.456)',
-                          // Ícone de câmera removido - funcionalidade não está sendo usada
-                          // suffixIcon: IconButton(
-                          //   icon: const Icon(Icons.camera_alt, color: Colors.red),
-                          //   onPressed: _openOdometerCamera,
-                          //   tooltip: 'Capturar odômetro com câmera',
-                          // ),
-                        ),
                       ),
-                      if (_vehicleData != null)
-                        Text(
-                          'Último KM: ${_vehicleData!['kmAtual']}',
-                          style: TextStyle(color: Colors.grey[600]),
+                      // Aviso quando KM é menor ou igual ao último
+                      if (_showKmWarning) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF8E1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange[200]!),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'KM menor que o último registro',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange[900],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'O KM informado é menor que o último registro (${OdometerFormatter.formatValue(_lastOdometer!.toInt())}). Verifique se está correto.',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      ],
+                      // Mensagem de incentivo quando não há histórico de KM
+                      if (_lastOdometer == null && _vehicleConfirmed) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.lightbulb_outline, color: Colors.blue[700], size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Registrar o KM ajuda a calcular o consumo médio e otimizar a gestão do veículo.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.blue[800],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       
                       // Lógica de UI para Combustível Compatível
@@ -1467,7 +1580,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                       ],
                       
                       const SizedBox(height: 16),
-                      if (_selectedFuel.isNotEmpty && _selectedFuel.toLowerCase().contains('diesel')) ...[
+                      if (_selectedFuel.isNotEmpty && _selectedFuel.toLowerCase().contains('diesel') && _hasArlaAvailable) ...[
                         Row(
                           children: [
                             Checkbox(
@@ -1478,7 +1591,12 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                                 });
                               },
                             ),
-                            const Text('Abastecer ARLA 32'),
+                            Expanded(
+                              child: Text(
+                                'Abastecer ARLA 32 (R\$ ${_arlaPrice.toStringAsFixed(2)}/litro)',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
                           ],
                         ),
                       ],

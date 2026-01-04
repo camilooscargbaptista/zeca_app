@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA - Jornada Ativa (Versão Unificada)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #1565C0;
+            --zeca-blue-dark: #0D47A1;
+            --zeca-blue-light: #E3F2FD;
+            --zeca-green: #43A047;
+            --zeca-orange: #FF9800;
+            --zeca-red: #E53935;
+            --zeca-purple: #7E57C2;
+            --zeca-gold: #FFD700;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --bg-gray: #F5F5F5;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gray);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            min-height: 812px;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .status-bar {
+            height: 47px;
+            background: var(--zeca-blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .header {
+            background: var(--zeca-blue);
+            padding: 0 16px 20px;
+            color: white;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Vehicle Card - Compacto */
+        .vehicle-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .vehicle-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .vehicle-icon-bg {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vehicle-info .plate {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .vehicle-info .model {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .status-badge {
+            background: var(--zeca-green);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-badge .material-icons-round {
+            font-size: 12px;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            background: var(--bg-gray);
+            min-height: 500px;
+            padding-bottom: 100px;
+        }
+
+        /* BOTÃO ABASTECER - Destaque Principal */
+        .refuel-cta {
+            background: linear-gradient(135deg, var(--zeca-blue) 0%, var(--zeca-blue-dark) 100%);
+            border-radius: 18px;
+            padding: 18px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(21, 101, 192, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refuel-cta:hover {
+            transform: scale(1.02);
+        }
+
+        .refuel-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .refuel-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refuel-icon .material-icons-round {
+            font-size: 28px;
+        }
+
+        .refuel-text h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .refuel-text p {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .refuel-arrow {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Economy Card - Compacto */
+        .economy-card {
+            background: linear-gradient(135deg, var(--zeca-green) 0%, #2E7D32 100%);
+            border-radius: 16px;
+            padding: 14px 16px;
+            color: white;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .economy-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .economy-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .economy-info h4 {
+            font-size: 11px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .economy-info .value {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .economy-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .economy-stat {
+            text-align: center;
+        }
+
+        .economy-stat-value {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .economy-stat-label {
+            font-size: 9px;
+            opacity: 0.8;
+        }
+
+        /* Quick Actions Grid */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .action-item {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 8px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .action-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+            font-size: 22px;
+        }
+
+        .action-icon.orange {
+            background: #FFF3E0;
+            color: var(--zeca-orange);
+        }
+
+        .action-icon.green {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .action-icon.purple {
+            background: #F3E5F5;
+            color: var(--zeca-purple);
+        }
+
+        .action-icon.blue {
+            background: var(--zeca-blue-light);
+            color: var(--zeca-blue);
+        }
+
+        .action-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .action-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--zeca-red);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ZECA Club Card */
+        .club-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .club-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .club-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .club-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--zeca-purple) 0%, #9C27B0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .club-title h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .club-level {
+            background: var(--zeca-gold);
+            color: #5D4037;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .club-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .club-points {
+            text-align: center;
+        }
+
+        .club-points-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--zeca-purple);
+        }
+
+        .club-points-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .club-cashback {
+            text-align: center;
+            padding: 10px 16px;
+            background: #F3E5F5;
+            border-radius: 12px;
+        }
+
+        .club-cashback-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--zeca-purple);
+        }
+
+        .club-cashback-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .club-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .club-action {
+            flex: 1;
+            background: #F3E5F5;
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--zeca-purple);
+            cursor: pointer;
+        }
+
+        .club-action .material-icons-round {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* Last Refueling Card */
+        .last-refuel-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .last-refuel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .last-refuel-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .last-refuel-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .last-refuel-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--zeca-blue-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+        }
+
+        .last-refuel-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .last-refuel-info p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .last-refuel-value {
+            text-align: right;
+        }
+
+        .last-refuel-value .amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .last-refuel-value .liters {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            border-top: 1px solid #E0E0E0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 10px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--zeca-blue);
+        }
+
+        .nav-item .material-icons-round {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>22:48</span>
+            <span>●●●○○ 📶 🔋</span>
+        </div>
+
+        <div class="header">
+            <div class="header-top">
+                <div class="header-icon">
+                    <span class="material-icons-round">menu</span>
+                </div>
+                <div class="header-title">ZECA - Jornada Ativa</div>
+                <div class="header-icon">
+                    <span class="material-icons-round">power_settings_new</span>
+                </div>
+            </div>
+
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-left">
+                    <div class="vehicle-icon-bg">
+                        <span class="material-icons-round">local_shipping</span>
+                    </div>
+                    <div class="vehicle-info">
+                        <div class="plate">EMQ-8990</div>
+                        <div class="model">Nissan Frontier • Diesel S10</div>
+                    </div>
+                </div>
+                <div class="status-badge">
+                    <span class="material-icons-round">check_circle</span>
+                    ATIVA
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- ABASTECER CTA -->
+            <div class="refuel-cta">
+                <div class="refuel-left">
+                    <div class="refuel-icon">
+                        <span class="material-icons-round">local_gas_station</span>
+                    </div>
+                    <div class="refuel-text">
+                        <h3>Abastecer Agora</h3>
+                        <p>Encontre um posto e abasteça</p>
+                    </div>
+                </div>
+                <div class="refuel-arrow">
+                    <span class="material-icons-round">arrow_forward</span>
+                </div>
+            </div>
+
+            <!-- ECONOMIA - Compacto -->
+            <div class="economy-card">
+                <div class="economy-left">
+                    <div class="economy-icon">
+                        <span class="material-icons-round">savings</span>
+                    </div>
+                    <div class="economy-info">
+                        <h4>Economia no mês</h4>
+                        <div class="value">R$1.247</div>
+                    </div>
+                </div>
+                <div class="economy-stats">
+                    <div class="economy-stat">
+                        <div class="economy-stat-value">12</div>
+                        <div class="economy-stat-label">Abast.</div>
+                    </div>
+                    <div class="economy-stat">
+                        <div class="economy-stat-value">8.5</div>
+                        <div class="economy-stat-label">Km/L</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section-title">Acesso Rápido</div>
+            <div class="actions-grid">
+                <div class="action-item" style="position: relative;">
+                    <div class="action-badge">3</div>
+                    <div class="action-icon orange">
+                        <span class="material-icons-round">assignment</span>
+                    </div>
+                    <div class="action-label">Checklist</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-icon purple">
+                        <span class="material-icons-round">receipt_long</span>
+                    </div>
+                    <div class="action-label">Histórico</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-icon green">
+                        <span class="material-icons-round">location_on</span>
+                    </div>
+                    <div class="action-label">Postos</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-icon blue">
+                        <span class="material-icons-round">directions_car</span>
+                    </div>
+                    <div class="action-label">Veículos</div>
+                </div>
+            </div>
+
+            <!-- ZECA Club -->
+            <div class="club-card">
+                <div class="club-header">
+                    <div class="club-title">
+                        <div class="club-icon">
+                            <span class="material-icons-round">workspace_premium</span>
+                        </div>
+                        <h4>ZECA Club</h4>
+                    </div>
+                    <div class="club-level">GOLD</div>
+                </div>
+                <div class="club-content">
+                    <div class="club-points">
+                        <div class="club-points-value">2.450</div>
+                        <div class="club-points-label">pontos</div>
+                    </div>
+                    <div class="club-cashback">
+                        <div class="club-cashback-value">R$87,50</div>
+                        <div class="club-cashback-label">cashback disponível</div>
+                    </div>
+                </div>
+                <div class="club-actions">
+                    <div class="club-action">
+                        <span class="material-icons-round">redeem</span>
+                        Resgatar
+                    </div>
+                    <div class="club-action">
+                        <span class="material-icons-round">history</span>
+                        Extrato
+                    </div>
+                    <div class="club-action">
+                        <span class="material-icons-round">card_giftcard</span>
+                        Prêmios
+                    </div>
+                </div>
+            </div>
+
+            <!-- Último Abastecimento -->
+            <div class="last-refuel-card">
+                <div class="last-refuel-header">
+                    <span class="material-icons-round" style="font-size: 16px;">schedule</span>
+                    Último Abastecimento
+                </div>
+                <div class="last-refuel-content">
+                    <div class="last-refuel-left">
+                        <div class="last-refuel-icon">
+                            <span class="material-icons-round">local_gas_station</span>
+                        </div>
+                        <div class="last-refuel-info">
+                            <h4>Posto Shell BR-101</h4>
+                            <p>Ontem às 14:32 • Diesel S10</p>
+                        </div>
+                    </div>
+                    <div class="last-refuel-value">
+                        <div class="amount">R$487,50</div>
+                        <div class="liters">65L</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <span class="material-icons-round">home</span>
+                <span>Início</span>
+            </div>
+            <div class="nav-item">
+                <span class="material-icons-round">local_gas_station</span>
+                <span>Abastecer</span>
+            </div>
+            <div class="nav-item">
+                <span class="material-icons-round">workspace_premium</span>
+                <span>Club</span>
+            </div>
+            <div class="nav-item">
+                <span class="material-icons-round">person</span>
+                <span>Perfil</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

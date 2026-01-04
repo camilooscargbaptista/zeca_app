@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1.0">
+    <title>Mockup - Tela Iniciar Jornada Redesenhada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .mockup-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .version {
+            text-align: center;
+        }
+
+        .version-label {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .version-label.old {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .version-label.new {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .phone {
+            width: 375px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .screen {
+            background: #f5f5f5;
+            border-radius: 30px;
+            overflow: hidden;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: #2196F3;
+            padding: 50px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            color: white;
+            font-size: 24px;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-bell {
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Body */
+        .body {
+            flex: 1;
+            padding: 16px;
+            background: #f5f5f5;
+            overflow-y: auto;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 12px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Driver Card - Compact */
+        .driver-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .driver-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2196F3 0%, #1565c0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .driver-info {
+            flex: 1;
+        }
+
+        .driver-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .driver-cpf {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-autonomous {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .badge-fleet {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* Vehicle Selector */
+        .vehicle-selector {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vehicle-selector:hover {
+            border-color: #2196F3;
+        }
+
+        .vehicle-selector.selected {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .vehicle-plate {
+            background: linear-gradient(135deg, #2196F3 0%, #1976d2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .vehicle-details {
+            flex: 1;
+        }
+
+        .vehicle-model {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .vehicle-fuel {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .vehicle-dropdown {
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* Add Vehicle Button */
+        .add-vehicle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border: 2px dashed #bdbdbd;
+            border-radius: 12px;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .add-vehicle-btn:hover {
+            border-color: #2196F3;
+            color: #2196F3;
+        }
+
+        /* Info Hint */
+        .info-hint {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .hint-icon {
+            color: #1976d2;
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .hint-text {
+            font-size: 12px;
+            color: #1565c0;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        /* Footer Button */
+        .footer {
+            background: white;
+            padding: 12px 16px 24px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #2196F3 0%, #1976d2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* OLD DESIGN */
+        .old-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .old-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2196F3;
+            margin-bottom: 12px;
+        }
+
+        .old-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .old-info-row span:first-child {
+            color: #666;
+        }
+
+        .old-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .old-dropdown {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .old-add-btn {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            color: #2196F3;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .old-hint {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            color: #1565c0;
+            margin-bottom: 40px;
+        }
+
+        .old-btn {
+            width: 100%;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 12px 0;
+        }
+
+        /* NEW - Quick Stats */
+        .quick-stats {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="mockup-title">🔄 Redesign: Tela Iniciar Jornada</h1>
+
+    <div class="comparison">
+        <!-- OLD DESIGN -->
+        <div class="version">
+            <div class="version-label old">❌ Antes (Cards Separados)</div>
+            <div class="phone">
+                <div class="screen">
+                    <div class="header">
+                        <div class="header-left">
+                            <span class="header-icon">☰</span>
+                            <span class="header-title">Iniciar Jornada</span>
+                        </div>
+                        <span class="header-bell">🔔</span>
+                    </div>
+                    <div class="body">
+                        <!-- Old Welcome Card -->
+                        <div class="old-card">
+                            <div class="old-title">👤 Bem-vindo!</div>
+                            <div class="old-info-row">
+                                <span>👤 Motorista:</span>
+                                <strong>Lucas da Silva</strong>
+                            </div>
+                            <div class="old-info-row">
+                                <span>📋 CPF:</span>
+                                <strong>328.916.470-50</strong>
+                            </div>
+                            <div class="old-badge">🚚 Motorista Autônomo</div>
+                        </div>
+
+                        <!-- Old Vehicle Card -->
+                        <div class="old-card">
+                            <div class="old-title">🚗 Veículo</div>
+                            <div class="old-dropdown">
+                                <span>EMQ8990 - Nissan FRONTIER</span>
+                                <span>▼</span>
+                            </div>
+                            <div class="old-add-btn">
+                                + Cadastrar novo veículo
+                            </div>
+                            <div class="old-hint">
+                                <span>ℹ️</span>
+                                <span>Selecione o veículo que você irá utilizar nesta jornada. Após confirmar, você terá
+                                    acesso às funcionalidades de abastecimento.</span>
+                            </div>
+                        </div>
+
+                        <div style="padding-top:20px;">
+                            <button class="old-btn">CONFIRMAR</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW DESIGN -->
+        <div class="version">
+            <div class="version-label new">✅ Depois (Compacto + Moderno)</div>
+            <div class="phone">
+                <div class="screen">
+                    <div class="header">
+                        <div class="header-left">
+                            <span class="header-icon">☰</span>
+                            <span class="header-title">Iniciar Jornada</span>
+                        </div>
+                        <span class="header-bell">🔔</span>
+                    </div>
+                    <div class="body">
+                        <!-- NEW: Driver Card Compact -->
+                        <div class="card">
+                            <div class="driver-compact">
+                                <div class="driver-avatar">LS</div>
+                                <div class="driver-info">
+                                    <div class="driver-name">Lucas da Silva</div>
+                                    <div class="driver-cpf">CPF: 328.916.470-50</div>
+                                </div>
+                                <div class="badge badge-autonomous">Autônomo</div>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Vehicle Selector Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon" style="background:#e3f2fd;color:#1565c0;">🚚</div>
+                                <div>
+                                    <div class="card-title">Selecione o Veículo</div>
+                                    <div class="card-subtitle">Escolha o veículo para esta jornada</div>
+                                </div>
+                            </div>
+
+                            <div class="vehicle-selector selected">
+                                <div class="vehicle-plate">EMQ8990</div>
+                                <div class="vehicle-details">
+                                    <div class="vehicle-model">Nissan FRONTIER</div>
+                                    <div class="vehicle-fuel">Diesel S10 • 8.5 km/L</div>
+                                </div>
+                                <span class="vehicle-dropdown">▼</span>
+                            </div>
+
+                            <div class="add-vehicle-btn">
+                                <span>+</span>
+                                <span>Cadastrar novo veículo</span>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Quick Stats -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon" style="background:#fff3e0;color:#e65100;">📊</div>
+                                <div>
+                                    <div class="card-title">Resumo do Veículo</div>
+                                </div>
+                            </div>
+                            <div class="quick-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">123.456</div>
+                                    <div class="stat-label">Último KM</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">8.5</div>
+                                    <div class="stat-label">Km/L Médio</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">12</div>
+                                    <div class="stat-label">Abast. Mês</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Compact Hint -->
+                        <div class="info-hint">
+                            <span class="hint-icon">ℹ️</span>
+                            <span class="hint-text">Confirme para iniciar sua jornada e acessar as funcionalidades de
+                                abastecimento.</span>
+                        </div>
+                    </div>
+
+                    <!-- Fixed Footer Button -->
+                    <div class="footer">
+                        <button class="btn-primary">
+                            🚀 Iniciar Jornada
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:40px;max-width:900px;background:white;border-radius:12px;padding:24px;">
+        <h2 style="margin-bottom:16px;">📋 Resumo das Mudanças Propostas</h2>
+        <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Aspecto</th>
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Antes</th>
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Depois</th>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;">Card do Motorista</td>
+                <td style="padding:12px;border:1px solid #ddd;">Card grande com "Bem-vindo!" e info vertical</td>
+                <td style="padding:12px;border:1px solid #ddd;">Card compacto horizontal com avatar + badge</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Seletor de Veículo</td>
+                <td style="padding:12px;border:1px solid #ddd;">Dropdown simples</td>
+                <td style="padding:12px;border:1px solid #ddd;">Card visual com placa destacada + detalhes</td>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;font-weight:bold;">Novo: Resumo do Veículo</td>
+                <td style="padding:12px;border:1px solid #ddd;">-</td>
+                <td style="padding:12px;border:1px solid #ddd;color:green;">Stats rápidas: Último KM, Consumo, Abast.
+                    Mês</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Instrução/Hint</td>
+                <td style="padding:12px;border:1px solid #ddd;">Texto longo dentro do card</td>
+                <td style="padding:12px;border:1px solid #ddd;">Hint compacto separado</td>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;font-weight:bold;">Botão Confirmar</td>
+                <td style="padding:12px;border:1px solid #ddd;">Dentro do scroll</td>
+                <td style="padding:12px;border:1px solid #ddd;color:green;font-weight:bold;">FIXO no rodapé + texto
+                    "Iniciar Jornada"</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Visual Geral</td>
+                <td style="padding:12px;border:1px solid #ddd;">Básico, cards separados</td>
+                <td style="padding:12px;border:1px solid #ddd;">Moderno, gradientes, hierarquia visual clara</td>
+            </tr>
+        </table>
+
+        <div style="margin-top:20px;padding:16px;background:#e8f5e9;border-radius:8px;">
+            <strong>✨ Benefícios:</strong>
+            <ul style="margin-top:8px;padding-left:20px;">
+                <li>Menos scroll necessário</li>
+                <li>Informações mais organizadas</li>
+                <li>Motorista vê stats importantes do veículo</li>
+                <li>Botão sempre visível para ação rápida</li>
+                <li>Design consistente com as outras telas</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
