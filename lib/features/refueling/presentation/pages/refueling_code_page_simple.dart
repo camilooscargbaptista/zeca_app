@@ -44,6 +44,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   String _kmAtual = '';
   bool _abastecerArla = false;
   String? _refuelingId; // ID do abastecimento para polling
+  String _transporterCnpj = ''; // CNPJ/CPF para Nota Fiscal
   
   // Serviços
   final RefuelingPollingService _pollingService = RefuelingPollingService();
@@ -123,6 +124,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
               _kmAtual = '';
             }
             _abastecerArla = extra['abastecer_arla'] ?? false;
+            _transporterCnpj = extra['transporter_cnpj'] ?? '';
             _refuelingData = {
               'code': extra['code'],
               'expires_at': extra['expires_at'],
@@ -164,337 +166,354 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Código de Abastecimento'),
+        backgroundColor: const Color(0xFF2196F3),
+        elevation: 0,
+        title: const Text(
+          'Código de Abastecimento',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: _onBackPressed,
+        ),
+      ),
+      // Botão Finalizar fixo no rodapé
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 12,
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ElevatedButton.icon(
+          onPressed: _isUploading ? null : _finalizeRefueling,
+          icon: _isUploading 
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.check_circle),
+          label: Text(
+            _isUploading ? 'Finalizando...' : 'Finalizar Abastecimento',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green[600],
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         ),
       ),
       body: _isLoading
         ? const Center(child: CircularProgressIndicator())
         : SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                top: 16.0,
-                bottom: MediaQuery.of(context).padding.bottom + 16.0,
-              ),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Card do Código QR
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Código de Abastecimento',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // QR Code
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: QrImageView(
-                            data: _formatCode(_refuelingCode),
-                            version: QrVersions.auto,
-                            size: 200.0,
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // Código de Texto
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _formatCode(_refuelingCode),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.bold,
+                  // ===== CARD PRINCIPAL - QR CODE + INFO =====
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // QR Code compacto
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey[200]!),
                             ),
-                            textAlign: TextAlign.center,
+                            child: QrImageView(
+                              data: _formatCode(_refuelingCode),
+                              version: QrVersions.auto,
+                              size: 160.0,
+                              backgroundColor: Colors.white,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // Botão Copiar
-                        ElevatedButton.icon(
-                          onPressed: _copyCode,
-                          icon: const Icon(Icons.copy),
-                          label: const Text('Copiar Código'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          const SizedBox(height: 12),
+                          
+                          // Código de Texto
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2196F3).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _formatCode(_refuelingCode),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2196F3),
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: _copyCode,
+                                  child: Icon(Icons.copy, size: 18, color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Card de Informações
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Informações do Abastecimento',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                          
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 12),
+                          
+                          // Info compacta em grid 2x2
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildCompactInfoItem(
+                                  Icons.local_shipping,
+                                  'Veículo',
+                                  _vehicleData?['placa'] ?? 'N/A',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildCompactInfoItem(
+                                  Icons.local_gas_station,
+                                  'Posto',
+                                  _stationData?['nome'] ?? 'N/A',
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        if (_vehicleData != null && _stationData != null) ...[
-                          _buildInfoRow('Veículo', _vehicleData!['placa'] ?? 'N/A'),
-                          _buildInfoRow('Posto', _stationData!['nome'] ?? 'N/A'),
-                          _buildInfoRow('Combustível', _parseFuelTypeDisplay(_fuelType)),
-                          _buildInfoRow('KM Atual', _kmAtual.isNotEmpty ? _kmAtual : 'N/A'),
-                          if (_abastecerArla)
-                            _buildInfoRow('ARLA 32', 'Sim'),
-                          if (_refuelingData?['expires_at'] != null)
-                            _buildInfoRow('Validade', _formatValidity(_refuelingData!['expires_at'])),
-                        ] else ...[
-                          _buildInfoRow('Veículo', 'N/A'),
-                          _buildInfoRow('Posto', 'N/A'),
-                          _buildInfoRow('Combustível', 'N/A'),
-                          _buildInfoRow('KM Atual', 'N/A'),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildCompactInfoItem(
+                                  Icons.local_gas_station,
+                                  'Combustível',
+                                  _parseFuelTypeDisplay(_fuelType),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildCompactInfoItem(
+                                  Icons.speed,
+                                  'KM Atual',
+                                  _kmAtual.isNotEmpty ? _kmAtual : 'N/A',
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_abastecerArla) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildCompactInfoItem(
+                                    Icons.water_drop,
+                                    'ARLA 32',
+                                    'Sim',
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildCompactInfoItem(
+                                    Icons.timer,
+                                    'Validade',
+                                    _formatValidity(_refuelingData?['expires_at']),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ] else if (_refuelingData?['expires_at'] != null) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildCompactInfoItem(
+                                    Icons.timer,
+                                    'Validade',
+                                    _formatValidity(_refuelingData?['expires_at']),
+                                  ),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-                ),
-                // TODO: Card de Comprovante - Funcionalidade comentada temporariamente
-                // const SizedBox(height: 24),
-                // 
-                // // Card de Comprovante (NOVO)
-                // Card(
-                //   child: Padding(
-                //     padding: const EdgeInsets.all(16.0),
-                //     child: Column(
-                //       crossAxisAlignment: CrossAxisAlignment.start,
-                //       children: [
-                //         Row(
-                //           children: [
-                //             Text(
-                //               'Comprovante',
-                //               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                //                 fontWeight: FontWeight.bold,
-                //               ),
-                //             ),
-                //             const SizedBox(width: 8),
-                //             Container(
-                //               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                //               decoration: BoxDecoration(
-                //                 color: Colors.red,
-                //                 borderRadius: BorderRadius.circular(12),
-                //               ),
-                //               child: const Text(
-                //                 'Obrigatório',
-                //                 style: TextStyle(
-                //                   color: Colors.white,
-                //                   fontSize: 12,
-                //                   fontWeight: FontWeight.bold,
-                //                 ),
-                //               ),
-                //             ),
-                //           ],
-                //         ),
-                //         const SizedBox(height: 8),
-                //         Text(
-                //           'Anexe o comprovante fiscal (NF/Danfe/Cupom)',
-                //           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                //             color: Colors.grey[600],
-                //           ),
-                //         ),
-                //         const SizedBox(height: 16),
-                //         
-                //         // Botões de Ação para Upload
-                //         Row(
-                //           children: [
-                //             Expanded(
-                //               child: ElevatedButton.icon(
-                //                 onPressed: _attachedImages.length < _maxImages ? _takePhoto : null,
-                //                 icon: const Icon(Icons.camera_alt),
-                //                 label: const Text('Tirar Foto'),
-                //                 style: ElevatedButton.styleFrom(
-                //                   backgroundColor: Colors.blue,
-                //                   foregroundColor: Colors.white,
-                //                   padding: const EdgeInsets.symmetric(vertical: 12),
-                //                 ),
-                //               ),
-                //             ),
-                //             const SizedBox(width: 12),
-                //             Expanded(
-                //               child: ElevatedButton.icon(
-                //                 onPressed: _attachedImages.length < _maxImages ? _pickFromGallery : null,
-                //                 icon: const Icon(Icons.attach_file),
-                //                 label: const Text('Anexar da Galeria'),
-                //                 style: ElevatedButton.styleFrom(
-                //                   backgroundColor: Colors.green,
-                //                   foregroundColor: Colors.white,
-                //                   padding: const EdgeInsets.symmetric(vertical: 12),
-                //                 ),
-                //               ),
-                //             ),
-                //           ],
-                //         ),
-                //         const SizedBox(height: 16),
-                //         
-                //         // Contador de fotos
-                //         Text(
-                //           'Fotos anexadas: ${_attachedImages.length}/$_maxImages',
-                //           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                //             fontWeight: FontWeight.w500,
-                //             color: _attachedImages.length == _maxImages ? Colors.green : Colors.grey[600],
-                //           ),
-                //         ),
-                //         const SizedBox(height: 16),
-                //         
-                //         // Grid de imagens anexadas
-                //         if (_attachedImages.isNotEmpty) ...[
-                //           GridView.builder(
-                //             shrinkWrap: true,
-                //             physics: const NeverScrollableScrollPhysics(),
-                //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                //               crossAxisCount: 3,
-                //               crossAxisSpacing: 8,
-                //               mainAxisSpacing: 8,
-                //               childAspectRatio: 1,
-                //             ),
-                //             itemCount: _attachedImages.length,
-                //             itemBuilder: (context, index) {
-                //               return Stack(
-                //                 children: [
-                //                   Container(
-                //                     decoration: BoxDecoration(
-                //                       borderRadius: BorderRadius.circular(8),
-                //                       border: Border.all(color: Colors.grey[300]!),
-                //                     ),
-                //                     child: ClipRRect(
-                //                       borderRadius: BorderRadius.circular(8),
-                //                       child: Image.file(
-                //                         _attachedImages[index],
-                //                         fit: BoxFit.cover,
-                //                       ),
-                //                     ),
-                //                   ),
-                //                   Positioned(
-                //                     top: 4,
-                //                     right: 4,
-                //                     child: GestureDetector(
-                //                       onTap: () => _removeImage(index),
-                //                       child: Container(
-                //                         padding: const EdgeInsets.all(4),
-                //                         decoration: const BoxDecoration(
-                //                           color: Colors.red,
-                //                           shape: BoxShape.circle,
-                //                         ),
-                //                         child: const Icon(
-                //                           Icons.close,
-                //                           color: Colors.white,
-                //                           size: 16,
-                //                         ),
-                //                       ),
-                //                     ),
-                //                   ),
-                //                 ],
-                //               );
-                //             },
-                //           ),
-                //         ],
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                const SizedBox(height: 24),
-                
-                // Card de Instruções
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Como usar',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        const ListTile(
-                          leading: Icon(Icons.qr_code, color: Colors.blue),
-                          title: Text('1. Mostre o QR Code no posto'),
-                          subtitle: Text('O funcionário irá escanear o código'),
-                        ),
-                        const ListTile(
-                          leading: Icon(Icons.local_gas_station, color: Colors.green),
-                          title: Text('2. Realize o abastecimento'),
-                          subtitle: Text('Abasteça conforme necessário'),
-                        ),
-                        const ListTile(
-                          leading: Icon(Icons.check_circle, color: Colors.green),
-                          title: Text('3. Finalize o abastecimento'),
-                          subtitle: Text('Confirme para concluir o processo'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Botão de finalizar sempre habilitado (sem validação de foto)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _finalizeRefueling,
-                      icon: _isUploading 
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_circle),
-                      label: Text(_isUploading ? 'Finalizando...' : 'Finalizar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
                   ),
-                ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // ===== CNPJ PARA NOTA FISCAL - DESTAQUE =====
+                  if (_transporterCnpj.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.description, color: Colors.orange[700], size: 24),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'CNPJ/CPF PARA NOTA FISCAL',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.orange[800],
+                                  ),
+                                ),
+                                Text(
+                                  _formatCnpjCpf(_transporterCnpj),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                    color: Colors.orange[900],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _copyCnpj,
+                            child: Icon(Icons.copy, size: 20, color: Colors.orange[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  
+                  // ===== INSTRUÇÕES COMPACTAS =====
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Mostre o QR Code para o caixa escanear e realize o abastecimento.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[800],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
     );
+  }
+  
+  Widget _buildCompactInfoItem(IconData icon, String label, String value, {Color? color}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color ?? Colors.grey[600]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: color ?? Colors.grey[800],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Formatar CNPJ (14 dígitos) ou CPF (11 dígitos)
+  String _formatCnpjCpf(String value) {
+    final digits = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.length == 14) {
+      // CNPJ: XX.XXX.XXX/XXXX-XX
+      return '${digits.substring(0, 2)}.${digits.substring(2, 5)}.${digits.substring(5, 8)}/${digits.substring(8, 12)}-${digits.substring(12)}';
+    } else if (digits.length == 11) {
+      // CPF: XXX.XXX.XXX-XX
+      return '${digits.substring(0, 3)}.${digits.substring(3, 6)}.${digits.substring(6, 9)}-${digits.substring(9)}';
+    }
+    return value; // Retorna sem formatação se não for válido
+  }
+  
+  /// Copiar CNPJ/CPF para a área de transferência
+  void _copyCnpj() {
+    if (_transporterCnpj.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: _transporterCnpj));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('CNPJ/CPF copiado!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   String _parseFuelTypeDisplay(dynamic fuelType) {

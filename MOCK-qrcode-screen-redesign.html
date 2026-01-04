@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1.0">
+    <title>Mockup - Tela QR Code Redesenhada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .mockup-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .version {
+            text-align: center;
+        }
+
+        .version-label {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .version-label.old {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .version-label.new {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .phone {
+            width: 375px;
+            background: #000;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .screen {
+            background: #f5f5f5;
+            border-radius: 30px;
+            overflow: hidden;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: #2196F3;
+            padding: 50px 16px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-back {
+            color: white;
+            font-size: 24px;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Body */
+        .body {
+            flex: 1;
+            padding: 16px;
+            background: #f5f5f5;
+            overflow-y: auto;
+        }
+
+        /* Card Principal */
+        .main-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        /* QR Code */
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .qr-code {
+            width: 160px;
+            height: 160px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .qr-code.large {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* Code Display */
+        .code-display {
+            background: rgba(33, 150, 243, 0.1);
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .code-text {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2196F3;
+            letter-spacing: 1px;
+        }
+
+        .copy-icon {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-icon {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Instruction Hint */
+        .instruction-hint {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hint-icon {
+            color: #1976d2;
+            font-size: 20px;
+        }
+
+        .hint-text {
+            font-size: 12px;
+            color: #1565c0;
+            flex: 1;
+        }
+
+        /* Footer Button */
+        .footer {
+            background: white;
+            padding: 12px 16px 24px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-finalizar {
+            width: 100%;
+            background: #43a047;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* OLD DESIGN STYLES */
+        .old-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .old-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .old-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 auto;
+        }
+
+        .old-info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .old-info-label {
+            width: 100px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .old-info-value {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .old-list-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            gap: 12px;
+        }
+
+        .old-list-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .old-list-content h4 {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .old-list-content p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .old-btn-finalizar {
+            width: 100%;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 16px 0;
+        }
+
+        .scroll-indicator {
+            text-align: center;
+            padding: 8px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="mockup-title">🔄 Redesign: Tela QR Code de Abastecimento</h1>
+
+    <div class="comparison">
+        <!-- OLD DESIGN -->
+        <div class="version">
+            <div class="version-label old">❌ Antes (Muito Scroll)</div>
+            <div class="phone">
+                <div class="screen">
+                    <div class="header">
+                        <span class="header-back">←</span>
+                        <span class="header-title">Código de Abastecimento</span>
+                    </div>
+                    <div class="body" style="padding-bottom: 0;">
+                        <!-- Card QR -->
+                        <div class="old-card">
+                            <div class="old-card-title">Código de Abastecimento</div>
+                            <div class="qr-container">
+                                <div class="qr-code large">QR CODE<br>200x200</div>
+                            </div>
+                            <div
+                                style="background:#f5f5f5;padding:8px 16px;border-radius:8px;text-align:center;margin-bottom:16px;">
+                                <span style="font-family:monospace;font-weight:bold;">7T25-2026-E8DFDE42</span>
+                            </div>
+                            <button class="old-btn">📋 Copiar Código</button>
+                        </div>
+
+                        <!-- Card Info -->
+                        <div class="old-card">
+                            <div class="old-card-title" style="text-align:left;">Informações do Abastecimento</div>
+                            <div class="old-info-row">
+                                <span class="old-info-label">Veículo:</span>
+                                <span class="old-info-value">EMQ8990</span>
+                            </div>
+                            <div class="old-info-row">
+                                <span class="old-info-label">Posto:</span>
+                                <span class="old-info-value">Posto ZECA</span>
+                            </div>
+                            <div class="old-info-row">
+                                <span class="old-info-label">Combustível:</span>
+                                <span class="old-info-value">Diesel S10</span>
+                            </div>
+                            <div class="old-info-row">
+                                <span class="old-info-label">KM Atual:</span>
+                                <span class="old-info-value">123.456</span>
+                            </div>
+                            <div class="old-info-row" style="border:none;">
+                                <span class="old-info-label">Validade:</span>
+                                <span class="old-info-value">4 horas</span>
+                            </div>
+                        </div>
+
+                        <div class="scroll-indicator">⬇️ Precisa rolar para ver mais...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW DESIGN -->
+        <div class="version">
+            <div class="version-label new">✅ Depois (Compacto + Botão Fixo)</div>
+            <div class="phone">
+                <div class="screen">
+                    <div class="header">
+                        <span class="header-back">←</span>
+                        <span class="header-title">Código de Abastecimento</span>
+                    </div>
+                    <div class="body">
+                        <!-- Card Principal Único -->
+                        <div class="main-card">
+                            <!-- QR Code Compacto -->
+                            <div class="qr-container">
+                                <div class="qr-code">QR CODE<br>160x160</div>
+                            </div>
+
+                            <!-- Código + Copy -->
+                            <div class="code-display">
+                                <span class="code-text">7T25-2026-E8DFDE42</span>
+                                <span class="copy-icon">📋</span>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <!-- Info Grid 2x2 -->
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-icon">🚚</span>
+                                    <div class="info-content">
+                                        <div class="info-label">Veículo</div>
+                                        <div class="info-value">EMQ8990</div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">⛽</span>
+                                    <div class="info-content">
+                                        <div class="info-label">Posto</div>
+                                        <div class="info-value">Posto ZECA</div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">⛽</span>
+                                    <div class="info-content">
+                                        <div class="info-label">Combustível</div>
+                                        <div class="info-value">Diesel S10</div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">🏎️</span>
+                                    <div class="info-content">
+                                        <div class="info-label">KM Atual</div>
+                                        <div class="info-value">123.456</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CNPJ/CPF para Nota Fiscal - DESTAQUE -->
+                            <div style="margin-top:12px;">
+                                <div
+                                    style="background:#fff3e0;border:1px solid #ffcc80;border-radius:8px;padding:10px;display:flex;align-items:center;gap:8px;">
+                                    <span style="font-size:18px;">📄</span>
+                                    <div style="flex:1;">
+                                        <div style="font-size:10px;color:#e65100;font-weight:600;">CNPJ PARA NOTA FISCAL
+                                        </div>
+                                        <div
+                                            style="font-size:14px;font-weight:bold;color:#bf360c;font-family:monospace;">
+                                            12.345.678/0001-90</div>
+                                    </div>
+                                    <span style="font-size:14px;cursor:pointer;">📋</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:12px;">
+                                <div class="info-grid" style="grid-template-columns: 1fr;">
+                                    <div class="info-item">
+                                        <span class="info-icon">⏱️</span>
+                                        <div class="info-content">
+                                            <div class="info-label">Validade</div>
+                                            <div class="info-value">4 horas</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Instrução Compacta -->
+                        <div class="instruction-hint">
+                            <span class="hint-icon">ℹ️</span>
+                            <span class="hint-text">Mostre o QR Code para o caixa escanear e realize o
+                                abastecimento.</span>
+                        </div>
+                    </div>
+
+                    <!-- Botão FIXO no rodapé -->
+                    <div class="footer">
+                        <button class="btn-finalizar">
+                            ✅ Finalizar Abastecimento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:40px;max-width:800px;background:white;border-radius:12px;padding:24px;">
+        <h2 style="margin-bottom:16px;">📋 Resumo das Mudanças</h2>
+        <table style="width:100%;border-collapse:collapse;">
+            <tr style="background:#f5f5f5;">
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Aspecto</th>
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Antes</th>
+                <th style="padding:12px;text-align:left;border:1px solid #ddd;">Depois</th>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;">QR Code</td>
+                <td style="padding:12px;border:1px solid #ddd;">200x200px com padding 16px</td>
+                <td style="padding:12px;border:1px solid #ddd;">160x160px com padding 12px</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Cards</td>
+                <td style="padding:12px;border:1px solid #ddd;">3 cards separados (QR, Info, Instruções)</td>
+                <td style="padding:12px;border:1px solid #ddd;">1 card único consolidado</td>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;">Informações</td>
+                <td style="padding:12px;border:1px solid #ddd;">Lista vertical (1 coluna)</td>
+                <td style="padding:12px;border:1px solid #ddd;">Grid 2x2 compacto com ícones</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Instruções</td>
+                <td style="padding:12px;border:1px solid #ddd;">Card com 3 ListTiles</td>
+                <td style="padding:12px;border:1px solid #ddd;">1 linha de dica inline</td>
+            </tr>
+            <tr>
+                <td style="padding:12px;border:1px solid #ddd;font-weight:bold;">Botão Finalizar</td>
+                <td style="padding:12px;border:1px solid #ddd;color:red;">No fim do scroll (escondido)</td>
+                <td style="padding:12px;border:1px solid #ddd;color:green;font-weight:bold;">FIXO no rodapé (sempre
+                    visível)</td>
+            </tr>
+            <tr style="background:#f5f5f5;">
+                <td style="padding:12px;border:1px solid #ddd;">Scroll necessário</td>
+                <td style="padding:12px;border:1px solid #ddd;">Sim, muito</td>
+                <td style="padding:12px;border:1px solid #ddd;">Mínimo ou nenhum</td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>

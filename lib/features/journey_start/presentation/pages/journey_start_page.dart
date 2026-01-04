@@ -35,6 +35,10 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
   String? _selectedVehicleId;
   bool _loadingVehicles = false;
   
+  // NOVO: Estatísticas do veículo (para card de resumo)
+  Map<String, dynamic>? _vehicleStats;
+  bool _loadingStats = false;
+  
   // Máscara para placa (formato antigo e Mercosul)
   final _placaMaskFormatter = MaskTextInputFormatter(
     mask: 'AAA-####',
@@ -282,6 +286,44 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
       });
       
       debugPrint('✅ Veículo selecionado: ${selected['plate']} - ${selected['brand']} ${selected['model']}');
+      
+      // Buscar stats do veículo
+      _fetchVehicleStats(selected['plate']);
+    }
+  }
+  
+  /// Buscar estatísticas do veículo (último KM, consumo médio, abast. do mês)
+  Future<void> _fetchVehicleStats(String plate) async {
+    setState(() {
+      _loadingStats = true;
+    });
+    
+    try {
+      final apiService = ApiService();
+      final cleanPlate = plate.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+      final response = await apiService.get('/vehicles/$cleanPlate/stats');
+      
+      debugPrint('📊 Stats do veículo $cleanPlate: $response');
+      
+      if (mounted && response != null) {
+        setState(() {
+          _vehicleStats = {
+            'last_odometer': response['last_odometer'],
+            'average_consumption': response['average_consumption'],
+            'refuelings_this_month': response['refuelings_this_month'],
+          };
+          _loadingStats = false;
+        });
+      } else {
+        setState(() {
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Erro ao buscar stats do veículo: $e');
+      setState(() {
+        _loadingStats = false;
+      });
     }
   }
 
@@ -486,7 +528,47 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
         ],
       ),
       drawer: _buildDrawer(),
-      body: _isLoading
+      // NOVO: Botão fixo no rodapé
+      bottomNavigationBar: _vehicleSearched && _vehicleData != null
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _confirmVehicle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.zecaBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                            SizedBox(width: 8),
+                            Text(
+                              'Iniciar Jornada',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            )
+          : null,
+      body: _isLoading && !_vehicleSearched
           ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
               onTap: _dismissKeyboard,
@@ -495,7 +577,7 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
                   left: 16.0,
                   right: 16.0,
                   top: 16.0,
-                  bottom: 16.0 + MediaQuery.of(context).viewPadding.bottom,
+                  bottom: _vehicleSearched ? 100.0 : 16.0 + MediaQuery.of(context).viewPadding.bottom,
                 ),
                 child: Form(
                   key: _formKey,
@@ -503,15 +585,146 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildWelcomeCard(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       _buildVehicleCard(),
-                      const SizedBox(height: 24),
-                      _buildInfoCard(),
+                      // NOVO: Card de estatísticas quando veículo selecionado
+                      if (_vehicleSearched && _vehicleData != null) ...[
+                        const SizedBox(height: 16),
+                        _buildVehicleStatsCard(),
+                      ],
+                      const SizedBox(height: 16),
+                      // Hint compacto
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, size: 18, color: Colors.blue[600]),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Selecione um veículo para iniciar sua jornada de trabalho.',
+                                style: TextStyle(fontSize: 12, color: Colors.blue[800]),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+    );
+  }
+  
+  /// NOVO: Card de estatísticas do veículo
+  Widget _buildVehicleStatsCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.analytics_outlined, color: Colors.orange[700], size: 20),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Resumo do Veículo',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _loadingStats
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(
+                        icon: Icons.speed,
+                        label: 'Último KM',
+                        value: _formatOdometer(_vehicleStats?['last_odometer']),
+                        color: Colors.blue,
+                      ),
+                      _buildStatItem(
+                        icon: Icons.local_gas_station,
+                        label: 'Km/L Médio',
+                        value: _vehicleStats?['average_consumption']?.toString() ?? '--',
+                        color: Colors.green,
+                      ),
+                      _buildStatItem(
+                        icon: Icons.calendar_month,
+                        label: 'Abast. Mês',
+                        value: _vehicleStats?['refuelings_this_month']?.toString() ?? '0',
+                        color: Colors.purple,
+                      ),
+                    ],
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Formatar odômetro para display
+  String _formatOdometer(dynamic value) {
+    if (value == null) return '--';
+    final intValue = value is double ? value.toInt() : int.tryParse(value.toString()) ?? 0;
+    final formatted = intValue.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return formatted;
+  }
+  
+  /// Widget para cada item de estatística
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
     );
   }
 
@@ -644,35 +857,90 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
   }
 
   Widget _buildWelcomeCard() {
+    // Extrair iniciais do nome
+    String initials = '';
+    if (_userData != null && _userData!['nome'] != null) {
+      final names = _userData!['nome'].toString().split(' ');
+      if (names.length >= 2) {
+        initials = '${names[0][0]}${names[names.length - 1][0]}'.toUpperCase();
+      } else if (names.isNotEmpty) {
+        initials = names[0].substring(0, 2).toUpperCase();
+      }
+    }
+    
     return Card(
       elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(Icons.person, color: AppColors.zecaBlue, size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  'Bem-vindo!',
-                  style: TextStyle(
-                    fontSize: 20,
+            // Avatar com iniciais
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.zecaBlue, AppColors.zecaBlue.withOpacity(0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.zecaBlue,
                   ),
                 ),
-              ],
+              ),
             ),
-            const SizedBox(height: 16),
-            if (_userData != null) ...[
-              _buildInfoRow(icon: Icons.badge, label: 'Motorista', value: _userData!['nome']),
-              _buildInfoRow(icon: Icons.assignment_ind, label: 'CPF', value: _userData!['cpf']),
-              const Divider(height: 24),
-              _buildInfoRow(icon: Icons.business, label: 'Transportadora', value: _userData!['empresa']),
-              _buildInfoRow(icon: Icons.description, label: 'CNPJ', value: _userData!['cnpj']),
-            ],
+            const SizedBox(width: 14),
+            // Informações
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _userData?['nome'] ?? 'Motorista',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'CPF: ${_userData?['cpf'] ?? '---'}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Badge Autônomo ou Frota
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: _isAutonomous ? Colors.blue[50] : Colors.green[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _isAutonomous ? 'Autônomo' : 'Frota',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _isAutonomous ? Colors.blue[800] : Colors.green[800],
+                ),
+              ),
+            ),
           ],
         ),
       ),

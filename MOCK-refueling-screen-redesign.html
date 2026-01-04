@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Completo - Fluxo de Abastecimento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .mockups-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .phone-frame {
+            width: 375px;
+            background: #f5f7fa;
+            min-height: 750px;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 8px solid #333;
+            flex-shrink: 0;
+        }
+
+        /* Header */
+        .header {
+            background: #2196F3;
+            padding: 50px 16px 16px;
+            color: white;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .pending-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .pending-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #f44336;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Content */
+        .content {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .card-icon.vehicle {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .card-icon.station {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .card-icon.fuel {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .card-icon.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .card-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Vehicle Card - Compact */
+        .vehicle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plate-badge {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .vehicle-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .vehicle-meta strong {
+            color: #333;
+            display: block;
+        }
+
+        /* CNPJ Input Section */
+        .cnpj-section {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: #1a73e8;
+        }
+
+        .text-input.error {
+            border-color: #e53935;
+            background: #fff5f5;
+        }
+
+        .text-input.success {
+            border-color: #43a047;
+            background: #f1f8f1;
+        }
+
+        .validate-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .validate-btn:disabled {
+            background: #bbb;
+            cursor: not-allowed;
+        }
+
+        /* Station Validated Card */
+        .station-validated {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .station-info {
+            flex: 1;
+        }
+
+        .station-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .badge-autonomo {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .badge-parceria {
+            background: #4caf50;
+            color: white;
+        }
+
+        .station-address {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .change-station-btn {
+            padding: 6px 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .change-station-btn:hover {
+            background: #eee;
+        }
+
+        .fuel-price-chip {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            text-align: center;
+            display: inline-flex;
+            flex-direction: column;
+            min-width: 100px;
+        }
+
+        .fuel-price-chip .type {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .fuel-price-chip .price {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .fuel-price-chip.arla {
+            background: linear-gradient(135deg, #2196f3, #1565c0);
+        }
+
+        .fuel-prices-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Error Message */
+        .error-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 10px 12px;
+            background: #ffebee;
+            border-radius: 10px;
+            border-left: 3px solid #e53935;
+        }
+
+        .error-message i {
+            color: #e53935;
+            margin-top: 2px;
+        }
+
+        .error-message .text {
+            flex: 1;
+        }
+
+        .error-message .title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #c62828;
+        }
+
+        .error-message .desc {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* KM Section */
+        .km-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .km-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .km-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            outline: none;
+        }
+
+        .km-input:focus {
+            border-color: #1a73e8;
+        }
+
+        .km-label {
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            background: white;
+            padding: 0 4px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .last-km-box {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+            border: 1.5px solid #2196F3;
+        }
+
+        .last-km-box .label {
+            font-size: 9px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .last-km-box .value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        /* KM Hint */
+        .km-hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: #fff8e1;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #f57f17;
+            margin-top: 8px;
+        }
+
+        .km-hint i {
+            font-size: 12px;
+        }
+
+        /* ARLA Option */
+        .arla-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f0f7ff;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .arla-option.checked {
+            border-color: #1a73e8;
+            background: #e3f2fd;
+        }
+
+        .arla-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            border: 2px solid #bbb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+        }
+
+        .arla-option.checked .arla-checkbox {
+            background: #1a73e8;
+            border-color: #1a73e8;
+        }
+
+        .arla-text {
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .arla-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            margin: 12px auto;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            width: fit-content;
+            min-width: 200px;
+        }
+
+        .generate-btn:disabled {
+            background: #bbb;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Variant Labels */
+        .variant-label {
+            text-align: center;
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: 24px;
+            color: white;
+            text-align: center;
+            margin: 30px 0 20px;
+            width: 100%;
+        }
+
+        /* Divider */
+        .full-width {
+            width: 100%;
+        }
+
+        /* KM Warning */
+        .km-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #fffbf5;
+            border-radius: 10px;
+            border: 1px solid #ffe0b2;
+            margin-top: 10px;
+        }
+
+        .km-warning i {
+            color: #fb8c00;
+            font-size: 14px;
+            margin-top: 1px;
+        }
+
+        .km-warning .text {
+            flex: 1;
+        }
+
+        .km-warning .title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e65100;
+        }
+
+        .km-warning .desc {
+            font-size: 11px;
+            color: #757575;
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="color: white; text-align: center; margin-bottom: 30px;">Fluxo Completo - Tela de Abastecimento</h1>
+
+    <div class="mockups-container">
+        <!-- ================================== -->
+        <!-- ESTADO 1: Inicial - Digitando CNPJ -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 1: INICIAL - DIGITANDO CNPJ</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNPJ Input Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Posto de Combustível</span>
+                    </div>
+                    <div class="cnpj-section">
+                        <div class="input-group">
+                            <label class="input-label">CNPJ do Posto</label>
+                            <input type="text" class="text-input" placeholder="00.000.000/0000-00" value="12.345.678/">
+                        </div>
+                        <button class="validate-btn" disabled>
+                            Validar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Disabled KM Section -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Valide o posto primeiro" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" disabled>
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 2: Validando CNPJ (Loading) -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 2: VALIDANDO CNPJ (LOADING)</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNPJ Input Card - Loading -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Posto de Combustível</span>
+                    </div>
+                    <div class="cnpj-section">
+                        <div class="input-group">
+                            <label class="input-label">CNPJ do Posto</label>
+                            <input type="text" class="text-input" value="12.345.678/0001-90" readonly
+                                style="background: #f5f5f5;">
+                        </div>
+                        <button class="validate-btn" disabled style="min-width: 80px;">
+                            <div class="spinner"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Disabled KM Section -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Aguarde..." disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" disabled>
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 3: Erro - Posto não encontrado -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 3: ERRO - POSTO NÃO ENCONTRADO</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNPJ Input Card - Error -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon error"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Posto de Combustível</span>
+                    </div>
+                    <div class="cnpj-section">
+                        <div class="input-group">
+                            <label class="input-label">CNPJ do Posto</label>
+                            <input type="text" class="text-input error" value="99.999.999/0001-99">
+                        </div>
+                        <button class="validate-btn">
+                            Validar
+                        </button>
+                    </div>
+
+                    <div class="error-message" style="margin-top: 10px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div class="text">
+                            <div class="title">Posto não encontrado</div>
+                            <div class="desc">Verifique o CNPJ digitado ou tente outro posto parceiro.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disabled KM Section -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Valide o posto primeiro" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" disabled>
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 4: Erro - Sem parceria -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 4: ERRO - SEM PARCERIA</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNPJ Input Card - Error -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon error"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Posto de Combustível</span>
+                    </div>
+                    <div class="cnpj-section">
+                        <div class="input-group">
+                            <label class="input-label">CNPJ do Posto</label>
+                            <input type="text" class="text-input error" value="11.222.333/0001-44">
+                        </div>
+                        <button class="validate-btn">
+                            Validar
+                        </button>
+                    </div>
+
+                    <div class="error-message" style="margin-top: 10px;">
+                        <i class="fas fa-handshake-slash"></i>
+                        <div class="text">
+                            <div class="title">Posto sem parceria</div>
+                            <div class="desc">Este posto não possui parceria ativa com sua frota. Entre em contato com
+                                seu gestor.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disabled KM Section -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Valide o posto primeiro" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" disabled>
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 5: Posto Validado - Com KM -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 5: SUCESSO - POSTO VALIDADO + KM ANTERIOR</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto ZECA
+                                <span class="badge badge-autonomo">Autônomo</span>
+                            </div>
+                            <div class="station-address">Rua Quirino Roquetti, 235 - Ribeirão Preto</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="fuel-price-chip" style="display: inline-flex; gap: 8px; align-items: center;">
+                            <span class="type">Diesel S10:</span>
+                            <span class="price">R$ 5,85/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - With Last KM -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-row">
+                        <div class="km-input-wrapper">
+                            <span class="km-label">KM Atual</span>
+                            <input type="text" class="km-input" value="125.430">
+                        </div>
+                        <div class="last-km-box">
+                            <div class="label">Último</div>
+                            <div class="value">123.850</div>
+                        </div>
+                    </div>
+
+                    <!-- ARLA Option -->
+                    <div class="arla-option checked" onclick="this.classList.toggle('checked')">
+                        <div class="arla-checkbox"><i class="fas fa-check"></i></div>
+                        <span class="arla-text">Abastecer ARLA 32</span>
+                        <span class="arla-price">R$ 4,50/L</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 6: Posto Validado - Sem KM -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 6: SUCESSO - POSTO VALIDADO + SEM KM ANTERIOR</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">XYZ9H87</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: --
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card - Parceria -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Auto Posto Brasil
+                                <span class="badge badge-parceria">Parceria</span>
+                            </div>
+                            <div class="station-address">Av. Paulista, 1500 - São Paulo</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="fuel-price-chip" style="display: inline-flex; gap: 8px; align-items: center;">
+                            <span class="type">Diesel S10:</span>
+                            <span class="price">R$ 5,49/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - Without Last KM -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Digite o KM atual">
+                    </div>
+
+                    <!-- First time hint -->
+                    <div class="km-hint">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Registrar o KM ajuda a calcular o consumo médio e otimizar a gestão do veículo!</span>
+                    </div>
+
+                    <!-- No ARLA option - posto doesn't have it -->
+                </div>
+            </div>
+
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 7: Trocando Posto -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 7: TROCANDO POSTO (CLICOU EM TROCAR)</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNPJ Input Card - Empty for new input -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Trocar Posto</span>
+                    </div>
+
+                    <!-- Previous station info -->
+                    <div
+                        style="padding: 8px 10px; background: #f5f5f5; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; color: #666;">
+                            <i class="fas fa-history" style="margin-right: 6px;"></i>
+                            Anterior: Posto ZECA
+                        </span>
+                        <button
+                            style="background: none; border: none; color: #1a73e8; font-size: 11px; cursor: pointer; font-weight: 600;">
+                            Cancelar
+                        </button>
+                    </div>
+
+                    <div class="cnpj-section">
+                        <div class="input-group">
+                            <label class="input-label">Novo CNPJ do Posto</label>
+                            <input type="text" class="text-input" placeholder="00.000.000/0000-00" autofocus>
+                        </div>
+                        <button class="validate-btn" disabled>
+                            Validar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Disabled KM Section -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" value="125.430" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn" disabled>
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 8: ARLA Disponível (não marcado) -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 8: ARLA DISPONÍVEL - NÃO SELECIONADO</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto Shell
+                                <span class="badge badge-parceria">Parceria</span>
+                            </div>
+                            <div class="station-address">BR-101, km 234 - Curitiba</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <div class="fuel-price-chip" style="display: inline-flex; gap: 8px; align-items: center;">
+                            <span class="type">Diesel S10:</span>
+                            <span class="price">R$ 5,99/L</span>
+                        </div>
+                        <div class="fuel-price-chip"
+                            style="display: inline-flex; gap: 8px; align-items: center; background: linear-gradient(135deg, #2196f3, #1565c0);">
+                            <span class="type">ARLA 32:</span>
+                            <span class="price">R$ 4,50/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - ARLA não marcado -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-row">
+                        <div class="km-input-wrapper">
+                            <span class="km-label">KM Atual</span>
+                            <input type="text" class="km-input" value="125.430">
+                        </div>
+                        <div class="last-km-box">
+                            <div class="label">Último</div>
+                            <div class="value">123.850</div>
+                        </div>
+                    </div>
+
+                    <!-- ARLA Option - NOT checked -->
+                    <div class="arla-option" onclick="this.classList.toggle('checked')">
+                        <div class="arla-checkbox"><i class="fas fa-check"></i></div>
+                        <span class="arla-text">Abastecer ARLA 32</span>
+                        <span class="arla-price">R$ 4,50/L</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 9: Posto SEM ARLA disponível -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 9: POSTO SEM ARLA (OPÇÃO NÃO APARECE)</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">DEF4G56</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 3.8 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card - Sem ARLA -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto Ipiranga
+                                <span class="badge badge-parceria">Parceria</span>
+                            </div>
+                            <div class="station-address">Av. Brasil, 500 - Belo Horizonte</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="fuel-price-chip" style="display: inline-flex; gap: 8px; align-items: center;">
+                            <span class="type">Diesel S10:</span>
+                            <span class="price">R$ 5,75/L</span>
+                        </div>
+                        <!-- SEM chip de ARLA -->
+                    </div>
+                </div>
+
+                <!-- KM Section - SEM opção de ARLA -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-row">
+                        <div class="km-input-wrapper">
+                            <span class="km-label">KM Atual</span>
+                            <input type="text" class="km-input" value="98.750">
+                        </div>
+                        <div class="last-km-box">
+                            <div class="label">Último</div>
+                            <div class="value">97.200</div>
+                        </div>
+                    </div>
+
+                    <!-- SEM opção de ARLA - posto não tem -->
+                    <div
+                        style="margin-top: 8px; padding: 8px 10px; background: #f5f5f5; border-radius: 8px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Este posto não oferece ARLA 32</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 10: Veículo a Gasolina (ARLA não se aplica) -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label">ESTADO 10: VEÍCULO GASOLINA (ARLA NÃO SE APLICA)</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card - Gasolina -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-car"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge" style="background: linear-gradient(135deg, #ff9800, #f57c00);">GHI7J89
+                        </div>
+                        <div class="vehicle-meta">
+                            <strong>Gasolina Comum</strong>
+                            Consumo: 12.5 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto BR
+                                <span class="badge badge-parceria">Parceria</span>
+                            </div>
+                            <div class="station-address">Rua das Flores, 100 - São Paulo</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="fuel-price-chip"
+                            style="display: inline-flex; gap: 8px; align-items: center; background: linear-gradient(135deg, #ff9800, #f57c00);">
+                            <span class="type">Gasolina:</span>
+                            <span class="price">R$ 6,29/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - SEM ARLA (gasolina não usa) -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-row">
+                        <div class="km-input-wrapper">
+                            <span class="km-label">KM Atual</span>
+                            <input type="text" class="km-input" value="45.230">
+                        </div>
+                        <div class="last-km-box">
+                            <div class="label">Último</div>
+                            <div class="value">44.800</div>
+                        </div>
+                    </div>
+
+                    <!-- ARLA não aparece para veículos a gasolina -->
+                </div>
+            </div>
+
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 11: KM Igual ou Menor (Alerta) -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label" style="background: #ff9800;">ESTADO 11: ALERTA - KM IGUAL OU MENOR QUE ÚLTIMO
+            </div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-truck"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge">ABC1D23</div>
+                        <div class="vehicle-meta">
+                            <strong>Diesel S10</strong>
+                            Consumo: 4.2 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon station"><i class="fas fa-check-circle"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto ZECA
+                                <span class="badge badge-autonomo">Autônomo</span>
+                            </div>
+                            <div class="station-address">Rua Quirino Roquetti, 235 - Ribeirão Preto</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <div class="fuel-price-chip" style="display: inline-flex; gap: 8px; align-items: center;">
+                            <span class="type">Diesel S10:</span>
+                            <span class="price">R$ 5,85/L</span>
+                        </div>
+                        <div class="fuel-price-chip"
+                            style="display: inline-flex; gap: 8px; align-items: center; background: linear-gradient(135deg, #2196f3, #1565c0);">
+                            <span class="type">ARLA 32:</span>
+                            <span class="price">R$ 4,50/L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - COM ALERTA -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-row">
+                        <div class="km-input-wrapper">
+                            <span class="km-label">KM Atual</span>
+                            <input type="text" class="km-input" value="123.500" style="border-color: #ff9800;">
+                        </div>
+                        <div class="last-km-box" style="background: #fff3e0; border: 1px solid #ff9800;">
+                            <div class="label">Último</div>
+                            <div class="value" style="color: #e65100;">123.850</div>
+                        </div>
+                    </div>
+
+                    <!-- KM WARNING - Alerta não bloqueante -->
+                    <div class="km-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="text">
+                            <div class="title">KM menor que o último registro</div>
+                            <div class="desc">O KM informado (123.500) é menor que o último registro (123.850).
+                                Verifique se está correto antes de continuar.</div>
+                        </div>
+                    </div>
+
+                    <!-- ARLA Option -->
+                    <div class="arla-option checked" onclick="this.classList.toggle('checked')">
+                        <div class="arla-checkbox"><i class="fas fa-check"></i></div>
+                        <span class="arla-text">Abastecer ARLA 32</span>
+                        <span class="arla-price">R$ 4,50/L</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão ainda habilitado (alerta não bloqueia) -->
+            <button class="generate-btn">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO
+            </button>
+        </div>
+
+        <!-- ================================== -->
+        <!-- ESTADO 12: Combustível não disponível na parceria -->
+        <!-- ================================== -->
+        <div class="phone-frame">
+            <div class="variant-label" style="background: #c62828;">ESTADO 12: ERRO - COMBUSTÍVEL NÃO DISPONÍVEL NA
+                PARCERIA</div>
+
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                        <h1>Novo Abastecimento</h1>
+                    </div>
+                    <button class="pending-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="pending-badge">3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Vehicle Card - Etanol -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon vehicle"><i class="fas fa-car"></i></div>
+                        <span class="card-title">Veículo Selecionado</span>
+                    </div>
+                    <div class="vehicle-row">
+                        <div class="plate-badge" style="background: linear-gradient(135deg, #4caf50, #2e7d32);">KLM8N01
+                        </div>
+                        <div class="vehicle-meta">
+                            <strong>Etanol</strong>
+                            Consumo: 8.5 km/L
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Station Validated Card - Mas sem combustível -->
+                <div class="card" style="border: 2px solid #ffcdd2;">
+                    <div class="card-header">
+                        <div class="card-icon error"><i class="fas fa-gas-pump"></i></div>
+                        <span class="card-title">Posto Validado</span>
+                    </div>
+                    <div class="station-validated">
+                        <div class="station-info">
+                            <div class="station-name">
+                                Posto Rodoviário Norte
+                                <span class="badge badge-parceria">Parceria</span>
+                            </div>
+                            <div class="station-address">BR-153, km 450 - Goiânia</div>
+                        </div>
+                        <button class="change-station-btn">
+                            <i class="fas fa-exchange-alt"></i>
+                            Trocar
+                        </button>
+                    </div>
+
+                    <!-- Combustíveis disponíveis na parceria -->
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 10px; color: #888; margin-bottom: 6px;">Combustíveis disponíveis nesta
+                            parceria:</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <div class="fuel-price-chip"
+                                style="display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; font-size: 12px;">
+                                <span class="type">Diesel S10:</span>
+                                <span class="price" style="font-size: 14px;">R$ 5,89/L</span>
+                            </div>
+                            <div class="fuel-price-chip"
+                                style="display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; font-size: 12px; background: linear-gradient(135deg, #607d8b, #455a64);">
+                                <span class="type">Diesel S500:</span>
+                                <span class="price" style="font-size: 14px;">R$ 5,69/L</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ERRO - Combustível não disponível -->
+                    <div class="error-message" style="margin-top: 12px;">
+                        <i class="fas fa-ban"></i>
+                        <div class="text">
+                            <div class="title">Etanol não disponível</div>
+                            <div class="desc">Este posto não possui <strong>Etanol</strong> na parceria com sua frota.
+                                Tente outro posto ou entre em contato com seu gestor.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KM Section - Desabilitada -->
+                <div class="card" style="opacity: 0.5;">
+                    <div class="card-header">
+                        <div class="card-icon fuel"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="card-title">Dados do Abastecimento</span>
+                    </div>
+                    <div class="km-input-wrapper">
+                        <span class="km-label">KM Atual</span>
+                        <input type="text" class="km-input" placeholder="Combustível não disponível" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão BLOQUEADO -->
+            <button class="generate-btn" disabled>
+                <i class="fas fa-ban"></i>
+                COMBUSTÍVEL NÃO DISPONÍVEL
+            </button>
+        </div>
+    </div>
+
+    <p style="color: #888; text-align: center; margin-top: 40px; font-size: 12px;">
+        Mockup Completo - Todos os Estados do Fluxo de Abastecimento (12 cenários)
+    </p>
+</body>
+
+</html>
