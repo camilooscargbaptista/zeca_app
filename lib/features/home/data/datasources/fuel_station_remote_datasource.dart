@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../models/fuel_station_model.dart';
+import '../models/nearby_station_model.dart';
 import '../models/fuel_type_model.dart';
 
 abstract class FuelStationRemoteDataSource {
@@ -9,7 +10,7 @@ abstract class FuelStationRemoteDataSource {
   Future<FuelStationModel> validateStation(String cnpj);
   Future<FuelStationModel> validateStationByCnpj(String cnpj);
   Future<FuelStationModel> getStationById(String id);
-  Future<List<FuelStationModel>> getNearbyStations(double latitude, double longitude, double radiusKm);
+  Future<List<NearbyStationModel>> getNearbyStations(double latitude, double longitude, double radiusKm);
   Future<Map<String, double>> getStationPrices(String stationId);
   Future<List<FuelPriceModel>> getFuelPrices();
   Future<List<FuelTypeModel>> getFuelTypes();
@@ -53,7 +54,7 @@ class FuelStationRemoteDataSourceImpl implements FuelStationRemoteDataSource {
   }
   
   @override
-  Future<List<FuelStationModel>> getNearbyStations(
+  Future<List<NearbyStationModel>> getNearbyStations(
     double latitude,
     double longitude,
     double radiusKm,
@@ -61,13 +62,16 @@ class FuelStationRemoteDataSourceImpl implements FuelStationRemoteDataSource {
     final response = await _client.get(
       ApiConstants.nearbyStations,
       queryParameters: {
-        'latitude': latitude,
-        'longitude': longitude,
-        'radius': radiusKm,
+        'lat': latitude,
+        'lng': longitude,
+        'radius': radiusKm.toInt(),
       },
     );
+    
+    // O backend novo retorna { success: true, data: [...], meta: {...} }
+    // As vezes o DioClient já extrai o data se tiver interceptor, mas vou assumir response.data['data']
     final List<dynamic> stationsJson = response.data['data'];
-    return stationsJson.map((json) => FuelStationModel.fromJson(json)).toList();
+    return stationsJson.map((json) => NearbyStationModel.fromJson(json)).toList();
   }
   
   @override

@@ -57,6 +57,8 @@ import 'package:zeca_app/features/home/domain/usecases/search_vehicle_usecase.da
     as _i292;
 import 'package:zeca_app/features/home/domain/usecases/validate_station_usecase.dart'
     as _i32;
+import 'package:zeca_app/features/home/presentation/bloc/nearby_stations/nearby_stations_bloc.dart'
+    as _i434;
 import 'package:zeca_app/features/home/presentation/bloc/refueling_form_bloc.dart'
     as _i23;
 import 'package:zeca_app/features/home/presentation/bloc/vehicle_bloc.dart'
@@ -216,6 +218,8 @@ extension GetItInjectableX on _i174.GetIt {
           getNearbyStationsUseCase: gh<_i85.GetNearbyStationsUseCase>(),
           validateStationUseCase: gh<_i32.ValidateStationUseCase>(),
         ));
+    gh.factory<_i434.NearbyStationsBloc>(
+        () => _i434.NearbyStationsBloc(gh<_i85.GetNearbyStationsUseCase>()));
     return this;
   }
 }

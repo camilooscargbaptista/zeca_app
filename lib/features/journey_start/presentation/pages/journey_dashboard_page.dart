@@ -68,8 +68,11 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
   Future<void> _fetchDashboardSummary() async {
     try {
       final apiService = ApiService();
-      debugPrint('🔄 Chamando GET /drivers/dashboard-summary...');
-      final response = await apiService.get('/drivers/dashboard-summary');
+      // Pegar placa do veículo para filtrar economia e último abastecimento
+      final plate = _vehicleData?['placa'] ?? _vehicleData?['plate'] ?? '';
+      final queryParam = plate.isNotEmpty ? '?plate=$plate' : '';
+      debugPrint('🔄 Chamando GET /drivers/dashboard-summary$queryParam...');
+      final response = await apiService.get('/drivers/dashboard-summary$queryParam');
       debugPrint('📥 Response type: ${response.runtimeType}');
       debugPrint('📥 Response: $response');
       
@@ -236,6 +239,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                       _buildEconomyCard(),
                       const SizedBox(height: 14),
                       
+                      // Quick Actions
                       // Quick Actions
                       _buildSectionTitle('Acesso Rápido'),
                       const SizedBox(height: 10),
@@ -565,7 +569,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
         const SizedBox(width: 10),
         Expanded(child: _buildActionItem(Icons.receipt_long, 'Histórico', _zecaPurple, onTap: () => context.push('/refueling-history'))),
         const SizedBox(width: 10),
-        Expanded(child: _buildActionItem(Icons.location_on, 'Postos', _zecaGreen)),
+        Expanded(child: _buildActionItem(Icons.location_on, 'Postos', _zecaGreen, onTap: () => context.push('/nearby-stations'))),
         const SizedBox(width: 10),
         Expanded(child: _buildActionItem(Icons.directions_car, 'Veículos', _zecaBlue)),
       ],

@@ -28,6 +28,7 @@ import '../features/autonomous/presentation/pages/autonomous_journey_start_page.
 import '../features/autonomous/presentation/pages/autonomous_first_access_page.dart';
 import '../features/autonomous/presentation/bloc/autonomous_registration_bloc.dart';
 import '../features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart';
+import '../features/home/presentation/pages/nearby_stations_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -193,6 +194,11 @@ class AppRouter {
         path: '/autonomous/first-access',
         name: 'autonomous-first-access',
         builder: (context, state) => const AutonomousFirstAccessPage(),
+      ),
+      GoRoute(
+        path: '/nearby-stations',
+        name: 'nearby-stations',
+        builder: (context, state) => const NearbyStationsPage(),
       ),
     ],
     errorBuilder: (context, state) {

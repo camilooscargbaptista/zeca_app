@@ -25,7 +25,7 @@ class ApiConstants {
   static const String fuelStations = '/api/v1/fuel-stations';
   static const String validateStation = '/api/v1/fuel-stations/validate';
   static const String stationPrices = '/api/v1/fuel-stations/{id}/prices';
-  static const String nearbyStations = '/api/v1/fuel-stations/nearby';
+  static const String nearbyStations = '/companies/stations/nearby';
   
   // Fuel Types
   static const String fuelTypes = '/api/v1/fuel-types';

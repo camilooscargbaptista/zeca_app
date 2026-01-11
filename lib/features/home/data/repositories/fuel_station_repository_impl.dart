@@ -26,7 +26,35 @@ class FuelStationRepositoryImpl implements FuelStationRepository {
         longitude,
         radius.toDouble(),
       );
-      final stationEntities = stationModels.map((model) => model.toEntity()).toList();
+      
+      final stationEntities = stationModels.map((model) {
+        // Adapter: NearbyStationModel -> FuelStationEntity
+        return FuelStationEntity(
+          id: model.id,
+          cnpj: model.cnpj,
+          razaoSocial: model.name, // Nearby retorna 'name', usamos como razao para compatibilidade
+          nomeFantasia: model.name,
+          endereco: FuelStationAddressEntity(
+            logradouro: model.address.street,
+            numero: model.address.number ?? 'S/N',
+            bairro: '', // Não vem no nearby
+            cidade: model.address.city,
+            uf: model.address.state,
+            cep: '', // Não vem no nearby
+            latitude: model.latitude,
+            longitude: model.longitude,
+          ),
+          conveniado: model.isPartner,
+          precos: model.pricesMap, // Usando o getter que converte List para Map
+          servicos: [], // Não vem no nearby
+          formasPagamento: [], // Não vem no nearby
+          ativo: true,
+          distanciaKm: model.distanceKm,
+          contato: null,
+          avaliacao: null,
+        );
+      }).toList();
+      
       return Right(stationEntities);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));

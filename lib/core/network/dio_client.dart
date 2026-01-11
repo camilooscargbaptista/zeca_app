@@ -3,6 +3,8 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../errors/exceptions.dart';
 import '../config/api_config.dart';
+import '../services/storage_service.dart';
+import '../di/injection.dart';
 
 class DioClient {
   late Dio _dio;
@@ -47,7 +49,16 @@ class DioClient {
           }
 
           // Add auth token if available
-          // TODO: Add token from secure storage
+          try {
+            final storageService = getIt<StorageService>();
+            final token = await storageService.getAccessToken();
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          } catch (e) {
+            print('Erro ao obter token no DioClient: $e');
+          }
+          
           handler.next(options);
         },
         onResponse: (response, handler) {
