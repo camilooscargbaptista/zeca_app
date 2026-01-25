@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
+
 
 class AutonomousJourneyStartPage extends StatefulWidget {
   const AutonomousJourneyStartPage({Key? key}) : super(key: key);
@@ -264,7 +266,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
           ),
         ],
       ),
-      drawer: _buildDrawer(primaryColor),
+      drawer: const AppDrawer(),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -435,100 +437,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
     );
   }
   
-  /// Drawer lateral menu
-  Widget _buildDrawer(Color primaryColor) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [primaryColor, primaryColor.withOpacity(0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: primaryColor),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _driverInfo['name'] ?? 'Motorista',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Text(
-                      _driverInfo['cpf'] ?? '',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Autônomo',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.person, color: primaryColor),
-            title: const Text('Meu Perfil'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: Icon(Icons.directions_car, color: primaryColor),
-            title: const Text('Meus Veículos'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/autonomous/vehicles');
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.settings, color: primaryColor),
-            title: const Text('Configurações'),
-            onTap: () => Navigator.pop(context),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.exit_to_app, color: Colors.red),
-            title: const Text('Sair', style: TextStyle(color: Colors.red)),
-            onTap: () async {
-              Navigator.pop(context);
-              final storageService = getIt<StorageService>();
-              await storageService.clearJourneyVehicleData();
-              await storageService.delete('user_data');
-              await storageService.delete('access_token');
-              if (mounted) context.go('/login');
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // REMOVIDO: _buildDrawer() - Agora usa AppDrawer unificado (lib/shared/widgets/app_drawer.dart)
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(

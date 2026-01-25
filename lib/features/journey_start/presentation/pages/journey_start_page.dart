@@ -7,7 +7,9 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/user_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
+
 
 class JourneyStartPage extends StatefulWidget {
   const JourneyStartPage({Key? key}) : super(key: key);
@@ -527,7 +529,7 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
           ),
         ],
       ),
-      drawer: _buildDrawer(),
+      drawer: const AppDrawer(),
       // NOVO: Botão fixo no rodapé
       bottomNavigationBar: _vehicleSearched && _vehicleData != null
           ? SafeArea(
@@ -728,133 +730,7 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.zecaBlue, AppColors.zecaBlue.withOpacity(0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const CircleAvatar(
-                  radius: 32,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppColors.zecaBlue,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (_userData != null) ...[
-                  Text(
-                    _userData!['nome'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        _userData!['cpf'],
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                      if (_isAutonomous) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Autônomo',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person, color: AppColors.zecaBlue),
-            title: const Text('Meu Perfil'),
-            onTap: () {
-              Navigator.pop(context);
-              ErrorDialog.show(context, title: 'Em Desenvolvimento', message: 'Funcionalidade de perfil em desenvolvimento.');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings, color: AppColors.zecaBlue),
-            title: const Text('Configurações'),
-            onTap: () {
-              Navigator.pop(context);
-              ErrorDialog.show(context, title: 'Em Desenvolvimento', message: 'Funcionalidade de configurações em desenvolvimento.');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.help_outline, color: AppColors.zecaBlue),
-            title: const Text('Ajuda'),
-            onTap: () {
-              Navigator.pop(context);
-              ErrorDialog.show(context, title: 'Em Desenvolvimento', message: 'Funcionalidade de ajuda em desenvolvimento.');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.exit_to_app, color: Colors.red),
-            title: const Text('Sair', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              Navigator.pop(context);
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  title: const Text('Confirmar Saída'),
-                  content: const Text('Deseja realmente sair do aplicativo?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _handleLogout();
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Sair'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // REMOVIDO: _buildDrawer() - Agora usa AppDrawer unificado (lib/shared/widgets/app_drawer.dart)
 
   Widget _buildWelcomeCard() {
     // Extrair iniciais do nome

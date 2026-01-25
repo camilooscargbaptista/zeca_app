@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
+
 
 /// Tela exibida quando o autônomo faz login pela primeira vez
 /// e ainda não tem nenhum veículo cadastrado.
@@ -73,48 +75,8 @@ class AutonomousFirstAccessPage extends StatelessWidget {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: primaryColor,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: const [
-                  Icon(Icons.account_circle, size: 60, color: Colors.white),
-                  SizedBox(height: 8),
-                  Text(
-                    'Motorista Autônomo',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.home, color: primaryColor),
-              title: const Text('Início'),
-              onTap: () => Navigator.of(context).pop(),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Sair', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.of(context).pop();
-                _logout(context);
-              },
-            ),
-          ],
-        ),
-      ),
+      drawer: const AppDrawer(),
+      // REMOVIDO: Drawer inline - Agora usa AppDrawer unificado (lib/shared/widgets/app_drawer.dart)
       body: Column(
         children: [
           // Conteúdo central
