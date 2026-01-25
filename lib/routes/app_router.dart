@@ -33,6 +33,8 @@ import '../features/home/presentation/pages/nearby_stations_page.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/verify_token_page.dart';
 import '../features/auth/presentation/pages/reset_password_page.dart';
+// Profile imports
+import '../features/profile/presentation/pages/profile_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -228,6 +230,12 @@ class AppRouter {
         path: '/nearby-stations',
         name: 'nearby-stations',
         builder: (context, state) => const NearbyStationsPage(),
+      ),
+      // Profile route
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfilePage(),
       ),
     ],
     errorBuilder: (context, state) {

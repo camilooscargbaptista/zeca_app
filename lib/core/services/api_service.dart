@@ -2114,4 +2114,91 @@ class ApiService {
       return {};
     }
   }
+
+  // ============================================================
+  // AUTONOMOUS ACCOUNT DELETION
+  // ============================================================
+
+  /// Verificar se o autônomo pode excluir a conta
+  /// Endpoint: GET /autonomous/account/can-delete
+  Future<Map<String, dynamic>> checkCanDeleteAccount() async {
+    try {
+      final response = await _dio.get('/autonomous/account/can-delete');
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Excluir conta do autônomo (LGPD compliant)
+  /// Endpoint: DELETE /autonomous/account
+  Future<Map<String, dynamic>> deleteAccount({
+    required String confirmationPassword,
+    String? reason,
+    String? feedback,
+  }) async {
+    try {
+      final response = await _dio.delete(
+        '/autonomous/account',
+        data: {
+          'confirmation_password': confirmationPassword,
+          if (reason != null) 'reason': reason,
+          if (feedback != null) 'feedback': feedback,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      // Tratar erro 401 (senha incorreta)
+      if (e.response?.statusCode == 401) {
+        return {
+          'success': false,
+          'error': 'Senha incorreta',
+        };
+      }
+      // Tratar erro 400 (pendências)
+      if (e.response?.statusCode == 400) {
+        final errorData = e.response?.data;
+        if (errorData is Map) {
+          return {
+            'success': false,
+            'error': errorData['message'] ?? 'Não é possível excluir a conta',
+          };
+        }
+      }
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
 }
+

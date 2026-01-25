@@ -108,12 +108,68 @@ class AppDrawer extends StatelessWidget {
               //     }
               //   },
               // ),
-              const Divider(),
+              
+              // Menu Item: Meu Perfil
               ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Sair'),
+                leading: const Icon(Icons.person, color: AppColors.zecaBlue),
+                title: const Text('Meu Perfil'),
+                selected: currentRoute == '/profile',
+                selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
                 onTap: () {
-                  Navigator.of(context).pop(); // Fechar o drawer
+                  Navigator.of(context).pop();
+                  context.push('/profile');
+                },
+              ),
+              
+              // Menu Item: Meus Veículos (apenas para autônomos - TODO: verificar tipo)
+              ListTile(
+                leading: const Icon(Icons.directions_car, color: AppColors.zecaBlue),
+                title: const Text('Meus Veículos'),
+                selected: currentRoute == '/autonomous/vehicles',
+                selectedTileColor: AppColors.zecaBlue.withOpacity(0.1),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/autonomous/vehicles');
+                },
+              ),
+              
+              // Menu Item: Histórico
+              ListTile(
+                leading: const Icon(Icons.history, color: AppColors.zecaBlue),
+                title: const Text('Histórico'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // TODO: Navegar para histórico quando implementado
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Histórico em desenvolvimento')),
+                  );
+                },
+              ),
+              
+              // Menu Item: Configurações
+              ListTile(
+                leading: const Icon(Icons.settings, color: AppColors.zecaBlue),
+                title: const Text('Configurações'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  // TODO: Navegar para configurações quando implementado
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Configurações em desenvolvimento')),
+                  );
+                },
+              ),
+              
+              const Divider(),
+              
+              // Menu Item: Sair
+              ListTile(
+                leading: Icon(Icons.logout, color: AppColors.error),
+                title: Text(
+                  'Sair',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
                   context.go('/login');
                 },
               ),

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA App - Mockup Meu Perfil</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #2A70C0;
+            --zeca-blue-dark: #1E5A9A;
+            --zeca-green: #28A745;
+            --zeca-orange: #FF8C00;
+            --zeca-error: #DC3545;
+            --grey-50: #FAFAFA;
+            --grey-100: #F5F5F5;
+            --grey-200: #EEEEEE;
+            --grey-500: #9E9E9E;
+            --grey-600: #757575;
+            --grey-800: #424242;
+            --grey-900: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--grey-900);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--grey-600);
+            margin-bottom: 30px;
+        }
+
+        .mockups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            justify-items: center;
+        }
+
+        .mockup-wrapper {
+            text-align: center;
+        }
+
+        .mockup-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--grey-800);
+            margin-bottom: 12px;
+            padding: 8px 16px;
+            background: #fff;
+            border-radius: 20px;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mockup-title.autonomo {
+            border-left: 4px solid var(--zeca-orange);
+        }
+
+        .mockup-title.frotista {
+            border-left: 4px solid var(--zeca-green);
+        }
+
+        .mockup-title.modal {
+            border-left: 4px solid var(--zeca-error);
+        }
+
+        .phone-frame {
+            width: 320px;
+            height: 640px;
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* AppBar */
+        .appbar {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .appbar .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .appbar .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .appbar h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Content */
+        .content {
+            padding: 20px 16px;
+            overflow-y: auto;
+            height: calc(100% - 56px);
+            background: var(--grey-50);
+        }
+
+        /* Avatar Section */
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 0;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(42, 112, 192, 0.3);
+        }
+
+        .user-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--grey-900);
+            margin-bottom: 4px;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .user-badge.autonomo {
+            background: var(--zeca-orange);
+            color: white;
+        }
+
+        .user-badge.frotista {
+            background: var(--zeca-green);
+            color: white;
+        }
+
+        /* Info Cards */
+        .info-section {
+            margin-top: 16px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(42, 112, 192, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--grey-500);
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--grey-900);
+        }
+
+        /* Delete Button */
+        .delete-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--grey-200);
+        }
+
+        .delete-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: transparent;
+            border: 2px solid var(--zeca-error);
+            border-radius: 12px;
+            color: var(--zeca-error);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: var(--zeca-error);
+            color: white;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 300px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--grey-200);
+        }
+
+        .modal-header .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-error);
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            color: var(--zeca-error);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body p {
+            font-size: 14px;
+            color: var(--grey-600);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .form-field {
+            margin-bottom: 16px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--grey-600);
+            margin-bottom: 6px;
+        }
+
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--grey-200);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: var(--zeca-blue);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--grey-50);
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: var(--grey-600);
+            border: 1px solid var(--grey-200) !important;
+        }
+
+        .btn-confirm {
+            background: var(--zeca-error);
+            color: white;
+        }
+
+        /* Legend */
+        .legend {
+            margin-top: 40px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend h3 {
+            font-size: 16px;
+            color: var(--grey-800);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--grey-100);
+        }
+
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .legend-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .legend-content h4 {
+            font-size: 14px;
+            color: var(--grey-900);
+            margin-bottom: 4px;
+        }
+
+        .legend-content p {
+            font-size: 12px;
+            color: var(--grey-500);
+            line-height: 1.4;
+        }
+
+        .api-endpoint {
+            font-family: monospace;
+            background: var(--grey-100);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--zeca-blue-dark);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎨 Mockup: Tela "Meu Perfil"</h1>
+        <p class="subtitle">ZECA App - Visualização de dados pessoais e encerramento de conta</p>
+
+        <div class="mockups-grid">
+            <!-- Perfil Autônomo -->
+            <div class="mockup-wrapper">
+                <div class="mockup-title autonomo">👤 Perfil - Autônomo</div>
+                <div class="phone-frame">
+                    <div class="appbar">
+                        <div class="back-btn">
+                            <span class="material-icons">arrow_back</span>
+                        </div>
+                        <h2>Meu Perfil</h2>
+                    </div>
+                    <div class="content">
+                        <div class="avatar-section">
+                            <div class="avatar">PA</div>
+                            <div class="user-name">Pedro Augusto Silva</div>
+                            <span class="user-badge autonomo">
+                                <span class="material-icons" style="font-size: 14px;">local_shipping</span>
+                                Autônomo
+                            </span>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">badge</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">CPF</div>
+                                    <div class="info-value">270.315.810-60</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">email</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">E-mail</div>
+                                    <div class="info-value">pedro.silva@email.com</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">phone</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Telefone</div>
+                                    <div class="info-value">(11) 99999-9999</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">business</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Empresa</div>
+                                    <div class="info-value">Pedro Augusto Silva MEI</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="delete-section">
+                            <button class="delete-btn">
+                                <span class="material-icons">delete_forever</span>
+                                Encerrar Conta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Perfil Frotista -->
+            <div class="mockup-wrapper">
+                <div class="mockup-title frotista">👤 Perfil - Frotista</div>
+                <div class="phone-frame">
+                    <div class="appbar">
+                        <div class="back-btn">
+                            <span class="material-icons">arrow_back</span>
+                        </div>
+                        <h2>Meu Perfil</h2>
+                    </div>
+                    <div class="content">
+                        <div class="avatar-section">
+                            <div class="avatar">JC</div>
+                            <div class="user-name">João Carlos Oliveira</div>
+                            <span class="user-badge frotista">
+                                <span class="material-icons" style="font-size: 14px;">groups</span>
+                                Frotista
+                            </span>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">badge</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">CPF</div>
+                                    <div class="info-value">123.456.789-00</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">email</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">E-mail</div>
+                                    <div class="info-value">joao@transportadora.com</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">phone</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Telefone</div>
+                                    <div class="info-value">(11) 98888-8888</div>
+                                </div>
+                            </div>
+
+                            <div class="info-card">
+                                <div class="info-icon">
+                                    <span class="material-icons">business</span>
+                                </div>
+                                <div class="info-content">
+                                    <div class="info-label">Empresa</div>
+                                    <div class="info-value">Transportadora ABC Ltda</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sem botão de encerrar conta para frotista -->
+                        <div
+                            style="margin-top: 32px; padding: 16px; background: rgba(40, 167, 69, 0.1); border-radius: 12px; text-align: center;">
+                            <span class="material-icons"
+                                style="color: var(--zeca-green); font-size: 32px;">verified_user</span>
+                            <p style="font-size: 12px; color: var(--grey-600); margin-top: 8px;">
+                                Para alterações no cadastro,<br>entre em contato com o gestor da frota.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Encerrar Conta -->
+            <div class="mockup-wrapper">
+                <div class="mockup-title modal">⚠️ Modal - Encerrar Conta</div>
+                <div class="phone-frame">
+                    <div class="appbar">
+                        <div class="back-btn">
+                            <span class="material-icons">arrow_back</span>
+                        </div>
+                        <h2>Meu Perfil</h2>
+                    </div>
+                    <div class="content" style="filter: blur(2px);">
+                        <div class="avatar-section">
+                            <div class="avatar">PA</div>
+                            <div class="user-name">Pedro Augusto Silva</div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Overlay -->
+                    <div class="modal-overlay">
+                        <div class="modal">
+                            <div class="modal-header">
+                                <div class="icon">
+                                    <span class="material-icons">warning</span>
+                                </div>
+                                <h3>Encerrar Conta</h3>
+                            </div>
+                            <div class="modal-body">
+                                <p>
+                                    <strong>Atenção:</strong> Esta ação é irreversível. Todos os seus dados serão
+                                    anonimizados conforme a LGPD.
+                                </p>
+
+                                <div class="form-field">
+                                    <label>Senha de confirmação *</label>
+                                    <input type="password" placeholder="Digite sua senha">
+                                </div>
+
+                                <div class="form-field">
+                                    <label>Motivo (opcional)</label>
+                                    <select>
+                                        <option>Selecione um motivo...</option>
+                                        <option>Não uso mais o serviço</option>
+                                        <option>Encontrei outro serviço</option>
+                                        <option>Problemas com o app</option>
+                                        <option>Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-actions">
+                                <button class="btn-cancel">Cancelar</button>
+                                <button class="btn-confirm">Confirmar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h3>
+                <span class="material-icons">info</span>
+                Especificações Técnicas
+            </h3>
+
+            <div class="legend-item">
+                <div class="legend-icon" style="background: rgba(42, 112, 192, 0.1); color: var(--zeca-blue);">
+                    <span class="material-icons">storage</span>
+                </div>
+                <div class="legend-content">
+                    <h4>Fonte dos Dados</h4>
+                    <p>Dados carregados do <code>StorageService.getUserData()</code> - salvos no login. Sem chamada de
+                        API adicional.</p>
+                </div>
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-icon" style="background: rgba(255, 140, 0, 0.1); color: var(--zeca-orange);">
+                    <span class="material-icons">local_shipping</span>
+                </div>
+                <div class="legend-content">
+                    <h4>Detecção de Autônomo</h4>
+                    <p>
+                        Verificado via <code>company.type == 'AUTONOMO'</code><br>
+                        Botão "Encerrar Conta" só aparece para autônomos.
+                    </p>
+                </div>
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-icon" style="background: rgba(220, 53, 69, 0.1); color: var(--zeca-error);">
+                    <span class="material-icons">api</span>
+                </div>
+                <div class="legend-content">
+                    <h4>Endpoints de Encerramento</h4>
+                    <p>
+                        <span class="api-endpoint">GET /autonomous/account/can-delete</span> - Verifica pendências<br>
+                        <span class="api-endpoint">DELETE /autonomous/account</span> - Exclui conta (LGPD)
+                    </p>
+                </div>
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-icon" style="background: rgba(40, 167, 69, 0.1); color: var(--zeca-green);">
+                    <span class="material-icons">security</span>
+                </div>
+                <div class="legend-content">
+                    <h4>Segurança</h4>
+                    <p>
+                        Confirmação de senha obrigatória para encerrar conta.<br>
+                        Motivo é opcional mas ajuda a melhorar o produto.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
