@@ -528,6 +528,17 @@ class ApiService {
           'error': 'Posto não encontrado',
         };
       }
+      // Extrair mensagem de erro do backend para 400
+      if (e.response?.statusCode == 400) {
+        final errorData = e.response?.data;
+        if (errorData is Map) {
+          final message = errorData['message'] ?? errorData['error'] ?? 'Erro de validação';
+          return {
+            'success': false,
+            'error': message.toString(),
+          };
+        }
+      }
       return _handleDioError(e);
     } catch (e) {
       return {
@@ -1931,6 +1942,144 @@ class ApiService {
       }
     } on DioException catch (e) {
       return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  // ============================================
+  // PASSWORD RESET VIA CPF
+  // ============================================
+
+  /// Solicitar recuperação de senha via CPF
+  /// POST /auth/forgot-password/cpf
+  Future<Map<String, dynamic>> forgotPasswordByCpf(String cpf) async {
+    try {
+      // Remover máscara do CPF
+      final cleanCpf = cpf.replaceAll(RegExp(r'[^\d]'), '');
+      
+      final response = await _dio.post(
+        '/auth/forgot-password/cpf',
+        data: {'cpf': cleanCpf},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': response.data['message'] ?? 'Se o CPF estiver cadastrado, um email será enviado.',
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      // Sempre retornar sucesso para não revelar se CPF existe
+      return {
+        'success': true,
+        'message': 'Se o CPF estiver cadastrado, um email será enviado.',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Verificar token de recuperação de senha
+  /// POST /auth/verify-reset-token
+  Future<Map<String, dynamic>> verifyResetToken({
+    required String cpf,
+    required String token,
+  }) async {
+    try {
+      final cleanCpf = cpf.replaceAll(RegExp(r'[^\d]'), '');
+      
+      final response = await _dio.post(
+        '/auth/verify-reset-token',
+        data: {
+          'cpf': cleanCpf,
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'valid': response.data['valid'] ?? false,
+        };
+      } else {
+        return {
+          'success': false,
+          'valid': false,
+          'error': 'Erro no servidor',
+        };
+      }
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      return {
+        'success': false,
+        'valid': false,
+        'error': errorData?['message'] ?? 'Código inválido ou expirado',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'valid': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Redefinir senha via CPF
+  /// POST /auth/reset-password/cpf
+  Future<Map<String, dynamic>> resetPasswordByCpf({
+    required String cpf,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final cleanCpf = cpf.replaceAll(RegExp(r'[^\d]'), '');
+      
+      final response = await _dio.post(
+        '/auth/reset-password/cpf',
+        data: {
+          'cpf': cleanCpf,
+          'token': token,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': response.data['message'] ?? 'Senha alterada com sucesso',
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      String errorMessage = 'Erro ao redefinir senha';
+      
+      if (errorData is Map) {
+        errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
+      }
+      
+      return {
+        'success': false,
+        'error': errorMessage,
+      };
     } catch (e) {
       return {
         'success': false,
