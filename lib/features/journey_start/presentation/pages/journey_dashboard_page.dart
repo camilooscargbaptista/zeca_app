@@ -5,7 +5,9 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
+
 
 class JourneyDashboardPage extends StatefulWidget {
   const JourneyDashboardPage({Key? key}) : super(key: key);
@@ -213,7 +215,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: _bgGray,
-      drawer: _buildDrawer(),
+      drawer: const AppDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
@@ -919,95 +921,5 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     );
   }
 
-  Widget _buildDrawer() {
-    final driverName = _vehicleData?['driver_name'] ?? 'Motorista';
-    
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_zecaBlue, _zecaBlueDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white24,
-                  child: Icon(Icons.person, color: Colors.white, size: 36),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  driverName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Autônomo',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Meu Perfil'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.directions_car),
-            title: const Text('Meus Veículos'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/autonomous/vehicles');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.receipt_long),
-            title: const Text('Histórico'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/refueling-history');
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Configurações'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.exit_to_app, color: Colors.red),
-            title: const Text('Sair', style: TextStyle(color: Colors.red)),
-            onTap: () async {
-              Navigator.pop(context);
-              final storageService = getIt<StorageService>();
-              await storageService.clearTokens();
-              if (mounted) {
-                context.go('/login');
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // REMOVIDO: _buildDrawer() - Agora usa AppDrawer unificado (lib/shared/widgets/app_drawer.dart)
 }
