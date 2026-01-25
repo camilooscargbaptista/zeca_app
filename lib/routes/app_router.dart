@@ -29,6 +29,10 @@ import '../features/autonomous/presentation/pages/autonomous_first_access_page.d
 import '../features/autonomous/presentation/bloc/autonomous_registration_bloc.dart';
 import '../features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart';
 import '../features/home/presentation/pages/nearby_stations_page.dart';
+// Password Reset imports
+import '../features/auth/presentation/pages/forgot_password_page.dart';
+import '../features/auth/presentation/pages/verify_token_page.dart';
+import '../features/auth/presentation/pages/reset_password_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -47,6 +51,31 @@ class AppRouter {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginPageSimple(),
+      ),
+      // Password Reset Routes
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password/verify',
+        name: 'verify-token',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final cpf = extra?['cpf'] as String? ?? '';
+          return VerifyTokenPage(cpf: cpf);
+        },
+      ),
+      GoRoute(
+        path: '/forgot-password/reset',
+        name: 'reset-password',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final cpf = extra?['cpf'] as String? ?? '';
+          final token = extra?['token'] as String? ?? '';
+          return ResetPasswordPage(cpf: cpf, token: token);
+        },
       ),
       GoRoute(
         path: '/home',

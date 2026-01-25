@@ -235,7 +235,7 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
                 // Link Esqueci minha senha
                 TextButton(
                   onPressed: () {
-                    _showForgotPasswordDialog();
+                    context.push('/forgot-password');
                   },
                   child: const Text('Esqueci minha senha'),
                 ),
