@@ -233,6 +233,36 @@ class _RefuelingDetailsPageState extends State<RefuelingDetailsPage> {
   }
 
   Widget _buildDetailsCard() {
+    // Helper para extrair nome de campos que podem ser String ou Map
+    String _extractName(dynamic value, [String fallback = '--']) {
+      if (value == null) return fallback;
+      if (value is String) return value;
+      if (value is Map) {
+        // Tenta extrair 'name' ou 'plate' do objeto
+        return value['name']?.toString() 
+            ?? value['plate']?.toString() 
+            ?? value['code']?.toString()
+            ?? fallback;
+      }
+      return value.toString();
+    }
+
+    // Extrair valores de forma segura
+    final stationName = _data!['station']?['company_name'] 
+        ?? _data!['station']?['name']
+        ?? _data!['station_name'] 
+        ?? '--';
+    final vehiclePlate = _data!['vehicle']?['plate'] 
+        ?? _data!['vehicle_plate'] 
+        ?? '--';
+    final fuelType = _extractName(_data!['fuel_type']);
+    final driverName = _data!['driver']?['name'] 
+        ?? _data!['driver_name'] 
+        ?? '--';
+    final transporterName = _data!['transporter']?['name'] 
+        ?? _data!['transporter_name'] 
+        ?? '--';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -241,11 +271,11 @@ class _RefuelingDetailsPageState extends State<RefuelingDetailsPage> {
           children: [
             Text('Detalhes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.grey800)),
             const SizedBox(height: 12),
-            _detailRow(Icons.local_gas_station, 'Posto', _data!['station_name'] ?? '--'),
-            _detailRow(Icons.directions_car, 'Veículo', _data!['vehicle_plate'] ?? '--'),
-            _detailRow(Icons.local_drink, 'Combustível', _data!['fuel_type'] ?? '--'),
-            _detailRow(Icons.person, 'Motorista', _data!['driver_name'] ?? '--'),
-            _detailRow(Icons.business, 'Transportadora', _data!['transporter_name'] ?? '--'),
+            _detailRow(Icons.local_gas_station, 'Posto', stationName.toString()),
+            _detailRow(Icons.directions_car, 'Veículo', vehiclePlate.toString()),
+            _detailRow(Icons.local_drink, 'Combustível', fuelType),
+            _detailRow(Icons.person, 'Motorista', driverName.toString()),
+            _detailRow(Icons.business, 'Transportadora', transporterName.toString()),
           ],
         ),
       ),
