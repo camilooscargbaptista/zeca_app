@@ -38,6 +38,12 @@ import '../features/profile/presentation/pages/profile_page.dart';
 // History imports
 import '../features/history/presentation/pages/history_page.dart';
 import '../features/history/presentation/pages/refueling_details_page.dart';
+// Change Password imports
+import '../features/change_password/presentation/pages/change_password_page.dart';
+import '../features/change_password/presentation/bloc/change_password_bloc.dart';
+import '../features/change_password/data/repositories/change_password_repository.dart';
+import '../features/change_password/domain/usecases/change_password_usecase.dart';
+import '../features/auth/presentation/bloc/auth_bloc.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -252,6 +258,21 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return RefuelingDetailsPage(refuelingId: id);
+        },
+      ),
+      // Change Password route
+      GoRoute(
+        path: '/change-password',
+        name: 'change-password',
+        builder: (context, state) {
+          final apiService = getIt<ApiService>();
+          final repository = ChangePasswordRepository(apiService);
+          final useCase = ChangePasswordUseCase(repository);
+          final authBloc = context.read<AuthBloc>();
+          return BlocProvider(
+            create: (_) => ChangePasswordBloc(useCase, authBloc),
+            child: const ChangePasswordPage(),
+          );
         },
       ),
     ],

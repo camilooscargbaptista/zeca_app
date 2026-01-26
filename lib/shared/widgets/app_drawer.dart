@@ -172,16 +172,13 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
                 
-                // Configurações
+                // Alterar Senha
                 _buildMenuItem(
-                  icon: Icons.settings,
-                  title: 'Configurações',
+                  icon: Icons.lock_reset,
+                  title: 'Alterar Senha',
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navegar para tela de configurações quando implementada
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Configurações em desenvolvimento')),
-                    );
+                    context.push('/change-password');
                   },
                 ),
                 
