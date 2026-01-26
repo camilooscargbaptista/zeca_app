@@ -37,6 +37,7 @@ import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
 // History imports
 import '../features/history/presentation/pages/history_page.dart';
+import '../features/history/presentation/pages/refueling_details_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -244,6 +245,14 @@ class AppRouter {
         path: '/history',
         name: 'history',
         builder: (context, state) => const HistoryPage(),
+      ),
+      GoRoute(
+        path: '/history/:id',
+        name: 'refueling-details',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return RefuelingDetailsPage(refuelingId: id);
+        },
       ),
     ],
     errorBuilder: (context, state) {
