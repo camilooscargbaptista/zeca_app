@@ -1950,6 +1950,32 @@ class ApiService {
     }
   }
 
+  /// Método DELETE genérico para requisições HTTP
+  Future<Map<String, dynamic>> delete(String path, {Map<String, dynamic>? data}) async {
+    try {
+      final response = await _dio.delete(path, data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'Erro no servidor: ${response.statusCode}',
+        };
+      }
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
   // ============================================
   // PASSWORD RESET VIA CPF
   // ============================================

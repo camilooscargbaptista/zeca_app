@@ -12,6 +12,7 @@ class AutonomousVehiclesPage extends StatefulWidget {
 
 class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
   bool _isLoading = true;
+  bool _isDeleting = false;
   String? _error;
   List<Map<String, dynamic>> _vehicles = [];
   int _vehicleLimit = 3;
@@ -78,35 +79,120 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
     }
   }
 
-  void _deleteVehicle(String vehicleId) {
-    showDialog(
+  /// Exibir modal de confirmação e excluir veículo via API
+  Future<void> _deleteVehicle(String vehicleId, String plate) async {
+    final confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir Veículo'),
-        content: const Text('Tem certeza que deseja excluir este veículo?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_rounded, color: Colors.red, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text('Excluir Veículo?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tem certeza que deseja excluir o veículo $plate?',
+              style: const TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange[700], size: 18),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Esta ação não pode ser desfeita.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: Color(0xFF757575))),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _vehicles.removeWhere((v) => v['id'] == vehicleId);
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Veículo excluído'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    // Chamar API para excluir
+    setState(() => _isDeleting = true);
+
+    try {
+      final apiService = ApiService();
+      final response = await apiService.delete('/autonomous/vehicles/$vehicleId');
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        // Recarregar lista após exclusão
+        await _loadVehicles();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Veículo $plate excluído com sucesso'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        setState(() => _isDeleting = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['error'] ?? 'Erro ao excluir veículo'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isDeleting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro de conexão: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   String _formatOdometer(int odometer) {
@@ -145,66 +231,94 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Info box
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE3F2FD),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
+      body: Stack(
+        children: [
+          // Conteúdo principal
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadVehicles,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       children: [
-                        Icon(Icons.info_outline, color: primaryColor, size: 18),
-                        const SizedBox(width: 12),
-                        Text(
-                          '${_vehicles.length} de 3 veículos cadastrados',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: primaryColor,
+                        // Info box
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE3F2FD),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: primaryColor, size: 18),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${_vehicles.length} de $_vehicleLimit veículos cadastrados',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+                        // Lista de veículos
+                        if (_vehicles.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              children: [
+                                Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Nenhum veículo cadastrado',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Adicione seu primeiro veículo',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          ..._vehicles.map((vehicle) => _buildVehicleCard(vehicle)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Lista de veículos
-                  if (_vehicles.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        children: [
-                          Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[400]),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Nenhum veículo cadastrado',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Adicione seu primeiro veículo',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    ..._vehicles.map((vehicle) => _buildVehicleCard(vehicle)),
-                ],
+                ),
+          
+          // Loading overlay durante exclusão
+          if (_isDeleting)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Excluindo veículo...',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
             ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: () => context.push('/autonomous/vehicles/add'),
@@ -288,7 +402,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                     icon: Icons.delete,
                     color: const Color(0xFFE53935),
                     backgroundColor: const Color(0xFFFFEBEE),
-                    onTap: () => _deleteVehicle(vehicle['id']),
+                    onTap: () => _deleteVehicle(vehicle['id'], vehicle['plate']),
                   ),
                 ],
               ),
