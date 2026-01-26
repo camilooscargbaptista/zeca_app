@@ -70,48 +70,94 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
   Future<void> _fetchDashboardSummary() async {
     try {
       final apiService = ApiService();
-      // Pegar placa do veículo para filtrar economia e último abastecimento
       final plate = _vehicleData?['placa'] ?? _vehicleData?['plate'] ?? '';
-      final queryParam = plate.isNotEmpty ? '?plate=$plate' : '';
-      debugPrint('🔄 Chamando GET /drivers/dashboard-summary$queryParam...');
-      final response = await apiService.get('/drivers/dashboard-summary$queryParam');
-      debugPrint('📥 Response type: ${response.runtimeType}');
+      
+      // Período do mês atual (1º dia até hoje)
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startDate = startOfMonth.toIso8601String().split('T')[0];
+      final endDate = now.toIso8601String().split('T')[0];
+      
+      debugPrint('🔄 Buscando abastecimentos do mês via /refueling...');
+      debugPrint('📅 Período: $startDate a $endDate | Placa: $plate');
+      
+      // Usar o MESMO endpoint do histórico para garantir consistência
+      // O backend filtra automaticamente por driver_id via token JWT
+      final queryParams = <String, dynamic>{
+        'start_date': startDate,
+        'end_date': endDate,
+        'status': 'CONCLUIDO',  // Apenas concluídos (igual histórico)
+        'limit': 100,  // Limite alto para pegar todos do mês
+      };
+      
+      // Adicionar filtro de placa se disponível
+      if (plate.isNotEmpty) {
+        queryParams['vehicle_plate'] = plate;
+      }
+      
+      final response = await apiService.get('/refueling', queryParameters: queryParams);
       debugPrint('📥 Response: $response');
       
-      // Handle different possible response structures
-      Map<String, dynamic>? data;
-      
+      // Extrair lista de abastecimentos
+      List<dynamic> refuelings = [];
       if (response is Map<String, dynamic>) {
-        // Check if response has success/data structure
-        if (response['success'] == true && response['data'] != null) {
-          final innerData = response['data'];
-          // Check if data itself has another data wrapper
-          if (innerData is Map<String, dynamic> && innerData['economy'] != null) {
-            data = innerData;
-          } else if (innerData is Map<String, dynamic> && innerData['data'] != null) {
-            data = innerData['data'];
-          }
-        } else if (response['economy'] != null) {
-          // Response is directly the data
-          data = response;
+        refuelings = response['data'] ?? [];
+      }
+      
+      debugPrint('✅ Encontrados ${refuelings.length} abastecimentos CONCLUÍDOS do mês');
+      
+      // Calcular totais no frontend (igual ao histórico faz)
+      double totalSavings = 0;
+      double totalLiters = 0;
+      double totalKm = 0;
+      
+      for (final r in refuelings) {
+        totalSavings += (r['savings'] as num?)?.toDouble() ?? 0;
+        totalLiters += (r['quantity_liters'] as num?)?.toDouble() ?? 0;
+      }
+      
+      // Calcular consumo médio se houver dados de odômetro
+      double? avgConsumption;
+      final refuelingsWithOdometer = refuelings.where((r) => 
+        r['odometer_reading'] != null && (r['odometer_reading'] as num) > 0
+      ).toList();
+      
+      if (refuelingsWithOdometer.length >= 2) {
+        final firstOdometer = (refuelingsWithOdometer.last['odometer_reading'] as num).toDouble();
+        final lastOdometer = (refuelingsWithOdometer.first['odometer_reading'] as num).toDouble();
+        final kmRodados = lastOdometer - firstOdometer;
+        if (kmRodados > 0 && totalLiters > 0) {
+          avgConsumption = (kmRodados / totalLiters * 10).round() / 10;
         }
       }
       
-      debugPrint('📊 Extracted data: $data');
-      
-      if (data != null) {
-        debugPrint('✅ Economy: ${data['economy']}');
-        debugPrint('✅ Last refueling: ${data['last_refueling']}');
-        setState(() {
-          _dashboardData = data;
-          _isLoading = false;
-        });
-      } else {
-        debugPrint('⚠️ Could not extract dashboard data from response');
-        setState(() {
-          _isLoading = false;
-        });
+      // Pegar último abastecimento para exibir
+      Map<String, dynamic>? lastRefueling;
+      if (refuelings.isNotEmpty) {
+        final r = refuelings.first;
+        lastRefueling = {
+          'id': r['id'],
+          'station_name': r['station']?['name'] ?? r['station_name'] ?? 'Posto',
+          'date': r['refueling_datetime'],
+          'total_value': r['total_amount'],
+          'liters': r['quantity_liters'],
+          'fuel_type': r['fuel_type']?['name'] ?? r['fuel_type_name'] ?? '',
+        };
       }
+      
+      setState(() {
+        _dashboardData = {
+          'economy': {
+            'savings_this_month': totalSavings,
+            'total_refuelings': refuelings.length,  // ✅ Contagem igual ao histórico!
+            'avg_consumption': avgConsumption,
+          },
+          'last_refueling': lastRefueling,
+        };
+        _isLoading = false;
+      });
+      
+      debugPrint('✅ Dashboard atualizado: ${refuelings.length} abast., R\$ ${totalSavings.toStringAsFixed(2)} economia');
     } catch (e, stackTrace) {
       debugPrint('❌ Erro ao carregar dashboard: $e');
       debugPrint('Stack: $stackTrace');
@@ -120,6 +166,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
       });
     }
   }
+
 
   Future<void> _finishJourney() async {
     final confirm = await showDialog<bool>(
