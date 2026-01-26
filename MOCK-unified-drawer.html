@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA - Menu Lateral Unificado (Mockup)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            /* ZECA Design System Colors */
+            --zeca-blue: #2A70C0;
+            --zeca-blue-dark: #1E5A9A;
+            --zeca-green: #28A745;
+            --zeca-orange: #FF8C00;
+            --zeca-error: #DC3545;
+            --zeca-white: #FFFFFF;
+            --grey-50: #FAFAFA;
+            --grey-100: #F5F5F5;
+            --grey-200: #EEEEEE;
+            --grey-300: #E0E0E0;
+            --grey-600: #757575;
+            --grey-800: #424242;
+            --grey-900: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1400px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: var(--grey-50);
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 
+                0 50px 100px rgba(0,0,0,0.3),
+                0 0 0 12px #1a1a2e,
+                inset 0 0 0 2px rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1a1a2e;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: 10px;
+        }
+
+        .status-bar-time {
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-bar-icons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .status-bar-icons span {
+            color: white;
+            font-size: 14px;
+        }
+
+        .app-bar {
+            height: 56px;
+            background: var(--zeca-blue);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 16px;
+        }
+
+        .app-bar .material-icons {
+            color: white;
+            cursor: pointer;
+        }
+
+        .app-bar-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .content-area {
+            height: calc(100% - 100px);
+            background: var(--grey-50);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-placeholder {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            opacity: 0.3;
+        }
+
+        .placeholder-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .placeholder-card h3 {
+            color: var(--grey-600);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .placeholder-line {
+            height: 12px;
+            background: var(--grey-200);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .placeholder-line:last-child {
+            width: 60%;
+        }
+
+        /* ============================================
+           DRAWER STYLES - O FOCO DO MOCKUP
+           ============================================ */
+        .drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 200;
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer {
+            position: absolute;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 300;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open {
+            left: 0;
+        }
+
+        /* Drawer Header */
+        .drawer-header {
+            background: linear-gradient(135deg, var(--zeca-blue) 0%, var(--zeca-blue-dark) 100%);
+            padding: 60px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .drawer-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .drawer-avatar-initials {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .drawer-user-name {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .drawer-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .drawer-badge.autonomo {
+            background: var(--zeca-orange);
+            color: white;
+        }
+
+        .drawer-badge.frotista {
+            background: var(--zeca-green);
+            color: white;
+        }
+
+        /* Drawer Menu Items */
+        .drawer-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .drawer-item:hover {
+            background: var(--grey-100);
+        }
+
+        .drawer-item .material-icons {
+            color: var(--zeca-blue);
+            font-size: 24px;
+        }
+
+        .drawer-item-text {
+            color: var(--grey-900);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .drawer-item.logout .material-icons,
+        .drawer-item.logout .drawer-item-text {
+            color: var(--zeca-error);
+        }
+
+        .drawer-divider {
+            height: 1px;
+            background: var(--grey-200);
+            margin: 8px 0;
+        }
+
+        /* Drawer Footer */
+        .drawer-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--grey-200);
+            text-align: center;
+        }
+
+        .drawer-version {
+            color: var(--grey-600);
+            font-size: 12px;
+        }
+
+        /* Labels / Annotations */
+        .label-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .label-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .label-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+
+        /* Toggle Button */
+        .toggle-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .toggle-btn {
+            background: linear-gradient(135deg, var(--zeca-blue) 0%, var(--zeca-blue-dark) 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(42, 112, 192, 0.4);
+        }
+
+        /* Comparison Section */
+        .comparison {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+        }
+
+        .comparison h2 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .comparison-table th {
+            color: var(--zeca-blue);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .comparison-table td {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .check {
+            color: var(--zeca-green);
+        }
+
+        .cross {
+            color: var(--zeca-error);
+        }
+
+        /* Rules Section */
+        .rules {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(42, 112, 192, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(42, 112, 192, 0.3);
+        }
+
+        .rules h3 {
+            color: var(--zeca-blue);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .rules ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rules li {
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .rules li::before {
+            content: '✓';
+            color: var(--zeca-green);
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Phone Frame with Drawer -->
+        <div>
+            <div class="label-section">
+                <div class="label-title">📱 Menu Lateral Unificado</div>
+                <div class="label-desc">Clique no ícone de menu para abrir</div>
+            </div>
+            
+            <div class="phone-frame" id="phone1">
+                <div class="phone-notch"></div>
+                
+                <div class="status-bar">
+                    <span class="status-bar-time">9:41</span>
+                    <div class="status-bar-icons">
+                        <span class="material-icons" style="font-size: 16px;">signal_cellular_4_bar</span>
+                        <span class="material-icons" style="font-size: 16px;">wifi</span>
+                        <span class="material-icons" style="font-size: 16px;">battery_full</span>
+                    </div>
+                </div>
+                
+                <div class="app-bar">
+                    <span class="material-icons" onclick="toggleDrawer('autonomo')">menu</span>
+                    <span class="app-bar-title">Iniciar Jornada</span>
+                    <span class="material-icons">notifications_none</span>
+                </div>
+                
+                <div class="content-area">
+                    <!-- Placeholder content -->
+                    <div class="content-placeholder">
+                        <div class="placeholder-card">
+                            <h3>Card Motorista</h3>
+                            <div class="placeholder-line"></div>
+                            <div class="placeholder-line"></div>
+                        </div>
+                        <div class="placeholder-card">
+                            <h3>Selecionar Veículo</h3>
+                            <div class="placeholder-line"></div>
+                            <div class="placeholder-line"></div>
+                            <div class="placeholder-line"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Drawer Overlay -->
+                    <div class="drawer-overlay" id="overlay-autonomo" onclick="toggleDrawer('autonomo')"></div>
+                    
+                    <!-- Drawer - AUTÔNOMO -->
+                    <div class="drawer" id="drawer-autonomo">
+                        <div class="drawer-header">
+                            <div class="drawer-avatar">
+                                <span class="drawer-avatar-initials">JS</span>
+                            </div>
+                            <div class="drawer-user-name">João Silva</div>
+                            <span class="drawer-badge autonomo">Autônomo</span>
+                        </div>
+                        
+                        <div class="drawer-menu">
+                            <div class="drawer-item">
+                                <span class="material-icons">person</span>
+                                <span class="drawer-item-text">Meu Perfil</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">directions_car</span>
+                                <span class="drawer-item-text">Meus Veículos</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">receipt_long</span>
+                                <span class="drawer-item-text">Histórico</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">settings</span>
+                                <span class="drawer-item-text">Configurações</span>
+                            </div>
+                            
+                            <div class="drawer-divider"></div>
+                            
+                            <div class="drawer-item logout">
+                                <span class="material-icons">logout</span>
+                                <span class="drawer-item-text">Sair</span>
+                            </div>
+                        </div>
+                        
+                        <div class="drawer-footer">
+                            <span class="drawer-version">Versão 1.0.4+82</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn" onclick="toggleDrawer('autonomo')">
+                    <span class="material-icons">menu_open</span>
+                    Abrir Menu (Autônomo)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Phone Frame with Frotista -->
+        <div>
+            <div class="label-section">
+                <div class="label-title">📱 Menu Lateral - Frotista</div>
+                <div class="label-desc">Mesmo layout, badge diferente</div>
+            </div>
+            
+            <div class="phone-frame" id="phone2">
+                <div class="phone-notch"></div>
+                
+                <div class="status-bar">
+                    <span class="status-bar-time">9:41</span>
+                    <div class="status-bar-icons">
+                        <span class="material-icons" style="font-size: 16px;">signal_cellular_4_bar</span>
+                        <span class="material-icons" style="font-size: 16px;">wifi</span>
+                        <span class="material-icons" style="font-size: 16px;">battery_full</span>
+                    </div>
+                </div>
+                
+                <div class="app-bar">
+                    <span class="material-icons" onclick="toggleDrawer('frotista')">menu</span>
+                    <span class="app-bar-title">Jornada Ativa</span>
+                    <span class="material-icons">power_settings_new</span>
+                </div>
+                
+                <div class="content-area">
+                    <div class="content-placeholder">
+                        <div class="placeholder-card">
+                            <h3>Veículo em Jornada</h3>
+                            <div class="placeholder-line"></div>
+                            <div class="placeholder-line"></div>
+                        </div>
+                        <div class="placeholder-card">
+                            <h3>Abastecer Agora</h3>
+                            <div class="placeholder-line"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="drawer-overlay" id="overlay-frotista" onclick="toggleDrawer('frotista')"></div>
+                    
+                    <!-- Drawer - FROTISTA -->
+                    <div class="drawer" id="drawer-frotista">
+                        <div class="drawer-header">
+                            <div class="drawer-avatar">
+                                <span class="drawer-avatar-initials">MS</span>
+                            </div>
+                            <div class="drawer-user-name">Maria Santos</div>
+                            <span class="drawer-badge frotista">Frotista</span>
+                        </div>
+                        
+                        <div class="drawer-menu">
+                            <div class="drawer-item">
+                                <span class="material-icons">person</span>
+                                <span class="drawer-item-text">Meu Perfil</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">directions_car</span>
+                                <span class="drawer-item-text">Meus Veículos</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">receipt_long</span>
+                                <span class="drawer-item-text">Histórico</span>
+                            </div>
+                            <div class="drawer-item">
+                                <span class="material-icons">settings</span>
+                                <span class="drawer-item-text">Configurações</span>
+                            </div>
+                            
+                            <div class="drawer-divider"></div>
+                            
+                            <div class="drawer-item logout">
+                                <span class="material-icons">logout</span>
+                                <span class="drawer-item-text">Sair</span>
+                            </div>
+                        </div>
+                        
+                        <div class="drawer-footer">
+                            <span class="drawer-version">Versão 1.0.4+82</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn" onclick="toggleDrawer('frotista')">
+                    <span class="material-icons">menu_open</span>
+                    Abrir Menu (Frotista)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Comparison Table -->
+        <div class="comparison">
+            <h2>📋 Comparação: Antes vs Depois</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        <th>Antes</th>
+                        <th>Depois</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Implementações de Drawer</td>
+                        <td class="cross">5 diferentes</td>
+                        <td class="check">1 unificado</td>
+                    </tr>
+                    <tr>
+                        <td>Itens consistentes</td>
+                        <td class="cross">2-5 itens</td>
+                        <td class="check">5 itens fixos</td>
+                    </tr>
+                    <tr>
+                        <td>Item "Histórico"</td>
+                        <td class="cross">Condicional</td>
+                        <td class="check">Sempre visível</td>
+                    </tr>
+                    <tr>
+                        <td>Versão do App</td>
+                        <td class="cross">Não exibida</td>
+                        <td class="check">No rodapé</td>
+                    </tr>
+                    <tr>
+                        <td>Cor "Sair"</td>
+                        <td class="cross">Inconsistente</td>
+                        <td class="check">#DC3545</td>
+                    </tr>
+                    <tr>
+                        <td>Badge de Tipo</td>
+                        <td class="cross">Hardcoded</td>
+                        <td class="check">Dinâmico</td>
+                    </tr>
+                    <tr>
+                        <td>Linhas de Código</td>
+                        <td class="cross">~600 linhas</td>
+                        <td class="check">~150 linhas</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="rules">
+                <h3>Regras de Negócio Implementadas</h3>
+                <ul>
+                    <li>RN-MENU-001: Menu IDÊNTICO em todas as telas</li>
+                    <li>RN-MENU-002: Histórico sempre visível</li>
+                    <li>RN-MENU-003: Sair em cor de erro (#DC3545)</li>
+                    <li>RN-MENU-004: Sem status de jornada no menu</li>
+                    <li>RN-MENU-005: Versão no rodapé (X.Y.Z+build)</li>
+                    <li>RN-MENU-006: Header: avatar + nome + badge</li>
+                    <li>RN-MENU-007: Componente único reutilizável</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleDrawer(type) {
+            const drawer = document.getElementById('drawer-' + type);
+            const overlay = document.getElementById('overlay-' + type);
+            
+            drawer.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
