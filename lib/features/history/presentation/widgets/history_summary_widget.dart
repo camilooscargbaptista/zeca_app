@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../core/utils/volume.dart';
 import '../../domain/entities/refueling_history_entity.dart';
 
 /// Widget que exibe o resumo/totalizadores do histórico
@@ -56,7 +57,7 @@ class HistorySummaryWidget extends StatelessWidget {
                 _buildStatItem(
                   icon: Icons.water_drop,
                   label: 'Total Litros',
-                  value: '${summary.totalLiters.toStringAsFixed(0)} L',
+                  value: Volume.fromDouble(summary.totalLiters).formatted,
                   color: AppColors.zecaGreen,
                 ),
                 _buildStatItem(
