@@ -265,7 +265,7 @@ class AppRouter {
         path: '/change-password',
         name: 'change-password',
         builder: (context, state) {
-          final apiService = getIt<ApiService>();
+          final apiService = ApiService();
           final repository = ChangePasswordRepository(apiService);
           final useCase = ChangePasswordUseCase(repository);
           final authBloc = context.read<AuthBloc>();
