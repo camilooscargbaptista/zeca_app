@@ -36,14 +36,14 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
         setState(() {
-          _vehicles = data.map((v) => {
+          _vehicles = data.map((v) => <String, dynamic>{
             'id': v['id']?.toString() ?? '',
             'plate': v['plate'] ?? '',
             'brand': v['brand'] ?? '',
             'model': v['model'] ?? '',
-            'year': v['year'] ?? 0,
+            'year': _parseToInt(v['year']),
             'fuelType': _formatFuelType(v['fuel_type'] ?? ''),
-            'odometer': v['odometer'] ?? 0,
+            'odometer': _parseToInt(v['odometer']),
           }).toList();
           _isLoading = false;
         });
@@ -77,6 +77,19 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       case 'ETANOL': return 'Etanol';
       default: return type;
     }
+  }
+
+  /// Converte valor para int de forma segura (API pode retornar String, num ou double)
+  int _parseToInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      // Remover decimais se existir (ex: "213455.000" → 213455)
+      final cleanValue = value.replaceAll(RegExp(r'\..*'), '');
+      return int.tryParse(cleanValue) ?? 0;
+    }
+    return 0;
   }
 
   /// Exibir modal de confirmação e excluir veículo via API
