@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/refueling_history_entity.dart';
 
 /// Widget que exibe o resumo/totalizadores do histórico
@@ -61,7 +62,7 @@ class HistorySummaryWidget extends StatelessWidget {
                 _buildStatItem(
                   icon: Icons.attach_money,
                   label: 'Valor Total',
-                  value: 'R\$ ${summary.totalValue.toStringAsFixed(0)}',
+                  value: Money.fromDouble(summary.totalValue).formatted,
                   color: AppColors.zecaOrange,
                 ),
               ],
@@ -81,7 +82,7 @@ class HistorySummaryWidget extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'R\$ ${summary.averagePricePerLiter.toStringAsFixed(2)}/L',
+                    '${Money.fromDouble(summary.averagePricePerLiter).formatted}/L',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

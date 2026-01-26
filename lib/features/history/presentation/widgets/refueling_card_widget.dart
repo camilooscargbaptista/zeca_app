@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/money.dart';
 import '../../domain/entities/refueling_history_entity.dart';
 
 /// Card que exibe um item do histórico de abastecimentos
@@ -156,7 +157,7 @@ class RefuelingCardWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'R\$ ${refueling.totalAmount.toStringAsFixed(2)}',
+                          Money.fromDouble(refueling.totalAmount).formatted,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
