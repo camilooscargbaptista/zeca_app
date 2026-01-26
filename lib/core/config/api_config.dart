@@ -1,5 +1,6 @@
 class ApiConfig {
   // URLs base para diferentes ambientes
+  // URL local (LAN IP) para testes no dispositivo físico
   static const String _baseUrlDev = 'https://816343baaf24.ngrok-free.app';
   static const String _baseUrlStaging = 'https://api-staging.zeca.com.br';
   static const String _baseUrlProd = 'https://www.abastecacomzeca.com.br';

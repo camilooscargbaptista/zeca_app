@@ -36,17 +36,10 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Check connectivity
-          final connectivityResult = await _connectivity.checkConnectivity();
-          if (connectivityResult == ConnectivityResult.none) {
-            handler.reject(
-              DioException(
-                requestOptions: options,
-                error: NetworkException('Sem conexão com a internet'),
-              ),
-            );
-            return;
-          }
+          // Check connectivity removed to avoid false positives
+          // final connectivityResult = await _connectivity.checkConnectivity();
+          // if (connectivityResult == ConnectivityResult.none) { ... }
+
 
           // Add auth token if available
           try {
