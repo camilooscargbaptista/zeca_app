@@ -4,6 +4,38 @@ import '../../domain/entities/refueling_history_entity.dart';
 part 'refueling_history_model.freezed.dart';
 part 'refueling_history_model.g.dart';
 
+/// Conversor para campos que podem vir como String ou num
+class StringToDoubleConverter implements JsonConverter<double, dynamic> {
+  const StringToDoubleConverter();
+
+  @override
+  double fromJson(dynamic json) {
+    if (json == null) return 0.0;
+    if (json is num) return json.toDouble();
+    if (json is String) return double.tryParse(json) ?? 0.0;
+    return 0.0;
+  }
+
+  @override
+  dynamic toJson(double object) => object;
+}
+
+/// Conversor nullable para campos opcionais
+class NullableStringToDoubleConverter implements JsonConverter<double?, dynamic> {
+  const NullableStringToDoubleConverter();
+
+  @override
+  double? fromJson(dynamic json) {
+    if (json == null) return null;
+    if (json is num) return json.toDouble();
+    if (json is String) return double.tryParse(json);
+    return null;
+  }
+
+  @override
+  dynamic toJson(double? object) => object;
+}
+
 /// Model para um item do histórico de abastecimentos
 @freezed
 class RefuelingHistoryModel with _$RefuelingHistoryModel {
@@ -18,13 +50,16 @@ class RefuelingHistoryModel with _$RefuelingHistoryModel {
     @JsonKey(name: 'driver_name') String? driverName,
     @JsonKey(name: 'vehicle_plate') required String vehiclePlate,
     @JsonKey(name: 'fuel_type') required String fuelType,
+    @StringToDoubleConverter()
     @JsonKey(name: 'quantity_liters') required double quantityLiters,
+    @StringToDoubleConverter()
     @JsonKey(name: 'total_amount') required double totalAmount,
     required String status,
     @JsonKey(name: 'created_at') DateTime? createdAt,
     @JsonKey(name: 'is_autonomous') @Default(false) bool isAutonomous,
     @JsonKey(name: 'payment_method') String? paymentMethod,
     @JsonKey(name: 'transporter_name') String? transporterName,
+    @NullableStringToDoubleConverter()
     @JsonKey(name: 'unit_price') double? unitPrice,
     @JsonKey(name: 'has_nfe') @Default(false) bool hasNfe,
   }) = _RefuelingHistoryModel;
@@ -46,7 +81,7 @@ class RefuelingHistoryModel with _$RefuelingHistoryModel {
       status: status,
       isAutonomous: isAutonomous,
       paymentMethod: paymentMethod,
-      unitPrice: unitPrice ?? (totalAmount / quantityLiters),
+      unitPrice: unitPrice ?? (quantityLiters > 0 ? totalAmount / quantityLiters : 0),
       hasNfe: hasNfe,
     );
   }

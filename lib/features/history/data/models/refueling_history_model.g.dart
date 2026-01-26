@@ -17,8 +17,10 @@ _$RefuelingHistoryModelImpl _$$RefuelingHistoryModelImplFromJson(
       driverName: json['driver_name'] as String?,
       vehiclePlate: json['vehicle_plate'] as String,
       fuelType: json['fuel_type'] as String,
-      quantityLiters: (json['quantity_liters'] as num).toDouble(),
-      totalAmount: (json['total_amount'] as num).toDouble(),
+      quantityLiters:
+          const StringToDoubleConverter().fromJson(json['quantity_liters']),
+      totalAmount:
+          const StringToDoubleConverter().fromJson(json['total_amount']),
       status: json['status'] as String,
       createdAt: json['created_at'] == null
           ? null
@@ -26,7 +28,8 @@ _$RefuelingHistoryModelImpl _$$RefuelingHistoryModelImplFromJson(
       isAutonomous: json['is_autonomous'] as bool? ?? false,
       paymentMethod: json['payment_method'] as String?,
       transporterName: json['transporter_name'] as String?,
-      unitPrice: (json['unit_price'] as num?)?.toDouble(),
+      unitPrice:
+          const NullableStringToDoubleConverter().fromJson(json['unit_price']),
       hasNfe: json['has_nfe'] as bool? ?? false,
     );
 
@@ -41,14 +44,17 @@ Map<String, dynamic> _$$RefuelingHistoryModelImplToJson(
       'driver_name': instance.driverName,
       'vehicle_plate': instance.vehiclePlate,
       'fuel_type': instance.fuelType,
-      'quantity_liters': instance.quantityLiters,
-      'total_amount': instance.totalAmount,
+      'quantity_liters':
+          const StringToDoubleConverter().toJson(instance.quantityLiters),
+      'total_amount':
+          const StringToDoubleConverter().toJson(instance.totalAmount),
       'status': instance.status,
       'created_at': instance.createdAt?.toIso8601String(),
       'is_autonomous': instance.isAutonomous,
       'payment_method': instance.paymentMethod,
       'transporter_name': instance.transporterName,
-      'unit_price': instance.unitPrice,
+      'unit_price':
+          const NullableStringToDoubleConverter().toJson(instance.unitPrice),
       'has_nfe': instance.hasNfe,
     };
 

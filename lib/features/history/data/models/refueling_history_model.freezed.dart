@@ -36,8 +36,10 @@ mixin _$RefuelingHistoryModel {
   String get vehiclePlate => throw _privateConstructorUsedError;
   @JsonKey(name: 'fuel_type')
   String get fuelType => throw _privateConstructorUsedError;
+  @StringToDoubleConverter()
   @JsonKey(name: 'quantity_liters')
   double get quantityLiters => throw _privateConstructorUsedError;
+  @StringToDoubleConverter()
   @JsonKey(name: 'total_amount')
   double get totalAmount => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
@@ -49,6 +51,7 @@ mixin _$RefuelingHistoryModel {
   String? get paymentMethod => throw _privateConstructorUsedError;
   @JsonKey(name: 'transporter_name')
   String? get transporterName => throw _privateConstructorUsedError;
+  @NullableStringToDoubleConverter()
   @JsonKey(name: 'unit_price')
   double? get unitPrice => throw _privateConstructorUsedError;
   @JsonKey(name: 'has_nfe')
@@ -75,14 +78,20 @@ abstract class $RefuelingHistoryModelCopyWith<$Res> {
       @JsonKey(name: 'driver_name') String? driverName,
       @JsonKey(name: 'vehicle_plate') String vehiclePlate,
       @JsonKey(name: 'fuel_type') String fuelType,
-      @JsonKey(name: 'quantity_liters') double quantityLiters,
-      @JsonKey(name: 'total_amount') double totalAmount,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'quantity_liters')
+      double quantityLiters,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'total_amount')
+      double totalAmount,
       String status,
       @JsonKey(name: 'created_at') DateTime? createdAt,
       @JsonKey(name: 'is_autonomous') bool isAutonomous,
       @JsonKey(name: 'payment_method') String? paymentMethod,
       @JsonKey(name: 'transporter_name') String? transporterName,
-      @JsonKey(name: 'unit_price') double? unitPrice,
+      @NullableStringToDoubleConverter()
+      @JsonKey(name: 'unit_price')
+      double? unitPrice,
       @JsonKey(name: 'has_nfe') bool hasNfe});
 }
 
@@ -209,14 +218,20 @@ abstract class _$$RefuelingHistoryModelImplCopyWith<$Res>
       @JsonKey(name: 'driver_name') String? driverName,
       @JsonKey(name: 'vehicle_plate') String vehiclePlate,
       @JsonKey(name: 'fuel_type') String fuelType,
-      @JsonKey(name: 'quantity_liters') double quantityLiters,
-      @JsonKey(name: 'total_amount') double totalAmount,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'quantity_liters')
+      double quantityLiters,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'total_amount')
+      double totalAmount,
       String status,
       @JsonKey(name: 'created_at') DateTime? createdAt,
       @JsonKey(name: 'is_autonomous') bool isAutonomous,
       @JsonKey(name: 'payment_method') String? paymentMethod,
       @JsonKey(name: 'transporter_name') String? transporterName,
-      @JsonKey(name: 'unit_price') double? unitPrice,
+      @NullableStringToDoubleConverter()
+      @JsonKey(name: 'unit_price')
+      double? unitPrice,
       @JsonKey(name: 'has_nfe') bool hasNfe});
 }
 
@@ -335,14 +350,20 @@ class _$RefuelingHistoryModelImpl extends _RefuelingHistoryModel {
       @JsonKey(name: 'driver_name') this.driverName,
       @JsonKey(name: 'vehicle_plate') required this.vehiclePlate,
       @JsonKey(name: 'fuel_type') required this.fuelType,
-      @JsonKey(name: 'quantity_liters') required this.quantityLiters,
-      @JsonKey(name: 'total_amount') required this.totalAmount,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'quantity_liters')
+      required this.quantityLiters,
+      @StringToDoubleConverter()
+      @JsonKey(name: 'total_amount')
+      required this.totalAmount,
       required this.status,
       @JsonKey(name: 'created_at') this.createdAt,
       @JsonKey(name: 'is_autonomous') this.isAutonomous = false,
       @JsonKey(name: 'payment_method') this.paymentMethod,
       @JsonKey(name: 'transporter_name') this.transporterName,
-      @JsonKey(name: 'unit_price') this.unitPrice,
+      @NullableStringToDoubleConverter()
+      @JsonKey(name: 'unit_price')
+      this.unitPrice,
       @JsonKey(name: 'has_nfe') this.hasNfe = false})
       : super._();
 
@@ -373,9 +394,11 @@ class _$RefuelingHistoryModelImpl extends _RefuelingHistoryModel {
   @JsonKey(name: 'fuel_type')
   final String fuelType;
   @override
+  @StringToDoubleConverter()
   @JsonKey(name: 'quantity_liters')
   final double quantityLiters;
   @override
+  @StringToDoubleConverter()
   @JsonKey(name: 'total_amount')
   final double totalAmount;
   @override
@@ -393,6 +416,7 @@ class _$RefuelingHistoryModelImpl extends _RefuelingHistoryModel {
   @JsonKey(name: 'transporter_name')
   final String? transporterName;
   @override
+  @NullableStringToDoubleConverter()
   @JsonKey(name: 'unit_price')
   final double? unitPrice;
   @override
@@ -481,25 +505,31 @@ class _$RefuelingHistoryModelImpl extends _RefuelingHistoryModel {
 
 abstract class _RefuelingHistoryModel extends RefuelingHistoryModel {
   const factory _RefuelingHistoryModel(
-      {required final String id,
-      @JsonKey(name: 'refueling_code') required final String refuelingCode,
-      @JsonKey(name: 'refueling_datetime')
-      required final DateTime refuelingDatetime,
-      @JsonKey(name: 'station_name') final String? stationName,
-      @JsonKey(name: 'station_cnpj') final String? stationCnpj,
-      @JsonKey(name: 'driver_name') final String? driverName,
-      @JsonKey(name: 'vehicle_plate') required final String vehiclePlate,
-      @JsonKey(name: 'fuel_type') required final String fuelType,
-      @JsonKey(name: 'quantity_liters') required final double quantityLiters,
-      @JsonKey(name: 'total_amount') required final double totalAmount,
-      required final String status,
-      @JsonKey(name: 'created_at') final DateTime? createdAt,
-      @JsonKey(name: 'is_autonomous') final bool isAutonomous,
-      @JsonKey(name: 'payment_method') final String? paymentMethod,
-      @JsonKey(name: 'transporter_name') final String? transporterName,
-      @JsonKey(name: 'unit_price') final double? unitPrice,
-      @JsonKey(name: 'has_nfe')
-      final bool hasNfe}) = _$RefuelingHistoryModelImpl;
+          {required final String id,
+          @JsonKey(name: 'refueling_code') required final String refuelingCode,
+          @JsonKey(name: 'refueling_datetime')
+          required final DateTime refuelingDatetime,
+          @JsonKey(name: 'station_name') final String? stationName,
+          @JsonKey(name: 'station_cnpj') final String? stationCnpj,
+          @JsonKey(name: 'driver_name') final String? driverName,
+          @JsonKey(name: 'vehicle_plate') required final String vehiclePlate,
+          @JsonKey(name: 'fuel_type') required final String fuelType,
+          @StringToDoubleConverter()
+          @JsonKey(name: 'quantity_liters')
+          required final double quantityLiters,
+          @StringToDoubleConverter()
+          @JsonKey(name: 'total_amount')
+          required final double totalAmount,
+          required final String status,
+          @JsonKey(name: 'created_at') final DateTime? createdAt,
+          @JsonKey(name: 'is_autonomous') final bool isAutonomous,
+          @JsonKey(name: 'payment_method') final String? paymentMethod,
+          @JsonKey(name: 'transporter_name') final String? transporterName,
+          @NullableStringToDoubleConverter()
+          @JsonKey(name: 'unit_price')
+          final double? unitPrice,
+          @JsonKey(name: 'has_nfe') final bool hasNfe}) =
+      _$RefuelingHistoryModelImpl;
   const _RefuelingHistoryModel._() : super._();
 
   factory _RefuelingHistoryModel.fromJson(Map<String, dynamic> json) =
@@ -529,9 +559,11 @@ abstract class _RefuelingHistoryModel extends RefuelingHistoryModel {
   @JsonKey(name: 'fuel_type')
   String get fuelType;
   @override
+  @StringToDoubleConverter()
   @JsonKey(name: 'quantity_liters')
   double get quantityLiters;
   @override
+  @StringToDoubleConverter()
   @JsonKey(name: 'total_amount')
   double get totalAmount;
   @override
@@ -549,6 +581,7 @@ abstract class _RefuelingHistoryModel extends RefuelingHistoryModel {
   @JsonKey(name: 'transporter_name')
   String? get transporterName;
   @override
+  @NullableStringToDoubleConverter()
   @JsonKey(name: 'unit_price')
   double? get unitPrice;
   @override
