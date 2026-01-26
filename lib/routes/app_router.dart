@@ -35,6 +35,8 @@ import '../features/auth/presentation/pages/verify_token_page.dart';
 import '../features/auth/presentation/pages/reset_password_page.dart';
 // Profile imports
 import '../features/profile/presentation/pages/profile_page.dart';
+// History imports
+import '../features/history/presentation/pages/history_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -236,6 +238,12 @@ class AppRouter {
         path: '/profile',
         name: 'profile',
         builder: (context, state) => const ProfilePage(),
+      ),
+      // History routes
+      GoRoute(
+        path: '/history',
+        name: 'history',
+        builder: (context, state) => const HistoryPage(),
       ),
     ],
     errorBuilder: (context, state) {
