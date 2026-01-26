@@ -71,19 +71,63 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
     }
   }
 
-  void _loadVehicle() {
-    // TODO: Carregar dados do veículo da API
-    _plateController.text = 'ABC-1234';
-    _brandController.text = 'Scania';
-    _modelController.text = 'R450';
-    _yearController.text = '2022';
-    _odometerController.text = '245320';
-    setState(() {
-      _selectedFuelTypes = {'DIESEL_S10'};
-      _hasArla = false;
-      _plateLookupDone = true;
-      _plateLookupSuccess = true;
-    });
+  Future<void> _loadVehicle() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final apiService = ApiService();
+      final response = await apiService.get('/autonomous/vehicles/${widget.vehicleId}');
+      
+      if (response['success'] == true) {
+        final data = response['data'];
+        
+        setState(() {
+          _plateController.text = data['plate'] ?? '';
+          _brandController.text = data['brand'] ?? '';
+          _modelController.text = data['model'] ?? '';
+          _yearController.text = data['year']?.toString() ?? '';
+          _colorController.text = data['color'] ?? '';
+          
+          // Converter odometer para int se vier como String
+          final odometer = data['odometer'];
+          if (odometer != null) {
+            if (odometer is String) {
+              _odometerController.text = odometer.replaceAll(RegExp(r'\..*'), '');
+            } else {
+              _odometerController.text = odometer.toString().replaceAll(RegExp(r'\..*'), '');
+            }
+          }
+          
+          // Mapear tipo de combustível
+          final fuelType = data['fuel_type']?.toString() ?? '';
+          _selectedFuelTypes = _mapFuelType(fuelType);
+          
+          _hasArla = data['has_arla'] == true;
+          _plateLookupDone = true;
+          _plateLookupSuccess = true;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['error'] ?? 'Erro ao carregar veículo'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          context.pop();
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+        );
+        context.pop();
+      }
+    }
   }
 
   @override
@@ -444,28 +488,91 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       icon: Icons.local_shipping,
       title: 'Placa do Veículo',
       children: [
-        _buildLabel('Placa', required: true),
-        TextFormField(
-          controller: _plateController,
-          inputFormatters: [_plateMaskFormatter],
-          textCapitalization: TextCapitalization.characters,
-          enabled: !_isEditing,
-          validator: _validatePlate,
-          onChanged: _onPlateChanged,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2),
-          decoration: _inputDecoration('ABC-1234').copyWith(
-            suffixIcon: _isLoadingPlate
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                  )
-                : null,
+        _buildLabel('Placa', required: !_isEditing),
+        
+        // Modo edição: exibir placa como informativo (não editável)
+        if (_isEditing)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.directions_car, color: primaryColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _plateController.text.isEmpty ? 'Carregando...' : _plateController.text,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          color: Color(0xFF1A1A2E),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Placa não pode ser alterada',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock, size: 12, color: Colors.orange[700]),
+                      const SizedBox(width: 4),
+                      Text('Bloqueado', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.orange[700])),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        // Modo cadastro: campo editável
+        else ...[
+          TextFormField(
+            controller: _plateController,
+            inputFormatters: [_plateMaskFormatter],
+            textCapitalization: TextCapitalization.characters,
+            validator: _validatePlate,
+            onChanged: _onPlateChanged,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2),
+            decoration: _inputDecoration('ABC-1234').copyWith(
+              suffixIcon: _isLoadingPlate
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    )
+                  : null,
+            ),
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.only(top: 6, left: 4),
-          child: Text('Formato: ABC-1234 ou ABC1D23 (Mercosul)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-        ),
+          const Padding(
+            padding: EdgeInsets.only(top: 6, left: 4),
+            child: Text('Formato: ABC-1234 ou ABC1D23 (Mercosul)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          ),
+        ],
       ],
     );
   }
