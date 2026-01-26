@@ -99,9 +99,15 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
       debugPrint('📥 Response: $response');
       
       // Extrair lista de abastecimentos
+      // Estrutura: {success: true, data: {data: [...], total: N, page: N, limit: N}}
       List<dynamic> refuelings = [];
       if (response is Map<String, dynamic>) {
-        refuelings = response['data'] ?? [];
+        final outerData = response['data'];
+        if (outerData is Map<String, dynamic>) {
+          refuelings = outerData['data'] ?? [];
+        } else if (outerData is List) {
+          refuelings = outerData;
+        }
       }
       
       debugPrint('✅ Encontrados ${refuelings.length} abastecimentos CONCLUÍDOS do mês');
