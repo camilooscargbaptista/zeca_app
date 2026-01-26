@@ -259,7 +259,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                 ),
               ],
             ),
-      bottomNavigationBar: _buildBottomNav(),
+      // bottomNavigationBar removido - usando menu lateral (AppDrawer)
     );
   }
 
@@ -569,11 +569,11 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
       children: [
         Expanded(child: _buildActionItem(Icons.assignment, 'Checklist', _zecaOrange, badge: 3)),
         const SizedBox(width: 10),
-        Expanded(child: _buildActionItem(Icons.receipt_long, 'Histórico', _zecaPurple, onTap: () => context.push('/refueling-history'))),
+        Expanded(child: _buildActionItem(Icons.receipt_long, 'Histórico', _zecaPurple, onTap: () => context.push('/history'))),
         const SizedBox(width: 10),
         Expanded(child: _buildActionItem(Icons.location_on, 'Postos', _zecaGreen, onTap: () => context.push('/nearby-stations'))),
         const SizedBox(width: 10),
-        Expanded(child: _buildActionItem(Icons.directions_car, 'Veículos', _zecaBlue)),
+        Expanded(child: _buildActionItem(Icons.directions_car, 'Veículos', _zecaBlue, onTap: () => context.push('/autonomous/vehicles'))),
       ],
     );
   }
@@ -877,49 +877,6 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home, 'Início', isActive: true),
-              _buildNavItem(Icons.local_gas_station, 'Abastecer', onTap: () => context.go('/home')),
-              _buildNavItem(Icons.workspace_premium, 'Club'),
-              _buildNavItem(Icons.person, 'Perfil'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, {bool isActive = false, VoidCallback? onTap}) {
-    final color = isActive ? _zecaBlue : Colors.grey[600];
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // REMOVIDO: _buildBottomNav() e _buildNavItem() - Usando menu lateral (AppDrawer)
   // REMOVIDO: _buildDrawer() - Agora usa AppDrawer unificado (lib/shared/widgets/app_drawer.dart)
 }
