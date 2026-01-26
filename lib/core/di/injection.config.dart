@@ -39,6 +39,16 @@ import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_regist
     as _i545;
 import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart'
     as _i56;
+import 'package:zeca_app/features/history/data/datasources/history_remote_datasource.dart'
+    as _i753;
+import 'package:zeca_app/features/history/data/repositories/history_repository_impl.dart'
+    as _i191;
+import 'package:zeca_app/features/history/domain/repositories/history_repository.dart'
+    as _i799;
+import 'package:zeca_app/features/history/domain/usecases/get_history_usecase.dart'
+    as _i653;
+import 'package:zeca_app/features/history/presentation/bloc/history_bloc.dart'
+    as _i639;
 import 'package:zeca_app/features/home/data/datasources/fuel_station_remote_datasource.dart'
     as _i787;
 import 'package:zeca_app/features/home/data/datasources/vehicle_remote_datasource.dart'
@@ -121,6 +131,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i23.RefuelingFormBloc>(() => _i23.RefuelingFormBloc());
     gh.factory<_i921.VehicleRemoteDataSource>(
         () => _i921.VehicleRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.factory<_i753.HistoryRemoteDataSource>(
+        () => _i753.HistoryRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i974.UserRemoteDataSource>(
         () => _i974.UserRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i493.DocumentRemoteDataSource>(
@@ -131,12 +143,18 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i106.AutonomousRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i857.AuthRemoteDataSource>(
         () => _i857.AuthRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.factory<_i799.HistoryRepository>(
+        () => _i191.HistoryRepositoryImpl(gh<_i753.HistoryRemoteDataSource>()));
     gh.factory<_i218.NotificationRemoteDataSource>(
         () => _i218.NotificationRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i133.RefuelingRemoteDataSource>(
         () => _i133.RefuelingRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i724.RefuelingRepository>(() =>
         _i93.RefuelingRepositoryImpl(gh<_i133.RefuelingRemoteDataSource>()));
+    gh.factory<_i653.GetHistoryUseCase>(
+        () => _i653.GetHistoryUseCase(gh<_i799.HistoryRepository>()));
+    gh.factory<_i653.GetRefuelingDetailsUseCase>(
+        () => _i653.GetRefuelingDetailsUseCase(gh<_i799.HistoryRepository>()));
     gh.factory<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.factory<_i649.AutonomousRepository>(() =>
@@ -147,6 +165,8 @@ extension GetItInjectableX on _i174.GetIt {
         _i545.AutonomousRegistrationBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i1001.VehicleRepository>(
         () => _i404.VehicleRepositoryImpl(gh<_i921.VehicleRemoteDataSource>()));
+    gh.factory<_i639.HistoryBloc>(
+        () => _i639.HistoryBloc(gh<_i653.GetHistoryUseCase>()));
     gh.factory<_i222.FuelStationRepository>(() =>
         _i317.FuelStationRepositoryImpl(
             gh<_i787.FuelStationRemoteDataSource>()));
