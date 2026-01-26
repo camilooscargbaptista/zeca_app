@@ -168,10 +168,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   title: 'Histórico',
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navegar para histórico quando implementado
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Histórico em desenvolvimento')),
-                    );
+                    context.push('/history');
                   },
                 ),
                 
