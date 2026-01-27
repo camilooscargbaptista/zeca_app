@@ -8,7 +8,7 @@ import '../../domain/entities/notification_template_entity.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_remote_datasource.dart';
 
-@Injectable(as: NotificationRepository)
+@LazySingleton(as: NotificationRepository)
 class NotificationRepositoryImpl implements NotificationRepository {
   final NotificationRemoteDataSource _remoteDataSource;
 

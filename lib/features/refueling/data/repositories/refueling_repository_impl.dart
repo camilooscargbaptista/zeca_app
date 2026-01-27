@@ -8,7 +8,7 @@ import '../../domain/entities/refueling_shared_entities.dart';
 import '../../domain/repositories/refueling_repository.dart';
 import '../datasources/refueling_remote_datasource.dart';
 
-@Injectable(as: RefuelingRepository)
+@LazySingleton(as: RefuelingRepository)
 class RefuelingRepositoryImpl implements RefuelingRepository {
   final RefuelingRemoteDataSource _remoteDataSource;
 

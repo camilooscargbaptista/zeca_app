@@ -6,7 +6,7 @@ import '../../domain/entities/document_entity.dart';
 import '../../domain/repositories/document_repository.dart';
 import '../datasources/document_remote_datasource.dart';
 
-@Injectable(as: DocumentRepository)
+@LazySingleton(as: DocumentRepository)
 class DocumentRepositoryImpl implements DocumentRepository {
   final DocumentRemoteDataSource _remoteDataSource;
 

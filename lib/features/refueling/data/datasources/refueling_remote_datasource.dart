@@ -48,7 +48,7 @@ abstract class RefuelingRemoteDataSource {
   });
 }
 
-@Injectable(as: RefuelingRemoteDataSource)
+@LazySingleton(as: RefuelingRemoteDataSource)
 class RefuelingRemoteDataSourceImpl implements RefuelingRemoteDataSource {
   final DioClient _client;
 

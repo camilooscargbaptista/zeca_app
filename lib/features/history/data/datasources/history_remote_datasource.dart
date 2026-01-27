@@ -19,7 +19,7 @@ abstract class HistoryRemoteDataSource {
 }
 
 /// Implementação do datasource remoto de histórico
-@Injectable(as: HistoryRemoteDataSource)
+@LazySingleton(as: HistoryRemoteDataSource)
 class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
   final DioClient _client;
 

@@ -17,7 +17,7 @@ abstract class FuelStationRemoteDataSource {
   Future<List<FuelPriceHistoryModel>> getPriceHistory(String stationId, String fuelTypeId);
 }
 
-@Injectable(as: FuelStationRemoteDataSource)
+@LazySingleton(as: FuelStationRemoteDataSource)
 class FuelStationRemoteDataSourceImpl implements FuelStationRemoteDataSource {
   final DioClient _client;
   

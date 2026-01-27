@@ -62,7 +62,7 @@ abstract class NotificationRemoteDataSource {
   });
 }
 
-@Injectable(as: NotificationRemoteDataSource)
+@LazySingleton(as: NotificationRemoteDataSource)
 class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   final DioClient _client;
 

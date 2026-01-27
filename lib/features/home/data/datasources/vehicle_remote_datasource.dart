@@ -13,7 +13,7 @@ abstract class VehicleRemoteDataSource {
   Future<VehicleModel> updateVehicle(String id, Map<String, dynamic> data);
 }
 
-@Injectable(as: VehicleRemoteDataSource)
+@LazySingleton(as: VehicleRemoteDataSource)
 class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   final DioClient _client;
   

@@ -46,6 +46,8 @@ import 'package:zeca_app/features/change_password/domain/usecases/change_passwor
     as _i28;
 import 'package:zeca_app/features/change_password/presentation/bloc/change_password_bloc.dart'
     as _i400;
+import 'package:zeca_app/features/checklist/presentation/bloc/checklist_bloc.dart'
+    as _i876;
 import 'package:zeca_app/features/history/data/datasources/history_remote_datasource.dart'
     as _i753;
 import 'package:zeca_app/features/history/data/repositories/history_repository_impl.dart'
@@ -139,61 +141,62 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i579.GeocodingService>(() => _i579.GeocodingService());
     gh.factory<_i23.RefuelingFormBloc>(() => _i23.RefuelingFormBloc());
     gh.factory<_i402.OdometerCameraBloc>(() => _i402.OdometerCameraBloc());
-    gh.factory<_i921.VehicleRemoteDataSource>(
+    gh.factory<_i876.ChecklistBloc>(() => _i876.ChecklistBloc());
+    gh.lazySingleton<_i921.VehicleRemoteDataSource>(
         () => _i921.VehicleRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i753.HistoryRemoteDataSource>(
+    gh.lazySingleton<_i753.HistoryRemoteDataSource>(
         () => _i753.HistoryRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i974.UserRemoteDataSource>(
+    gh.lazySingleton<_i974.UserRemoteDataSource>(
         () => _i974.UserRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i493.DocumentRemoteDataSource>(
+    gh.lazySingleton<_i493.DocumentRemoteDataSource>(
         () => _i493.DocumentRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i787.FuelStationRemoteDataSource>(
+    gh.lazySingleton<_i787.FuelStationRemoteDataSource>(
         () => _i787.FuelStationRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i106.AutonomousRemoteDataSource>(
+    gh.lazySingleton<_i106.AutonomousRemoteDataSource>(
         () => _i106.AutonomousRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i857.AuthRemoteDataSource>(
+    gh.lazySingleton<_i857.AuthRemoteDataSource>(
         () => _i857.AuthRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i799.HistoryRepository>(
+    gh.lazySingleton<_i799.HistoryRepository>(
         () => _i191.HistoryRepositoryImpl(gh<_i753.HistoryRemoteDataSource>()));
-    gh.factory<_i218.NotificationRemoteDataSource>(
+    gh.lazySingleton<_i218.NotificationRemoteDataSource>(
         () => _i218.NotificationRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i133.RefuelingRemoteDataSource>(
+    gh.lazySingleton<_i133.RefuelingRemoteDataSource>(
         () => _i133.RefuelingRemoteDataSourceImpl(gh<_i241.DioClient>()));
-    gh.factory<_i724.RefuelingRepository>(() =>
+    gh.lazySingleton<_i724.RefuelingRepository>(() =>
         _i93.RefuelingRepositoryImpl(gh<_i133.RefuelingRemoteDataSource>()));
     gh.factory<_i653.GetHistoryUseCase>(
         () => _i653.GetHistoryUseCase(gh<_i799.HistoryRepository>()));
     gh.factory<_i653.GetRefuelingDetailsUseCase>(
         () => _i653.GetRefuelingDetailsUseCase(gh<_i799.HistoryRepository>()));
-    gh.factory<_i414.AuthLocalDataSource>(
+    gh.lazySingleton<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
-    gh.factory<_i649.AutonomousRepository>(() =>
+    gh.lazySingleton<_i649.AutonomousRepository>(() =>
         _i649.AutonomousRepositoryImpl(gh<_i106.AutonomousRemoteDataSource>()));
     gh.factory<_i56.AutonomousVehiclesBloc>(
         () => _i56.AutonomousVehiclesBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i545.AutonomousRegistrationBloc>(() =>
         _i545.AutonomousRegistrationBloc(gh<_i649.AutonomousRepository>()));
-    gh.factory<_i1001.VehicleRepository>(
+    gh.lazySingleton<_i1001.VehicleRepository>(
         () => _i404.VehicleRepositoryImpl(gh<_i921.VehicleRemoteDataSource>()));
     gh.factory<_i639.HistoryBloc>(
         () => _i639.HistoryBloc(gh<_i653.GetHistoryUseCase>()));
     gh.factory<_i654.ChangePasswordRepository>(
         () => _i654.ChangePasswordRepository(gh<_i844.ApiService>()));
-    gh.factory<_i222.FuelStationRepository>(() =>
+    gh.lazySingleton<_i222.FuelStationRepository>(() =>
         _i317.FuelStationRepositoryImpl(
             gh<_i787.FuelStationRemoteDataSource>()));
-    gh.factory<_i63.DocumentRepository>(() =>
+    gh.lazySingleton<_i63.DocumentRepository>(() =>
         _i672.DocumentRepositoryImpl(gh<_i493.DocumentRemoteDataSource>()));
     gh.factory<_i292.SearchVehicleUseCase>(
         () => _i292.SearchVehicleUseCase(gh<_i1001.VehicleRepository>()));
     gh.factory<_i514.UploadDocumentUseCase>(
         () => _i514.UploadDocumentUseCase(gh<_i63.DocumentRepository>()));
-    gh.factory<_i464.AuthRepository>(() => _i667.AuthRepositoryImpl(
+    gh.lazySingleton<_i464.AuthRepository>(() => _i667.AuthRepositoryImpl(
           gh<_i857.AuthRemoteDataSource>(),
           gh<_i414.AuthLocalDataSource>(),
           gh<_i852.StorageService>(),
         ));
-    gh.factory<_i472.NotificationRepository>(() =>
+    gh.lazySingleton<_i472.NotificationRepository>(() =>
         _i61.NotificationRepositoryImpl(
             gh<_i218.NotificationRemoteDataSource>()));
     gh.factory<_i256.ValidateRefuelingCodeUseCase>(() =>

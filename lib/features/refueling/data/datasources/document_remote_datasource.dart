@@ -28,7 +28,7 @@ abstract class DocumentRemoteDataSource {
   });
 }
 
-@Injectable(as: DocumentRemoteDataSource)
+@LazySingleton(as: DocumentRemoteDataSource)
 class DocumentRemoteDataSourceImpl implements DocumentRemoteDataSource {
   final DioClient _client;
 

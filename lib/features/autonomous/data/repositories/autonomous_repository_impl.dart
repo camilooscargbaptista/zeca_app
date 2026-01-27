@@ -31,7 +31,7 @@ abstract class AutonomousRepository {
   Future<Either<Failure, Map<String, int>>> countVehicles();
 }
 
-@Injectable(as: AutonomousRepository)
+@LazySingleton(as: AutonomousRepository)
 class AutonomousRepositoryImpl implements AutonomousRepository {
   final AutonomousRemoteDataSource _remoteDataSource;
   

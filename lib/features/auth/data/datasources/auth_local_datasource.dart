@@ -8,7 +8,7 @@ abstract class AuthLocalDataSource {
   Future<void> clearCache();
 }
 
-@Injectable(as: AuthLocalDataSource)
+@LazySingleton(as: AuthLocalDataSource)
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final StorageService _storageService;
   

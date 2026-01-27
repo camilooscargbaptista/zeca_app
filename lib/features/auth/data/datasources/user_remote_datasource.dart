@@ -14,7 +14,7 @@ abstract class UserRemoteDataSource {
   Future<UserModel> getUserById(String userId);
 }
 
-@Injectable(as: UserRemoteDataSource)
+@LazySingleton(as: UserRemoteDataSource)
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   final DioClient _client;
   

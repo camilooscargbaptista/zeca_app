@@ -13,7 +13,7 @@ abstract class AuthRemoteDataSource {
   Future<void> revokeToken(String token);
 }
 
-@Injectable(as: AuthRemoteDataSource)
+@LazySingleton(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final DioClient _client;
   

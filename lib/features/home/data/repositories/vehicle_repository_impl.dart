@@ -6,7 +6,7 @@ import '../../domain/entities/vehicle_entity.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_remote_datasource.dart';
 
-@Injectable(as: VehicleRepository)
+@LazySingleton(as: VehicleRepository)
 class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource _remoteDataSource;
 

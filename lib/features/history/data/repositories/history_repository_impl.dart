@@ -7,7 +7,7 @@ import '../../domain/repositories/history_repository.dart';
 import '../datasources/history_remote_datasource.dart';
 
 /// Implementação do repository de histórico
-@Injectable(as: HistoryRepository)
+@LazySingleton(as: HistoryRepository)
 class HistoryRepositoryImpl implements HistoryRepository {
   final HistoryRemoteDataSource _remoteDataSource;
 

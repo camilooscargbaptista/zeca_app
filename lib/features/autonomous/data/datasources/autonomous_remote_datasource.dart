@@ -30,7 +30,7 @@ abstract class AutonomousRemoteDataSource {
   Future<void> deleteVehicle(String id);
 }
 
-@Injectable(as: AutonomousRemoteDataSource)
+@LazySingleton(as: AutonomousRemoteDataSource)
 class AutonomousRemoteDataSourceImpl implements AutonomousRemoteDataSource {
   final DioClient _client;
   

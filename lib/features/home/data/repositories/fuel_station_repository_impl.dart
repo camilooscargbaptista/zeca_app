@@ -6,7 +6,7 @@ import '../../domain/entities/fuel_station_entity.dart';
 import '../../domain/repositories/fuel_station_repository.dart';
 import '../datasources/fuel_station_remote_datasource.dart';
 
-@Injectable(as: FuelStationRepository)
+@LazySingleton(as: FuelStationRepository)
 class FuelStationRepositoryImpl implements FuelStationRepository {
   final FuelStationRemoteDataSource _remoteDataSource;
 
