@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AutonomousVehicleFormPage extends StatefulWidget {
   final String? vehicleId;
@@ -374,7 +375,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
     final primaryColor = FlavorConfig.instance.primaryColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -498,7 +499,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -527,7 +528,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
                       const SizedBox(height: 2),
                       const Text(
                         'Placa não pode ser alterada',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                        style: TextStyle(fontSize: 11, color: AppColors.grey400),
                       ),
                     ],
                   ),
@@ -570,7 +571,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
           ),
           const Padding(
             padding: EdgeInsets.only(top: 6, left: 4),
-            child: Text('Formato: ABC-1234 ou ABC1D23 (Mercosul)', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+            child: Text('Formato: ABC-1234 ou ABC1D23 (Mercosul)', style: TextStyle(fontSize: 12, color: AppColors.grey500)),
           ),
         ],
       ],
@@ -780,7 +781,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       children: [
         const Text(
           'Selecione os combustíveis que o veículo utiliza:',
-          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          style: TextStyle(fontSize: 12, color: AppColors.grey500),
         ),
         const SizedBox(height: 12),
         GridView.count(
@@ -805,7 +806,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: isSelected ? primaryColor : const Color(0xFFE2E8F0), width: 2),
+                  border: Border.all(color: isSelected ? primaryColor : Color(0xFFE2E8F0), width: 2),
                   borderRadius: BorderRadius.circular(12),
                   color: isSelected ? primaryColor.withValues(alpha: 0.1) : Colors.white,
                 ),
@@ -884,7 +885,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
             children: [
               Icon(icon, color: primaryColor, size: 18),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
             ],
           ),
           const SizedBox(height: 16),
@@ -900,7 +901,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
       child: RichText(
         text: TextSpan(
           text: text,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey600),
           children: required ? [const TextSpan(text: ' *', style: TextStyle(color: Colors.red))] : [],
         ),
       ),
@@ -910,7 +911,7 @@ class _AutonomousVehicleFormPageState extends State<AutonomousVehicleFormPage> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+      hintStyle: const TextStyle(color: AppColors.grey400),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 2)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 2)),

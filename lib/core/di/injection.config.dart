@@ -11,6 +11,7 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:zeca_app/core/network/dio_client.dart' as _i241;
+import 'package:zeca_app/core/services/api_service.dart' as _i844;
 import 'package:zeca_app/core/services/geocoding_service.dart' as _i579;
 import 'package:zeca_app/core/services/storage_service.dart' as _i852;
 import 'package:zeca_app/features/auth/data/datasources/auth_local_datasource.dart'
@@ -39,6 +40,12 @@ import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_regist
     as _i545;
 import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart'
     as _i56;
+import 'package:zeca_app/features/change_password/data/repositories/change_password_repository.dart'
+    as _i654;
+import 'package:zeca_app/features/change_password/domain/usecases/change_password_usecase.dart'
+    as _i28;
+import 'package:zeca_app/features/change_password/presentation/bloc/change_password_bloc.dart'
+    as _i400;
 import 'package:zeca_app/features/history/data/datasources/history_remote_datasource.dart'
     as _i753;
 import 'package:zeca_app/features/history/data/repositories/history_repository_impl.dart'
@@ -91,6 +98,8 @@ import 'package:zeca_app/features/notifications/domain/usecases/update_notificat
     as _i175;
 import 'package:zeca_app/features/notifications/presentation/bloc/notification_bloc.dart'
     as _i533;
+import 'package:zeca_app/features/odometer/presentation/bloc/odometer_camera_bloc.dart'
+    as _i402;
 import 'package:zeca_app/features/refueling/data/datasources/document_remote_datasource.dart'
     as _i493;
 import 'package:zeca_app/features/refueling/data/datasources/refueling_remote_datasource.dart'
@@ -129,6 +138,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i579.GeocodingService>(() => _i579.GeocodingService());
     gh.factory<_i23.RefuelingFormBloc>(() => _i23.RefuelingFormBloc());
+    gh.factory<_i402.OdometerCameraBloc>(() => _i402.OdometerCameraBloc());
     gh.factory<_i921.VehicleRemoteDataSource>(
         () => _i921.VehicleRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i753.HistoryRemoteDataSource>(
@@ -167,6 +177,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i404.VehicleRepositoryImpl(gh<_i921.VehicleRemoteDataSource>()));
     gh.factory<_i639.HistoryBloc>(
         () => _i639.HistoryBloc(gh<_i653.GetHistoryUseCase>()));
+    gh.factory<_i654.ChangePasswordRepository>(
+        () => _i654.ChangePasswordRepository(gh<_i844.ApiService>()));
     gh.factory<_i222.FuelStationRepository>(() =>
         _i317.FuelStationRepositoryImpl(
             gh<_i787.FuelStationRemoteDataSource>()));
@@ -198,6 +210,8 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i678.LoginUseCase(gh<_i464.AuthRepository>()));
     gh.factory<_i1041.LogoutUseCase>(
         () => _i1041.LogoutUseCase(gh<_i464.AuthRepository>()));
+    gh.factory<_i28.ChangePasswordUseCase>(
+        () => _i28.ChangePasswordUseCase(gh<_i654.ChangePasswordRepository>()));
     gh.factory<_i32.ValidateStationUseCase>(
         () => _i32.ValidateStationUseCase(gh<_i222.FuelStationRepository>()));
     gh.factory<_i85.GetNearbyStationsUseCase>(
@@ -212,6 +226,10 @@ extension GetItInjectableX on _i174.GetIt {
           loginUseCase: gh<_i678.LoginUseCase>(),
           logoutUseCase: gh<_i1041.LogoutUseCase>(),
           authRepository: gh<_i464.AuthRepository>(),
+        ));
+    gh.factory<_i400.ChangePasswordBloc>(() => _i400.ChangePasswordBloc(
+          gh<_i28.ChangePasswordUseCase>(),
+          gh<_i589.AuthBloc>(),
         ));
     gh.factory<_i175.UpdateNotificationSettingsUseCase>(() =>
         _i175.UpdateNotificationSettingsUseCase(
