@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../core/di/injection.dart';
+import '../bloc/checklist_bloc.dart';
 
 class ChecklistPage extends StatefulWidget {
   const ChecklistPage({Key? key}) : super(key: key);
@@ -14,26 +17,27 @@ class ChecklistPage extends StatefulWidget {
 }
 
 class _ChecklistPageState extends State<ChecklistPage> {
-  Map<String, dynamic>? _vehicleData;
-  Map<String, dynamic>? _checklistData;
+  late final ChecklistBloc _bloc;
   String? _executionId;
-  
-  bool _isLoading = true;
-  bool _isSaving = false;
-  
-  // Armazena as respostas dos itens (item_id -> resposta)
-  final Map<String, Map<String, dynamic>> _responses = {};
 
   @override
   void initState() {
     super.initState();
+    _bloc = ChecklistBloc();
     _loadVehicleAndChecklist();
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
   }
 
   /// Carregar dados do veículo e buscar checklist
   Future<void> _loadVehicleAndChecklist() async {
+    _bloc.add(const ChecklistEvent.loadData());
+    
     try {
-      // 1. Carregar dados do veículo do storage
       final storageService = getIt<StorageService>();
       final vehicleData = await storageService.getJourneyVehicleData();
       
@@ -49,15 +53,13 @@ class _ChecklistPageState extends State<ChecklistPage> {
         return;
       }
       
-      setState(() {
-        _vehicleData = vehicleData;
-      });
-      
-      // 2. Buscar checklist pela placa
-      await _fetchChecklist();
+      _bloc.add(ChecklistEvent.vehicleLoaded(vehicleData));
+      await _fetchChecklist(vehicleData);
       
     } catch (e) {
-      debugPrint('⚠️ Erro ao carregar dados: $e');
+      if (kDebugMode) {
+        print('⚠️ Erro ao carregar dados: $e');
+      }
       if (mounted) {
         ErrorDialog.show(
           context,
@@ -65,38 +67,26 @@ class _ChecklistPageState extends State<ChecklistPage> {
           message: 'Erro ao carregar dados do checklist: $e',
         );
       }
-      setState(() {
-        _isLoading = false;
-      });
+      _bloc.add(ChecklistEvent.loadFailed('Erro ao carregar: $e'));
     }
   }
 
-  /// Verificar se há checklist disponível
-  bool _hasChecklist() {
-    if (_checklistData == null) return false;
-    final checklists = _checklistData!['checklists'] as List?;
-    return checklists != null && checklists.isNotEmpty;
-  }
-
   /// Buscar checklist pela placa
-  Future<void> _fetchChecklist() async {
+  Future<void> _fetchChecklist(Map<String, dynamic> vehicleData) async {
     try {
       final apiService = ApiService();
-      final plate = _vehicleData!['placa'];
-      
-      // Remover hífens da placa para garantir formato correto
+      final plate = vehicleData['placa'];
       final cleanPlate = plate?.toString().replaceAll('-', '').replaceAll(' ', '').toUpperCase() ?? '';
       
-      debugPrint('🔍 Buscando checklist para placa: $plate (limpa: $cleanPlate)');
-      debugPrint('📦 Dados do veículo: $_vehicleData');
+      if (kDebugMode) {
+        print('🔍 Buscando checklist para placa: $cleanPlate');
+      }
       
-      // Tentar primeiro com pre_trip
       var response = await apiService.getChecklistByPlate(
-        plate: cleanPlate, // Usar placa sem hífens
-        executionType: 'pre_trip', // Pré-viagem por padrão
+        plate: cleanPlate,
+        executionType: 'pre_trip',
       );
       
-      // Se não encontrar com pre_trip, tentar sem filtro de execution_type
       if (response['success'] == true) {
         final data = response['data'];
         List<dynamic> checklists = [];
@@ -107,71 +97,43 @@ class _ChecklistPageState extends State<ChecklistPage> {
         }
         
         if (checklists.isEmpty) {
-          debugPrint('⚠️ Nenhum checklist encontrado com pre_trip, tentando sem filtro...');
           response = await apiService.getChecklistByPlate(
             plate: cleanPlate,
-            executionType: null, // Sem filtro
+            executionType: null,
           );
         }
       }
       
-      debugPrint('📥 Resposta da API: ${response.toString()}');
-      
       if (response['success'] == true) {
         final data = response['data'];
-        debugPrint('📦 Data recebida: ${data.toString()}');
-        debugPrint('📦 Tipo de data: ${data.runtimeType}');
+        Map<String, dynamic> checklistData;
         
-        // Verificar se data é um Map ou List
-        List<dynamic> checklists = [];
         if (data is Map<String, dynamic>) {
-          checklists = data['checklists'] as List<dynamic>? ?? [];
-          debugPrint('📋 Checklists do Map: ${checklists.length}');
+          checklistData = data;
         } else if (data is List) {
-          checklists = data;
-          debugPrint('📋 Checklists da List: ${checklists.length}');
-        }
-        
-        debugPrint('✅ Total de checklists encontrados: ${checklists.length}');
-        
-        setState(() {
-          // Garantir que o formato está correto
-          if (data is Map<String, dynamic>) {
-            _checklistData = data;
-          } else {
-            _checklistData = {
-              'vehicle': _vehicleData,
-              'checklists': checklists,
-            };
-          }
-          _isLoading = false;
-        });
-        
-        debugPrint('✅ Checklist carregado: ${checklists.length} template(s)');
-      } else {
-        debugPrint('⚠️ Erro na resposta: ${response['error']}');
-        setState(() {
-          _isLoading = false;
-          // Definir checklistData como vazio para mostrar mensagem de "nenhum checklist"
-          _checklistData = {
-            'vehicle': _vehicleData,
+          checklistData = {
+            'vehicle': vehicleData,
+            'checklists': data,
+          };
+        } else {
+          checklistData = {
+            'vehicle': vehicleData,
             'checklists': [],
           };
-        });
-        debugPrint('⚠️ Nenhum checklist encontrado para o veículo');
-      }
-    } catch (e, stackTrace) {
-      debugPrint('❌ Erro ao buscar checklist: $e');
-      debugPrint('📚 Stack trace: $stackTrace');
-      setState(() {
-        _isLoading = false;
-        // Definir checklistData como vazio para mostrar mensagem de erro
-        _checklistData = {
-          'vehicle': _vehicleData,
+        }
+        
+        _bloc.add(ChecklistEvent.checklistLoaded(checklistData));
+      } else {
+        _bloc.add(ChecklistEvent.checklistLoaded({
+          'vehicle': vehicleData,
           'checklists': [],
-        };
-      });
-      debugPrint('❌ Erro ao buscar checklist: $e');
+        }));
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Erro ao buscar checklist: $e');
+      }
+      _bloc.add(ChecklistEvent.loadFailed('Erro ao buscar checklist: $e'));
     }
   }
 
@@ -182,47 +144,17 @@ class _ChecklistPageState extends State<ChecklistPage> {
     bool isConforming = true,
     String? notes,
   }) {
-    setState(() {
-      _responses[itemId] = {
-        'value': value,
-        'is_conforming': isConforming,
-        'notes': notes,
-      };
-    });
-  }
-
-  /// Verificar se todos os itens obrigatórios foram respondidos
-  bool _areAllRequiredItemsAnswered() {
-    if (_checklistData == null) return false;
-    
-    final checklists = _checklistData!['checklists'] as List?;
-    if (checklists == null || checklists.isEmpty) return false;
-    
-    // Para simplificar, considerar o primeiro checklist
-    final checklist = checklists[0];
-    final sections = checklist['sections'] as List?;
-    if (sections == null) return true;
-    
-    for (final section in sections) {
-      final items = section['items'] as List?;
-      if (items == null) continue;
-      
-      for (final item in items) {
-        final itemId = item['id'];
-        // Verificar se é crítico e se foi respondido
-        if (item['is_critical'] == true && !_responses.containsKey(itemId)) {
-          return false;
-        }
-      }
-    }
-    
-    return true;
+    _bloc.add(ChecklistEvent.answerItem(
+      itemId: itemId,
+      value: value,
+      isConforming: isConforming,
+      notes: notes,
+    ));
   }
 
   /// Mostrar modal de confirmação
   Future<void> _showConfirmationDialog() async {
-    // Verificar se todos os itens obrigatórios foram respondidos
-    if (!_areAllRequiredItemsAnswered()) {
+    if (!_bloc.areAllRequiredItemsAnswered()) {
       ErrorDialog.show(
         context,
         title: 'Itens Obrigatórios',
@@ -288,24 +220,22 @@ class _ChecklistPageState extends State<ChecklistPage> {
     }
   }
 
-  /// Salvar checklist (iniciar execução, responder itens, finalizar)
+  /// Salvar checklist
   Future<void> _saveChecklist() async {
-    setState(() {
-      _isSaving = true;
-    });
+    _bloc.add(const ChecklistEvent.startSaving());
 
     try {
+      final state = _bloc.state;
       final apiService = ApiService();
       
-      // 1. Iniciar execução
-      final checklists = _checklistData!['checklists'] as List;
-      final checklist = checklists[0]; // Primeiro checklist
+      final checklists = state.checklistData!['checklists'] as List;
+      final checklist = checklists[0];
       final templateId = checklist['id'];
-      final vehicleId = _vehicleData!['id'];
+      final vehicleId = state.vehicleData!['id'];
       
-      debugPrint('📋 Iniciando execução do checklist...');
-      debugPrint('   Template ID: $templateId');
-      debugPrint('   Vehicle ID: $vehicleId');
+      if (kDebugMode) {
+        print('📋 Iniciando execução do checklist...');
+      }
       
       final executionResponse = await apiService.startChecklistExecution(
         fleetTemplateId: templateId,
@@ -319,34 +249,23 @@ class _ChecklistPageState extends State<ChecklistPage> {
       
       final executionData = executionResponse['data'];
       _executionId = executionData['data']?['id'] ?? executionData['id'];
+      _bloc.add(ChecklistEvent.executionStarted(_executionId!));
       
-      debugPrint('✅ Execução iniciada: $_executionId');
-      
-      // 2. Enviar respostas dos itens
-      debugPrint('📝 Enviando ${_responses.length} resposta(s)...');
-      
-      for (final entry in _responses.entries) {
+      // Enviar respostas
+      for (final entry in state.responses.entries) {
         final itemId = entry.key;
         final response = entry.value;
         
-        final itemResponse = await apiService.answerChecklistItem(
+        await apiService.answerChecklistItem(
           executionId: _executionId!,
           itemId: itemId,
           responseValue: response['value'],
           isConforming: response['is_conforming'] ?? true,
           notes: response['notes'],
         );
-        
-        if (itemResponse['success'] != true) {
-          debugPrint('⚠️ Erro ao responder item $itemId: ${itemResponse['error']}');
-        } else {
-          debugPrint('✅ Item $itemId respondido');
-        }
       }
       
-      // 3. Finalizar execução
-      debugPrint('🏁 Finalizando checklist...');
-      
+      // Finalizar
       final completeResponse = await apiService.completeChecklistExecution(
         executionId: _executionId!,
         notes: 'Checklist concluído via app móvel',
@@ -356,13 +275,8 @@ class _ChecklistPageState extends State<ChecklistPage> {
         throw Exception(completeResponse['error'] ?? 'Erro ao finalizar checklist');
       }
       
-      debugPrint('✅ Checklist finalizado com sucesso!');
+      _bloc.add(const ChecklistEvent.saveCompleted());
       
-      setState(() {
-        _isSaving = false;
-      });
-      
-      // Mostrar mensagem de sucesso e voltar
       if (mounted) {
         showDialog(
           context: context,
@@ -375,18 +289,14 @@ class _ChecklistPageState extends State<ChecklistPage> {
                 const Text('Sucesso!'),
               ],
             ),
-            content: const Text(
-              'Checklist finalizado e enviado com sucesso!',
-            ),
+            content: const Text('Checklist finalizado e enviado com sucesso!'),
             actions: [
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   context.go('/journey-dashboard');
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('OK'),
               ),
             ],
@@ -395,10 +305,10 @@ class _ChecklistPageState extends State<ChecklistPage> {
       }
       
     } catch (e) {
-      debugPrint('❌ Erro ao salvar checklist: $e');
-      setState(() {
-        _isSaving = false;
-      });
+      if (kDebugMode) {
+        print('❌ Erro ao salvar checklist: $e');
+      }
+      _bloc.add(ChecklistEvent.saveFailed('Erro ao salvar: $e'));
       
       if (mounted) {
         ErrorDialog.show(
@@ -412,159 +322,114 @@ class _ChecklistPageState extends State<ChecklistPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checklist'),
-        centerTitle: true,
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Voltar para o dashboard
-            context.go('/journey-dashboard');
-          },
-          tooltip: 'Voltar',
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _isSaving
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Salvando checklist...',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Aguarde enquanto enviamos suas respostas',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+    return BlocProvider.value(
+      value: _bloc,
+      child: BlocBuilder<ChecklistBloc, ChecklistState>(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Checklist'),
+              centerTitle: true,
+              elevation: 2,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/journey-dashboard'),
+                tooltip: 'Voltar',
+              ),
+            ),
+            body: state.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : state.isSaving
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Salvando checklist...',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Aguarde enquanto enviamos suas respostas',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                          left: 16.0,
+                          right: 16.0,
+                          top: 16.0,
+                          bottom: 16.0 + MediaQuery.of(context).viewPadding.bottom + 80,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildVehicleCard(state),
+                            const SizedBox(height: 16),
+                            if (_bloc.hasChecklist()) _buildProgressBar(state),
+                            if (_bloc.hasChecklist()) const SizedBox(height: 24),
+                            ..._buildChecklistSections(state),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    left: 16.0,
-                    right: 16.0,
-                    top: 16.0,
-                    bottom: 16.0 + MediaQuery.of(context).viewPadding.bottom + 80, // Espaço para o botão fixo
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Card da Placa do Veículo (destaque no topo)
-                      _buildVehicleCard(),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Barra de Progresso Geral (somente se houver checklist)
-                      if (_checklistData != null && _hasChecklist()) _buildProgressBar(),
-                      
-                      if (_checklistData != null && _hasChecklist()) const SizedBox(height: 24),
-                      
-                      // Seções do Checklist
-                      if (_checklistData != null) ..._buildChecklistSections(),
-                    ],
-                  ),
-                ),
-      // Botão fixo na parte inferior (somente se houver checklist)
-      bottomNavigationBar: !_isLoading && !_isSaving && _checklistData != null && _hasChecklist()
-          ? Container(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 12,
-                bottom: 12 + MediaQuery.of(context).viewPadding.bottom,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: _showConfirmationDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondaryRed,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Finalizar Checklist',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            )
-          : null,
+            bottomNavigationBar: !state.isLoading && !state.isSaving && _bloc.hasChecklist()
+                ? Container(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 12,
+                      bottom: 12 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _showConfirmationDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondaryRed,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Finalizar Checklist',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
+          );
+        },
+      ),
     );
   }
 
-  /// Calcular progresso total do checklist
-  Map<String, dynamic> _calculateProgress() {
-    int totalItems = 0;
-    int answeredItems = 0;
-    
-    final checklists = _checklistData!['checklists'] as List?;
-    if (checklists == null || checklists.isEmpty) {
-      return {'total': 0, 'answered': 0, 'percentage': 0.0};
-    }
-    
-    final checklist = checklists[0];
-    final sections = checklist['sections'] as List?;
-    if (sections == null) {
-      return {'total': 0, 'answered': 0, 'percentage': 0.0};
-    }
-    
-    for (final section in sections) {
-      final items = section['items'] as List?;
-      if (items == null) continue;
-      
-      totalItems += items.length;
-      
-      for (final item in items) {
-        final itemId = item['id'];
-        if (_responses.containsKey(itemId)) {
-          answeredItems++;
-        }
-      }
-    }
-    
-    final percentage = totalItems > 0 ? (answeredItems / totalItems) : 0.0;
-    
-    return {
-      'total': totalItems,
-      'answered': answeredItems,
-      'percentage': percentage,
-    };
-  }
-
-  Widget _buildProgressBar() {
-    final progress = _calculateProgress();
+  Widget _buildProgressBar(ChecklistState state) {
+    final progress = _bloc.calculateProgress();
     final total = progress['total'] as int;
     final answered = progress['answered'] as int;
     final percentage = progress['percentage'] as double;
     
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -575,9 +440,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
               children: [
                 Text(
                   'Progresso do Checklist',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   '$answered/$total',
@@ -617,22 +480,17 @@ class _ChecklistPageState extends State<ChecklistPage> {
     );
   }
 
-  Widget _buildVehicleCard() {
-    if (_vehicleData == null) return const SizedBox.shrink();
+  Widget _buildVehicleCard(ChecklistState state) {
+    if (state.vehicleData == null) return const SizedBox.shrink();
 
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: [
-              AppColors.zecaBlue,
-              AppColors.zecaBlue.withOpacity(0.8),
-            ],
+            colors: [AppColors.zecaBlue, AppColors.zecaBlue.withValues(alpha: 0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -640,26 +498,16 @@ class _ChecklistPageState extends State<ChecklistPage> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Icon(
-              Icons.directions_car,
-              color: Colors.white,
-              size: 40,
-            ),
+            const Icon(Icons.directions_car, color: Colors.white, size: 40),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Veículo',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
+                  const Text('Veículo', style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(
-                    _vehicleData!['placa'] ?? 'N/A',
+                    state.vehicleData!['placa'] ?? 'N/A',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -669,11 +517,8 @@ class _ChecklistPageState extends State<ChecklistPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_vehicleData!['marca']} ${_vehicleData!['modelo']}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    '${state.vehicleData!['marca']} ${state.vehicleData!['modelo']}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
@@ -684,8 +529,8 @@ class _ChecklistPageState extends State<ChecklistPage> {
     );
   }
 
-  List<Widget> _buildChecklistSections() {
-    final checklists = _checklistData!['checklists'] as List?;
+  List<Widget> _buildChecklistSections(ChecklistState state) {
+    final checklists = state.checklistData?['checklists'] as List?;
     if (checklists == null || checklists.isEmpty) {
       return [
         Center(
@@ -694,25 +539,17 @@ class _ChecklistPageState extends State<ChecklistPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.assignment_outlined,
-                  size: 80,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.assignment_outlined, size: 80, color: Colors.grey[400]),
                 const SizedBox(height: 24),
                 Text(
                   'Nenhum checklist disponível',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Não há checklist configurado para este veículo no momento.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -722,7 +559,6 @@ class _ChecklistPageState extends State<ChecklistPage> {
       ];
     }
     
-    // Para simplificar, mostrar apenas o primeiro checklist
     final checklist = checklists[0];
     final sections = checklist['sections'] as List?;
     
@@ -737,21 +573,15 @@ class _ChecklistPageState extends State<ChecklistPage> {
       ];
     }
     
-    // Ordenar seções por display_order
-    final sortedSections = List.from(sections);
-    sortedSections.sort((a, b) => 
-      (a['display_order'] ?? 0).compareTo(b['display_order'] ?? 0)
-    );
+    final sortedSections = List.from(sections)
+      ..sort((a, b) => (a['display_order'] ?? 0).compareTo(b['display_order'] ?? 0));
     
     final widgets = <Widget>[];
     
-    // Adicionar título do checklist
     widgets.add(
       Text(
         checklist['name'] ?? 'Checklist',
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
     
@@ -760,100 +590,67 @@ class _ChecklistPageState extends State<ChecklistPage> {
       widgets.add(
         Text(
           checklist['description'],
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
-          ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
       );
     }
     
     widgets.add(const SizedBox(height: 24));
     
-    // Adicionar cada seção
     for (final section in sortedSections) {
-      widgets.add(_buildSection(section));
+      widgets.add(_buildSection(section, state));
       widgets.add(const SizedBox(height: 16));
     }
     
     return widgets;
   }
 
-  /// Verificar se uma seção está completa
-  bool _isSectionComplete(Map<String, dynamic> section) {
+  bool _isSectionComplete(Map<String, dynamic> section, ChecklistState state) {
     final items = section['items'] as List?;
     if (items == null || items.isEmpty) return true;
     
     for (final item in items) {
-      final itemId = item['id'];
-      if (!_responses.containsKey(itemId)) {
-        return false;
-      }
+      if (!state.responses.containsKey(item['id'])) return false;
     }
-    
     return true;
   }
 
-  /// Contar itens respondidos em uma seção
-  int _getAnsweredItemsCount(Map<String, dynamic> section) {
+  int _getAnsweredItemsCount(Map<String, dynamic> section, ChecklistState state) {
     final items = section['items'] as List?;
     if (items == null || items.isEmpty) return 0;
     
     int count = 0;
     for (final item in items) {
-      final itemId = item['id'];
-      if (_responses.containsKey(itemId)) {
-        count++;
-      }
+      if (state.responses.containsKey(item['id'])) count++;
     }
-    
     return count;
   }
 
-  Widget _buildSection(Map<String, dynamic> section) {
+  Widget _buildSection(Map<String, dynamic> section, ChecklistState state) {
     final items = section['items'] as List?;
+    if (items == null || items.isEmpty) return const SizedBox.shrink();
     
-    if (items == null || items.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final sortedItems = List.from(items)
+      ..sort((a, b) => (a['display_order'] ?? 0).compareTo(b['display_order'] ?? 0));
     
-    // Ordenar itens por display_order
-    final sortedItems = List.from(items);
-    sortedItems.sort((a, b) => 
-      (a['display_order'] ?? 0).compareTo(b['display_order'] ?? 0)
-    );
-    
-    // Verificar se seção está completa
-    final isComplete = _isSectionComplete(section);
-    final answeredCount = _getAnsweredItemsCount(section);
+    final isComplete = _isSectionComplete(section, state);
+    final answeredCount = _getAnsweredItemsCount(section, state);
     final totalItems = sortedItems.length;
     
-    // Cores baseadas no estado
-    final backgroundColor = isComplete 
-        ? Colors.green[50] 
-        : Colors.white;
-    final iconColor = isComplete 
-        ? Colors.green[700] 
-        : AppColors.zecaBlue;
-    final textColor = isComplete 
-        ? Colors.green[900] 
-        : Colors.black87;
+    final backgroundColor = isComplete ? Colors.green[50] : Colors.white;
+    final iconColor = isComplete ? Colors.green[700] : AppColors.zecaBlue;
+    final textColor = isComplete ? Colors.green[900] : Colors.black87;
     
     return Card(
       elevation: isComplete ? 3 : 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: isComplete 
-            ? BorderSide(color: Colors.green[700]!, width: 2)
-            : BorderSide.none,
+        side: isComplete ? BorderSide(color: Colors.green[700]!, width: 2) : BorderSide.none,
       ),
       color: backgroundColor,
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        childrenPadding: const EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
+        childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         leading: Icon(
           isComplete ? Icons.check_circle : Icons.check_box_outline_blank,
           color: iconColor,
@@ -888,26 +685,20 @@ class _ChecklistPageState extends State<ChecklistPage> {
                   ),
                   child: const Text(
                     'COMPLETO',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ],
           ),
         ),
-        initiallyExpanded: !isComplete, // Expandir se não estiver completo
-        children: sortedItems.map((item) => _buildItem(item)).toList(),
+        initiallyExpanded: !isComplete,
+        children: sortedItems.map((item) => _buildItem(item, state)).toList(),
       ),
     );
   }
 
-  Widget _buildItem(Map<String, dynamic> item) {
-    final itemId = item['id'];
-    final itemType = item['item_type'];
+  Widget _buildItem(Map<String, dynamic> item, ChecklistState state) {
     final isCritical = item['is_critical'] == true;
     
     return Padding(
@@ -918,14 +709,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
           Row(
             children: [
               if (isCritical) ...[
-                const Text(
-                  '*',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('*', style: TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 4),
               ],
               Expanded(
@@ -941,44 +725,33 @@ class _ChecklistPageState extends State<ChecklistPage> {
           ),
           if (item['description'] != null) ...[
             const SizedBox(height: 4),
-            Text(
-              item['description'],
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
-            ),
+            Text(item['description'], style: TextStyle(fontSize: 13, color: Colors.grey[600])),
           ],
           const SizedBox(height: 12),
-          _buildItemInput(item),
+          _buildItemInput(item, state),
         ],
       ),
     );
   }
 
-  Widget _buildItemInput(Map<String, dynamic> item) {
-    final itemId = item['id'];
+  Widget _buildItemInput(Map<String, dynamic> item, ChecklistState state) {
     final itemType = item['item_type'];
     
     switch (itemType) {
       case 'checkbox':
-        return _buildCheckboxInput(item);
-      
+        return _buildCheckboxInput(item, state);
       case 'select':
-        return _buildSelectInput(item);
-      
+        return _buildSelectInput(item, state);
       case 'text':
       case 'number':
-        return _buildTextInput(item);
-      
       default:
-        return _buildTextInput(item);
+        return _buildTextInput(item, state);
     }
   }
 
-  Widget _buildCheckboxInput(Map<String, dynamic> item) {
+  Widget _buildCheckboxInput(Map<String, dynamic> item, ChecklistState state) {
     final itemId = item['id'];
-    final currentValue = _responses[itemId]?['value'];
+    final currentValue = state.responses[itemId]?['value'];
     final isChecked = currentValue == 'true' || currentValue == true || currentValue == 'Sim';
     
     return CheckboxListTile(
@@ -992,10 +765,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
       },
       title: Text(
         isChecked ? 'Conforme' : 'Não conforme',
-        style: TextStyle(
-          fontSize: 14,
-          color: isChecked ? Colors.green[700] : Colors.grey[700],
-        ),
+        style: TextStyle(fontSize: 14, color: isChecked ? Colors.green[700] : Colors.grey[700]),
       ),
       activeColor: Colors.green,
       contentPadding: EdgeInsets.zero,
@@ -1003,9 +773,9 @@ class _ChecklistPageState extends State<ChecklistPage> {
     );
   }
 
-  Widget _buildSelectInput(Map<String, dynamic> item) {
+  Widget _buildSelectInput(Map<String, dynamic> item, ChecklistState state) {
     final itemId = item['id'];
-    final currentValue = _responses[itemId]?['value'];
+    final currentValue = state.responses[itemId]?['value'];
     final options = item['options']?['options'] as List?;
     
     if (options == null || options.isEmpty) {
@@ -1030,17 +800,17 @@ class _ChecklistPageState extends State<ChecklistPage> {
           _answerItem(
             itemId: itemId,
             value: value,
-            isConforming: value != 'Ruim', // Exemplo de lógica
+            isConforming: value != 'Ruim',
           );
         }
       },
     );
   }
 
-  Widget _buildTextInput(Map<String, dynamic> item) {
+  Widget _buildTextInput(Map<String, dynamic> item, ChecklistState state) {
     final itemId = item['id'];
     final itemType = item['item_type'];
-    final currentValue = _responses[itemId]?['value'];
+    final currentValue = state.responses[itemId]?['value'];
     
     return TextFormField(
       initialValue: currentValue,
@@ -1049,17 +819,11 @@ class _ChecklistPageState extends State<ChecklistPage> {
         hintText: 'Digite sua resposta',
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
-      keyboardType: itemType == 'number' 
-          ? TextInputType.number 
-          : TextInputType.text,
+      keyboardType: itemType == 'number' ? TextInputType.number : TextInputType.text,
       maxLines: itemType == 'text' ? 3 : 1,
       onChanged: (value) {
-        _answerItem(
-          itemId: itemId,
-          value: value,
-        );
+        _answerItem(itemId: itemId, value: value);
       },
     );
   }
 }
-

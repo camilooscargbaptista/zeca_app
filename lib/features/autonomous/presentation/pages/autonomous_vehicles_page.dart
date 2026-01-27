@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../bloc/autonomous_vehicles_bloc.dart';
 
 class AutonomousVehiclesPage extends StatefulWidget {
   const AutonomousVehiclesPage({Key? key}) : super(key: key);
@@ -12,23 +15,23 @@ class AutonomousVehiclesPage extends StatefulWidget {
 }
 
 class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
-  bool _isLoading = true;
-  bool _isDeleting = false;
-  String? _error;
-  List<Map<String, dynamic>> _vehicles = [];
-  int _vehicleLimit = 3;
+  late final AutonomousVehiclesBloc _bloc;
 
   @override
   void initState() {
     super.initState();
+    _bloc = AutonomousVehiclesBloc();
     _loadVehicles();
   }
 
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
+
   Future<void> _loadVehicles() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    _bloc.add(const AutonomousVehiclesEvent.loadVehicles());
 
     try {
       final apiService = ApiService();
@@ -36,37 +39,32 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
-        setState(() {
-          _vehicles = data.map((v) => <String, dynamic>{
-            'id': v['id']?.toString() ?? '',
-            'plate': v['plate'] ?? '',
-            'brand': v['brand'] ?? '',
-            'model': v['model'] ?? '',
-            'year': _parseToInt(v['year']),
-            'fuelType': _formatFuelType(v['fuel_type'] ?? ''),
-            'odometer': _parseToInt(v['odometer']),
-          }).toList();
-          _isLoading = false;
-        });
+        final vehicles = data.map((v) => <String, dynamic>{
+          'id': v['id']?.toString() ?? '',
+          'plate': v['plate'] ?? '',
+          'brand': v['brand'] ?? '',
+          'model': v['model'] ?? '',
+          'year': _parseToInt(v['year']),
+          'fuelType': _formatFuelType(v['fuel_type'] ?? ''),
+          'odometer': _parseToInt(v['odometer']),
+        }).toList();
         
         // Buscar limite de veículos
+        int limit = 3;
         final countResponse = await apiService.countAutonomousVehicles();
         if (countResponse['success'] == true) {
-          setState(() {
-            _vehicleLimit = countResponse['data']?['limit'] ?? 3;
-          });
+          limit = countResponse['data']?['limit'] ?? 3;
         }
+        
+        _bloc.add(AutonomousVehiclesEvent.vehiclesLoaded(vehicles, limit));
       } else {
-        setState(() {
-          _error = response['error'] ?? 'Erro ao carregar veículos';
-          _isLoading = false;
-        });
+        _bloc.add(AutonomousVehiclesEvent.loadFailed(response['error'] ?? 'Erro ao carregar veículos'));
       }
     } catch (e) {
-      setState(() {
-        _error = 'Erro de conexão: $e';
-        _isLoading = false;
-      });
+      if (kDebugMode) {
+        print('❌ Erro ao carregar veículos: $e');
+      }
+      _bloc.add(AutonomousVehiclesEvent.loadFailed('Erro de conexão: $e'));
     }
   }
 
@@ -80,20 +78,17 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
     }
   }
 
-  /// Converte valor para int de forma segura (API pode retornar String, num ou double)
   int _parseToInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
     if (value is double) return value.toInt();
     if (value is String) {
-      // Remover decimais se existir (ex: "213455.000" → 213455)
       final cleanValue = value.replaceAll(RegExp(r'\..*'), '');
       return int.tryParse(cleanValue) ?? 0;
     }
     return 0;
   }
 
-  /// Exibir modal de confirmação e excluir veículo via API
   Future<void> _deleteVehicle(String vehicleId, String plate) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -106,7 +101,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.warning_rounded, color: Colors.red, size: 24),
@@ -127,7 +122,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -148,7 +143,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar', style: TextStyle(color: AppColors.grey600)),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.grey600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -164,8 +159,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
 
     if (confirmed != true) return;
 
-    // Chamar API para excluir
-    setState(() => _isDeleting = true);
+    _bloc.add(AutonomousVehiclesEvent.startDelete(vehicleId));
 
     try {
       final apiService = ApiService();
@@ -174,7 +168,6 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       if (!mounted) return;
 
       if (response['success'] == true) {
-        // Recarregar lista após exclusão
         await _loadVehicles();
         
         if (mounted) {
@@ -186,7 +179,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
           );
         }
       } else {
-        setState(() => _isDeleting = false);
+        _bloc.add(AutonomousVehiclesEvent.deleteFailed(response['error'] ?? 'Erro ao excluir'));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -197,7 +190,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
         }
       }
     } catch (e) {
-      setState(() => _isDeleting = false);
+      _bloc.add(AutonomousVehiclesEvent.deleteFailed('Erro de conexão: $e'));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -220,124 +213,112 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
   Widget build(BuildContext context) {
     final primaryColor = FlavorConfig.instance.primaryColor;
     
-    return Scaffold(
-      backgroundColor: AppColors.grey50,
-      appBar: AppBar(
-        backgroundColor: primaryColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'Meus Veículos',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: () => context.push('/autonomous/vehicles/add'),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // Conteúdo principal
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _loadVehicles,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Info box
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlueLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
+    return BlocProvider.value(
+      value: _bloc,
+      child: BlocBuilder<AutonomousVehiclesBloc, AutonomousVehiclesState>(
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: AppColors.grey50,
+            appBar: AppBar(
+              backgroundColor: primaryColor,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => context.pop(),
+              ),
+              title: const Text(
+                'Meus Veículos',
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  onPressed: () => context.push('/autonomous/vehicles/add'),
+                ),
+              ],
+            ),
+            body: Stack(
+              children: [
+                state.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : RefreshIndicator(
+                        onRefresh: _loadVehicles,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
                             children: [
-                              Icon(Icons.info_outline, color: primaryColor, size: 18),
-                              const SizedBox(width: 12),
-                              Text(
-                                '${_vehicles.length} de $_vehicleLimit veículos cadastrados',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: primaryColor,
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlueLight,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, color: primaryColor, size: 18),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      '${state.vehicleCount} de ${state.vehicleLimit} veículos cadastrados',
+                                      style: TextStyle(fontSize: 14, color: primaryColor),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              if (state.vehicles.isEmpty)
+                                Container(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[400]),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Nenhum veículo cadastrado',
+                                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Adicione seu primeiro veículo',
+                                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                ...state.vehicles.map((vehicle) => _buildVehicleCard(vehicle)),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // Lista de veículos
-                        if (_vehicles.isEmpty)
-                          Container(
-                            padding: const EdgeInsets.all(32),
-                            child: Column(
-                              children: [
-                                Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[400]),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Nenhum veículo cadastrado',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Adicione seu primeiro veículo',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[500],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          ..._vehicles.map((vehicle) => _buildVehicleCard(vehicle)),
-                      ],
+                      ),
+                if (state.isDeleting)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    child: const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: Colors.white),
+                          SizedBox(height: 16),
+                          Text(
+                            'Excluindo veículo...',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-          
-          // Loading overlay durante exclusão
-          if (_isDeleting)
-            Container(
-              color: Colors.black.withOpacity(0.3),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text(
-                      'Excluindo veículo...',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryColor,
-        onPressed: () => context.push('/autonomous/vehicles/add'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white),
+            floatingActionButton: FloatingActionButton(
+              backgroundColor: primaryColor,
+              onPressed: () => context.push('/autonomous/vehicles/add'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+          );
+        },
       ),
     );
   }
@@ -353,7 +334,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -361,10 +342,8 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       ),
       child: Column(
         children: [
-          // Header: ícone, info, ações
           Row(
             children: [
-              // Ícone do veículo
               Container(
                 width: 48,
                 height: 48,
@@ -375,8 +354,6 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                 child: Icon(Icons.local_shipping, color: primaryColor, size: 24),
               ),
               const SizedBox(width: 12),
-              
-              // Info do veículo
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,19 +368,13 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                     ),
                     Text(
                       '${vehicle['brand']} ${vehicle['model']}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
-              
-              // Ações
               Row(
                 children: [
-                  // Editar
                   _buildActionButton(
                     icon: Icons.edit,
                     color: primaryColor,
@@ -411,21 +382,17 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                     onTap: () => context.push('/autonomous/vehicles/edit/${vehicle['id']}'),
                   ),
                   const SizedBox(width: 8),
-                  // Excluir
                   _buildActionButton(
                     icon: Icons.delete,
                     color: AppColors.error,
-                    backgroundColor: const Color(0xFFFFEBEE), // Red light bg
+                    backgroundColor: const Color(0xFFFFEBEE),
                     onTap: () => _deleteVehicle(vehicle['id'], vehicle['plate']),
                   ),
                 ],
               ),
             ],
           ),
-          
           const SizedBox(height: 12),
-          
-          // Detalhes
           Container(
             padding: const EdgeInsets.only(top: 12),
             decoration: const BoxDecoration(
@@ -433,24 +400,11 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
             ),
             child: Row(
               children: [
-                // Combustível
-                _buildDetailItem(
-                  icon: Icons.local_gas_station,
-                  value: vehicle['fuelType'],
-                  isBadge: true,
-                ),
+                _buildDetailItem(icon: Icons.local_gas_station, value: vehicle['fuelType'], isBadge: true),
                 const SizedBox(width: 12),
-                // Ano
-                _buildDetailItem(
-                  icon: Icons.calendar_today,
-                  value: vehicle['year'].toString(),
-                ),
+                _buildDetailItem(icon: Icons.calendar_today, value: vehicle['year'].toString()),
                 const SizedBox(width: 12),
-                // Quilometragem
-                _buildDetailItem(
-                  icon: Icons.speed,
-                  value: '${_formatOdometer(vehicle['odometer'])} km',
-                ),
+                _buildDetailItem(icon: Icons.speed, value: '${_formatOdometer(vehicle['odometer'])} km'),
               ],
             ),
           ),
@@ -470,10 +424,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
       child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(8)),
         child: Icon(icon, color: color, size: 16),
       ),
     );
@@ -495,26 +446,16 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF3E0), // Orange light bg
+              color: const Color(0xFFFFF3E0),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.warning,
-              ),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.warning),
             ),
           )
         else
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
+          Text(value, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
       ],
     );
   }

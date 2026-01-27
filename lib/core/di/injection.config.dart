@@ -140,6 +140,8 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i579.GeocodingService>(() => _i579.GeocodingService());
     gh.factory<_i23.RefuelingFormBloc>(() => _i23.RefuelingFormBloc());
+    gh.factory<_i56.AutonomousVehiclesBloc>(
+        () => _i56.AutonomousVehiclesBloc());
     gh.factory<_i402.OdometerCameraBloc>(() => _i402.OdometerCameraBloc());
     gh.factory<_i876.ChecklistBloc>(() => _i876.ChecklistBloc());
     gh.lazySingleton<_i921.VehicleRemoteDataSource>(
@@ -172,8 +174,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.lazySingleton<_i649.AutonomousRepository>(() =>
         _i649.AutonomousRepositoryImpl(gh<_i106.AutonomousRemoteDataSource>()));
-    gh.factory<_i56.AutonomousVehiclesBloc>(
-        () => _i56.AutonomousVehiclesBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i545.AutonomousRegistrationBloc>(() =>
         _i545.AutonomousRegistrationBloc(gh<_i649.AutonomousRepository>()));
     gh.lazySingleton<_i1001.VehicleRepository>(
