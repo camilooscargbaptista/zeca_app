@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Alterar Senha (Motorista)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .screen-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .screen-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 750px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Header azul */
+        .header-blue {
+            background: #2A70C0;
+            padding: 44px 16px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        /* Content */
+        .content {
+            padding: 24px 16px;
+            height: calc(100% - 76px);
+            overflow-y: auto;
+            background: #F5F5F5;
+        }
+
+        /* Icon header */
+        .icon-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(42, 112, 192, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .icon-circle i {
+            font-size: 32px;
+            color: #2A70C0;
+        }
+
+        .icon-circle.success {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .icon-circle.success i {
+            color: #4CAF50;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #757575;
+        }
+
+        /* Rules card */
+        .rules-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .rules-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .rules-header i {
+            color: #2A70C0;
+            font-size: 16px;
+        }
+
+        .rules-header span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+        }
+
+        .rule-item i {
+            font-size: 14px;
+            color: #4CAF50;
+        }
+
+        .rule-item span {
+            font-size: 13px;
+            color: #616161;
+        }
+
+        /* Input group */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 52px;
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 0 48px;
+            font-size: 16px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field.focused {
+            border-color: #2A70C0;
+        }
+
+        .input-field.error {
+            border-color: #E53935;
+        }
+
+        .input-field.success {
+            border-color: #4CAF50;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 16px;
+            color: #9E9E9E;
+            font-size: 18px;
+        }
+
+        .input-icon-right {
+            position: absolute;
+            right: 16px;
+            color: #9E9E9E;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .input-text {
+            font-size: 16px;
+            color: #212121;
+            letter-spacing: 4px;
+        }
+
+        .input-placeholder {
+            color: #BDBDBD;
+        }
+
+        .error-text {
+            font-size: 12px;
+            color: #E53935;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .error-text i {
+            font-size: 12px;
+        }
+
+        /* Button */
+        .btn-primary {
+            width: 100%;
+            height: 52px;
+            background: #2A70C0;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary.disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        .btn-primary.loading {
+            background: #2A70C0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Warning box */
+        .warning-box {
+            background: #FFF8E1;
+            border: 1px solid #FFE082;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .warning-box i {
+            color: #F9A825;
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .warning-box span {
+            font-size: 12px;
+            color: #5D4037;
+            line-height: 1.4;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .modal-icon.success {
+            background: #E8F5E9;
+        }
+
+        .modal-icon.success i {
+            font-size: 28px;
+            color: #4CAF50;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 12px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #616161;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            height: 48px;
+            background: #2A70C0;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            position: absolute;
+            bottom: 24px;
+            left: 16px;
+            right: 16px;
+            background: #E53935;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast i {
+            color: white;
+            font-size: 18px;
+        }
+
+        .toast span {
+            color: white;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* Dots */
+        .password-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: #212121;
+            border-radius: 50%;
+        }
+
+        .dot.empty {
+            background: #E0E0E0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TELA 1: Estado Inicial (Campos vazios) -->
+    <div class="screen-wrapper">
+        <div class="screen-label">1. Estado Inicial</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <span class="input-text input-placeholder">••••••</span>
+                        <i class="fas fa-eye input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <span class="input-text input-placeholder">••••••</span>
+                        <i class="fas fa-eye input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary disabled">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 2: Preenchendo (3 dígitos) -->
+    <div class="screen-wrapper">
+        <div class="screen-label">2. Digitando (parcial)</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field focused">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot empty"></div>
+                            <div class="dot empty"></div>
+                            <div class="dot empty"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <span class="input-text input-placeholder">••••••</span>
+                        <i class="fas fa-eye input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary disabled">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 3: Erro - Sequência -->
+    <div class="screen-wrapper">
+        <div class="screen-label">3. Erro: Sequência</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field error">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Não pode ser sequência crescente
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <span class="input-text input-placeholder">••••••</span>
+                        <i class="fas fa-eye input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary disabled">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 4: Erro - Senhas não coincidem -->
+    <div class="screen-wrapper">
+        <div class="screen-label">4. Erro: Senhas diferentes</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field success">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field error">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                    <div class="error-text">
+                        <i class="fas fa-exclamation-circle"></i>
+                        As senhas não coincidem
+                    </div>
+                </div>
+
+                <button class="btn-primary disabled">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 5: Válido (Botão habilitado) -->
+    <div class="screen-wrapper">
+        <div class="screen-label">5. Válido (pronto para enviar)</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field success">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field success">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 6: Loading -->
+    <div class="screen-wrapper">
+        <div class="screen-label">6. Loading (enviando)</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field" style="opacity: 0.6;">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field" style="opacity: 0.6;">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary loading">
+                    <div class="spinner"></div>
+                </button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 7: Sucesso (Modal) -->
+    <div class="screen-wrapper">
+        <div class="screen-label">7. Sucesso (Modal)</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content" style="filter: blur(2px);">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+            </div>
+            <div class="modal-overlay">
+                <div class="modal">
+                    <div class="modal-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="modal-title">Senha Alterada</div>
+                    <div class="modal-text">
+                        Sua senha foi alterada com sucesso!<br><br>
+                        Você será desconectado e precisará fazer login novamente com a nova senha.
+                    </div>
+                    <button class="modal-btn">ENTENDI</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 8: Erro API (Toast) -->
+    <div class="screen-wrapper">
+        <div class="screen-label">8. Erro API (Toast)</div>
+        <div class="mobile-frame">
+            <div class="header-blue">
+                <div class="back-btn"><i class="fas fa-arrow-left"></i></div>
+                <span class="header-title">Alterar Senha</span>
+            </div>
+            <div class="content">
+                <div class="icon-header">
+                    <div class="icon-circle">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="page-title">Criar Nova Senha</div>
+                    <div class="page-subtitle">Digite sua nova senha de 6 dígitos</div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Regras de Segurança</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Exatamente 6 dígitos numéricos</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ser sequência (123456)</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Não pode ter todos dígitos iguais</span>
+                    </div>
+                    <div class="rule-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Máximo 3 dígitos consecutivos iguais</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Nova Senha</label>
+                    <div class="input-field success">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Confirmar Nova Senha</label>
+                    <div class="input-field success">
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <div class="password-dots">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <i class="fas fa-eye-slash input-icon-right"></i>
+                    </div>
+                </div>
+
+                <button class="btn-primary">ALTERAR SENHA</button>
+
+                <div class="warning-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Após alterar a senha, você será desconectado e precisará fazer login novamente.</span>
+                </div>
+            </div>
+            <div class="toast">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Erro de conexão. Tente novamente.</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

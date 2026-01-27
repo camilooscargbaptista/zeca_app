@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'storage_service.dart';
@@ -39,15 +40,21 @@ class DeviceService {
       if (deviceId == null || deviceId.isEmpty) {
         deviceId = _uuid.v4();
         await storage.write(_deviceIdKey, deviceId);
-        print('🆕 Novo Device ID gerado: $deviceId');
+        if (kDebugMode) {
+          print('🆕 Novo Device ID gerado: $deviceId');
+        }
       } else {
-        print('✅ Device ID recuperado: $deviceId');
+        if (kDebugMode) {
+          print('✅ Device ID recuperado: $deviceId');
+        }
       }
       
       _cachedDeviceId = deviceId;
       return deviceId;
     } catch (e) {
-      print('❌ Erro ao obter Device ID: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao obter Device ID: $e');
+      }
       // Fallback: gerar UUID temporário (não salva)
       return _uuid.v4();
     }
@@ -80,7 +87,9 @@ class DeviceService {
           'device_brand': androidInfo.brand,
           'sdk_version': androidInfo.version.sdkInt.toString(),
         });
-        print('📱 Device Info (Android): ${androidInfo.manufacturer} ${androidInfo.model} - Android ${androidInfo.version.release}');
+        if (kDebugMode) {
+          print('📱 Device Info (Android): ${androidInfo.manufacturer} ${androidInfo.model} - Android ${androidInfo.version.release}');
+        }
       } else if (Platform.isIOS) {
         final IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
         deviceInfo.addAll({
@@ -91,7 +100,9 @@ class DeviceService {
           'device_name': iosInfo.name,
           'system_name': iosInfo.systemName,
         });
-        print('📱 Device Info (iOS): ${iosInfo.model} - iOS ${iosInfo.systemVersion}');
+        if (kDebugMode) {
+          print('📱 Device Info (iOS): ${iosInfo.model} - iOS ${iosInfo.systemVersion}');
+        }
       } else {
         // Fallback para outras plataformas (improvável no mobile)
         deviceInfo.addAll({
@@ -105,7 +116,9 @@ class DeviceService {
       _cachedDeviceInfo = deviceInfo;
       return deviceInfo;
     } catch (e) {
-      print('❌ Erro ao obter Device Info: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao obter Device Info: $e');
+      }
       // Fallback básico
       return {
         'device_type': 'mobile',
@@ -169,9 +182,13 @@ Platform: ${deviceInfo['platform']}
       final storage = getIt<StorageService>();
       await storage.delete(_deviceIdKey);
       _cachedDeviceId = null;
-      print('🗑️ Device ID limpo');
+      if (kDebugMode) {
+        print('🗑️ Device ID limpo');
+      }
     } catch (e) {
-      print('❌ Erro ao limpar Device ID: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao limpar Device ID: $e');
+      }
     }
   }
   
@@ -179,7 +196,8 @@ Platform: ${deviceInfo['platform']}
   /// (Device ID não é limpo, apenas as informações detalhadas)
   void clearCache() {
     _cachedDeviceInfo = null;
-    print('🧹 Cache de Device Info limpo');
+    if (kDebugMode) {
+      print('🧹 Cache de Device Info limpo');
+    }
   }
 }
-

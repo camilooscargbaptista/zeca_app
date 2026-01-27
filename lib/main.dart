@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -13,14 +14,18 @@ import 'features/journey/data/services/journey_storage_service.dart';
 Future<void> main() async {
   // Capturar erros não tratados
   FlutterError.onError = (FlutterErrorDetails details) {
-    print('❌ [FLUTTER_ERROR] ${details.exception}');
-    print('❌ [FLUTTER_ERROR] Stack: ${details.stack}');
+    if (kDebugMode) {
+      print('❌ [FLUTTER_ERROR] ${details.exception}');
+      print('❌ [FLUTTER_ERROR] Stack: ${details.stack}');
+    }
     FlutterError.presentError(details);
   };
   
   // Configurar ErrorWidget.builder para mostrar erros de forma amigável
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    print('❌ [ERROR_WIDGET] ${details.exception}');
+    if (kDebugMode) {
+      print('❌ [ERROR_WIDGET] ${details.exception}');
+    }
     return Material(
       child: Center(
         child: Column(
@@ -52,13 +57,17 @@ Future<void> main() async {
     try {
       await mainCommon(Flavor.dev);
     } catch (e, stackTrace) {
-      print('❌ [MAIN] Erro na inicialização do app: $e');
-      print('❌ [MAIN] Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('❌ [MAIN] Erro na inicialização do app: $e');
+        print('❌ [MAIN] Stack trace: $stackTrace');
+      }
       rethrow;
     }
   }, (error, stackTrace) {
-    print('❌ [ZONE_ERROR] Erro não capturado: $error');
-    print('❌ [ZONE_ERROR] Stack: $stackTrace');
+    if (kDebugMode) {
+      print('❌ [ZONE_ERROR] Erro não capturado: $error');
+      print('❌ [ZONE_ERROR] Stack: $stackTrace');
+    }
   });
 }
 
@@ -66,49 +75,68 @@ Future<void> mainCommon(Flavor flavor) async {
   final stopwatch = Stopwatch()..start();
   
   WidgetsFlutterBinding.ensureInitialized();
-  print('⏱️ [INIT] WidgetsFlutterBinding: ${stopwatch.elapsedMilliseconds}ms');
+  if (kDebugMode) {
+    print('⏱️ [INIT] WidgetsFlutterBinding: ${stopwatch.elapsedMilliseconds}ms');
+  }
   
   // Inicializar flavor (síncrono, rápido)
   FlavorConfig.initialize(flavor);
-  print('⏱️ [INIT] FlavorConfig: ${stopwatch.elapsedMilliseconds}ms');
+  if (kDebugMode) {
+    print('⏱️ [INIT] FlavorConfig: ${stopwatch.elapsedMilliseconds}ms');
+  }
   
   // Inicializar DI (crítico, precisa antes do runApp)
   await configureDependencies();
-  print('⏱️ [INIT] DI configurado: ${stopwatch.elapsedMilliseconds}ms');
+  if (kDebugMode) {
+    print('⏱️ [INIT] DI configurado: ${stopwatch.elapsedMilliseconds}ms');
+  }
   
   // 🚀 MOSTRAR APP IMEDIATAMENTE (sem esperar outras inicializações)
   runApp(const ZecaApp());
-  print('⏱️ [INIT] runApp chamado: ${stopwatch.elapsedMilliseconds}ms');
+  if (kDebugMode) {
+    print('⏱️ [INIT] runApp chamado: ${stopwatch.elapsedMilliseconds}ms');
+  }
   
   // ⚡ Inicializações assíncronas DEPOIS do runApp (em paralelo)
   // Isso permite que o splash screen apareça enquanto carrega
   // TODAS AS INICIALIZAÇÕES SÃO LAZY - não bloqueiam o startup
   Future.delayed(Duration(milliseconds: 100), () async {
     try {
-      print('🔄 [INIT] Iniciando inicializações lazy...');
+      if (kDebugMode) {
+        print('🔄 [INIT] Iniciando inicializações lazy...');
+      }
   
   // Inicializar Hive
   await Hive.initFlutter();
-      print('⏱️ [INIT] Hive inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      if (kDebugMode) {
+        print('⏱️ [INIT] Hive inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      }
       
       // Inicializar API Service
       await ApiService().initialize();
-      print('⏱️ [INIT] ApiService inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      if (kDebugMode) {
+        print('⏱️ [INIT] ApiService inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      }
   
   // Inicializar Journey Storage
   final journeyStorage = JourneyStorageService();
   await journeyStorage.init();
-      print('⏱️ [INIT] JourneyStorage inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      if (kDebugMode) {
+        print('⏱️ [INIT] JourneyStorage inicializado: ${stopwatch.elapsedMilliseconds}ms');
+      }
   
       // Por último, inicializar TokenManager (depende de API e Storage)
   await TokenManagerService().initialize();
-      print('⏱️ [INIT] TokenManager inicializado: ${stopwatch.elapsedMilliseconds}ms');
-      
-      print('✅ [INIT] Todas as inicializações completadas em ${stopwatch.elapsedMilliseconds}ms');
+      if (kDebugMode) {
+        print('⏱️ [INIT] TokenManager inicializado: ${stopwatch.elapsedMilliseconds}ms');
+        print('✅ [INIT] Todas as inicializações completadas em ${stopwatch.elapsedMilliseconds}ms');
+      }
       stopwatch.stop();
     } catch (e, stackTrace) {
-      print('❌ Erro nas inicializações assíncronas: $e');
-      print('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('❌ Erro nas inicializações assíncronas: $e');
+        print('Stack trace: $stackTrace');
+      }
     }
   });
 }
@@ -120,13 +148,8 @@ class ZecaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     try {
       final config = FlavorConfig.instance;
-      print('🔧 [ZecaApp] FlavorConfig obtido');
-      
       final router = getIt<AppRouter>();
-      print('🔧 [ZecaApp] AppRouter obtido');
-      
       final authBloc = getIt<AuthBloc>();
-      print('🔧 [ZecaApp] AuthBloc obtido');
       
       return BlocProvider<AuthBloc>(
         create: (context) => authBloc,
@@ -134,13 +157,14 @@ class ZecaApp extends StatelessWidget {
           title: config.appName,
           theme: config.theme,
           routerConfig: router.router,
-          // debugShowCheckedModeBanner: config.isDevelopment,
           debugShowCheckedModeBanner: false,
         ),
       );
     } catch (e, stackTrace) {
-      print('❌ [ZecaApp] Erro crítico no build: $e');
-      print('❌ [ZecaApp] Stack trace: $stackTrace');
+      if (kDebugMode) {
+        print('❌ [ZecaApp] Erro crítico no build: $e');
+        print('❌ [ZecaApp] Stack trace: $stackTrace');
+      }
       
       // Fallback: mostrar tela de erro
       return MaterialApp(

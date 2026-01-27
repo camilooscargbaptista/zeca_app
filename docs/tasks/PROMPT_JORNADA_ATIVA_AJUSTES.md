@@ -45,7 +45,7 @@ Na tela "ZECA - Jornada Ativa" (`journey_dashboard_page.dart`), existem 4 ajuste
 | **Filtro por status** | ✅ Aceita filtro `status` no DTO | ❌ NÃO filtra por CONCLUIDO |
 | **Filtro por placa** | ✅ `vehicle_plate ILIKE` | ✅ Normaliza placa |
 | **Consistência** | ✅ Seguro | ❌ Pode trazer dados de outros motoristas |
-
+ 
 ### Problema Identificado
 
 **Arquivo:** `zeca_site/backend/src/drivers/drivers.service.ts`

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -162,7 +163,9 @@ class StorageService {
   Future<void> saveJourneyVehicleData(Map<String, dynamic> vehicleData) async {
     final vehicleJson = jsonEncode(vehicleData);
     await write('journey_vehicle_data', vehicleJson);
-    print('✅ Dados do veículo salvos: $vehicleData');
+    if (kDebugMode) {
+      print('✅ Dados do veículo salvos: $vehicleData');
+    }
   }
 
   /// Recuperar dados do veículo da jornada ativa
@@ -172,7 +175,9 @@ class StorageService {
     try {
       return jsonDecode(vehicleJson) as Map<String, dynamic>;
     } catch (e) {
-      print('⚠️ Erro ao decodificar dados do veículo: $e');
+      if (kDebugMode) {
+        print('⚠️ Erro ao decodificar dados do veículo: $e');
+      }
       return null;
     }
   }
@@ -180,7 +185,9 @@ class StorageService {
   /// Limpar dados do veículo da jornada (ao finalizar jornada ou logout)
   Future<void> clearJourneyVehicleData() async {
     await delete('journey_vehicle_data');
-    print('🗑️ Dados do veículo da jornada limpos');
+    if (kDebugMode) {
+      print('🗑️ Dados do veículo da jornada limpos');
+    }
   }
 
   /// Verificar se existe uma jornada ativa (veículo selecionado)

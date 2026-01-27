@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AutonomousVehiclesPage extends StatefulWidget {
   const AutonomousVehiclesPage({Key? key}) : super(key: key);
@@ -136,7 +137,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                   const Expanded(
                     child: Text(
                       'Esta ação não pode ser desfeita.',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF757575)),
+                      style: TextStyle(fontSize: 13, color: AppColors.grey600),
                     ),
                   ),
                 ],
@@ -147,7 +148,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: Color(0xFF757575))),
+            child: Text('Cancelar', style: TextStyle(color: AppColors.grey600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -220,7 +221,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
     final primaryColor = FlavorConfig.instance.primaryColor;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -260,7 +261,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE3F2FD),
+                            color: AppColors.primaryBlueLight,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -368,7 +369,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
+                  color: AppColors.primaryBlueLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.local_shipping, color: primaryColor, size: 24),
@@ -385,14 +386,14 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF212121),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       '${vehicle['brand']} ${vehicle['model']}',
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF757575),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -406,15 +407,15 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
                   _buildActionButton(
                     icon: Icons.edit,
                     color: primaryColor,
-                    backgroundColor: const Color(0xFFE3F2FD),
+                    backgroundColor: AppColors.primaryBlueLight,
                     onTap: () => context.push('/autonomous/vehicles/edit/${vehicle['id']}'),
                   ),
                   const SizedBox(width: 8),
                   // Excluir
                   _buildActionButton(
                     icon: Icons.delete,
-                    color: const Color(0xFFE53935),
-                    backgroundColor: const Color(0xFFFFEBEE),
+                    color: AppColors.error,
+                    backgroundColor: const Color(0xFFFFEBEE), // Red light bg
                     onTap: () => _deleteVehicle(vehicle['id'], vehicle['plate']),
                   ),
                 ],
@@ -428,7 +429,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
           Container(
             padding: const EdgeInsets.only(top: 12),
             decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+              border: Border(top: BorderSide(color: AppColors.border)),
             ),
             child: Row(
               children: [
@@ -494,7 +495,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF3E0),
+              color: const Color(0xFFFFF3E0), // Orange light bg
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -502,7 +503,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFE65100),
+                color: AppColors.warning,
               ),
             ),
           )
@@ -511,7 +512,7 @@ class _AutonomousVehiclesPageState extends State<AutonomousVehiclesPage> {
             value,
             style: const TextStyle(
               fontSize: 12,
-              color: Color(0xFF757575),
+              color: AppColors.textSecondary,
             ),
           ),
       ],
