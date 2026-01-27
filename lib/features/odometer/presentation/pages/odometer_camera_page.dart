@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_cropper/image_cropper.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../domain/services/odometer_ocr_service.dart';
+import '../bloc/odometer_camera_bloc.dart';
 
 /// Tela para capturar foto do odômetro e extrair valor via OCR
 class OdometerCameraPage extends StatefulWidget {
@@ -22,23 +25,24 @@ class OdometerCameraPage extends StatefulWidget {
 }
 
 class _OdometerCameraPageState extends State<OdometerCameraPage> {
+  // Câmera precisa ficar no State (não pode ser gerenciada pelo BLoC)
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
-  bool _isInitialized = false;
-  bool _isProcessing = false;
-  double _currentZoomLevel = 1.0;
-  double _minAvailableZoom = 1.0;
-  double _maxAvailableZoom = 1.0;
   final OdometerOcrService _ocrService = OdometerOcrService();
   final ImagePicker _imagePicker = ImagePicker();
+  
+  late final OdometerCameraBloc _bloc;
 
   @override
   void initState() {
     super.initState();
+    _bloc = OdometerCameraBloc();
     _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
+    _bloc.add(const OdometerCameraEvent.initializeCamera());
+    
     try {
       // Verificar permissão
       final status = await Permission.camera.status;
@@ -98,18 +102,21 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
       await _cameraController!.initialize();
 
       // Obter níveis de zoom disponíveis
-      _minAvailableZoom = await _cameraController!.getMinZoomLevel();
-      _maxAvailableZoom = await _cameraController!.getMaxZoomLevel();
-      _currentZoomLevel = _minAvailableZoom;
+      final minZoom = await _cameraController!.getMinZoomLevel();
+      final maxZoom = await _cameraController!.getMaxZoomLevel();
 
       if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
+        _bloc.add(OdometerCameraEvent.cameraInitialized(
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+        ));
       }
     } catch (e) {
-      debugPrint('❌ Erro ao inicializar câmera: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao inicializar câmera: $e');
+      }
       if (mounted) {
+        _bloc.add(OdometerCameraEvent.initializationFailed('Erro ao inicializar câmera: $e'));
         ErrorDialog.show(
           context,
           title: 'Erro',
@@ -125,9 +132,7 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    _bloc.add(const OdometerCameraEvent.startProcessing());
 
     try {
       // Capturar foto
@@ -144,20 +149,23 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
             await file.delete();
           }
         } catch (e) {
-          debugPrint('⚠️ Erro ao deletar foto: $e');
+          if (kDebugMode) {
+            print('⚠️ Erro ao deletar foto: $e');
+          }
         }
 
         if (mounted) {
-          setState(() {
-            _isProcessing = false;
-          });
+          _bloc.add(const OdometerCameraEvent.processingFailed('Captura cancelada'));
+          _bloc.add(const OdometerCameraEvent.reset());
         }
         return;
       }
 
       // Processar com OCR na imagem recortada
-      debugPrint('📸 Foto capturada e recortada: ${croppedFile.path}');
-      debugPrint('🔍 Processando com OCR...');
+      if (kDebugMode) {
+        print('📸 Foto capturada e recortada: ${croppedFile.path}');
+        print('🔍 Processando com OCR...');
+      }
 
       final extractedValue = await _ocrService.extractOdometerValue(croppedFile.path);
 
@@ -171,22 +179,26 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
           await croppedFile.delete();
         }
       } catch (e) {
-        debugPrint('⚠️ Erro ao deletar fotos temporárias: $e');
+        if (kDebugMode) {
+          print('⚠️ Erro ao deletar fotos temporárias: $e');
+        }
       }
 
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-
         if (extractedValue != null && extractedValue.isNotEmpty) {
           // Converter para int e formatar
           final odometerValue = int.tryParse(extractedValue) ?? 0;
           final formattedValue = OdometerFormatter.formatValue(odometerValue);
 
+          _bloc.add(OdometerCameraEvent.processingCompleted(
+            rawValue: odometerValue,
+            formattedValue: formattedValue,
+          ));
+
           // Mostrar diálogo de confirmação
           _showConfirmationDialog(formattedValue, odometerValue);
         } else {
+          _bloc.add(const OdometerCameraEvent.processingFailed('Valor não extraído'));
           ErrorDialog.show(
             context,
             title: 'Valor Não Encontrado',
@@ -200,11 +212,11 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
         }
       }
     } catch (e) {
-      debugPrint('❌ Erro ao capturar foto: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao capturar foto: $e');
+      }
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
+        _bloc.add(OdometerCameraEvent.processingFailed('Erro: $e'));
         ErrorDialog.show(
           context,
           title: 'Erro',
@@ -253,7 +265,9 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
       }
       return null;
     } catch (e) {
-      debugPrint('❌ Erro ao recortar imagem: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao recortar imagem: $e');
+      }
       // Se falhar o crop, usar imagem original
       return File(imagePath);
     }
@@ -269,25 +283,23 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
 
       if (image == null) return;
 
-      setState(() {
-        _isProcessing = true;
-      });
+      _bloc.add(const OdometerCameraEvent.startProcessing());
 
       // Recortar imagem
       final croppedFile = await _cropImage(image.path);
 
       if (croppedFile == null) {
         if (mounted) {
-          setState(() {
-            _isProcessing = false;
-          });
+          _bloc.add(const OdometerCameraEvent.reset());
         }
         return;
       }
 
       // Processar com OCR
-      debugPrint('📸 Imagem selecionada e recortada: ${croppedFile.path}');
-      debugPrint('🔍 Processando com OCR...');
+      if (kDebugMode) {
+        print('📸 Imagem selecionada e recortada: ${croppedFile.path}');
+        print('🔍 Processando com OCR...');
+      }
 
       final extractedValue = await _ocrService.extractOdometerValue(croppedFile.path);
 
@@ -297,19 +309,24 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
           await croppedFile.delete();
         }
       } catch (e) {
-        debugPrint('⚠️ Erro ao deletar arquivo temporário: $e');
+        if (kDebugMode) {
+          print('⚠️ Erro ao deletar arquivo temporário: $e');
+        }
       }
 
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-
         if (extractedValue != null && extractedValue.isNotEmpty) {
           final odometerValue = int.tryParse(extractedValue) ?? 0;
           final formattedValue = OdometerFormatter.formatValue(odometerValue);
+          
+          _bloc.add(OdometerCameraEvent.processingCompleted(
+            rawValue: odometerValue,
+            formattedValue: formattedValue,
+          ));
+          
           _showConfirmationDialog(formattedValue, odometerValue);
         } else {
+          _bloc.add(const OdometerCameraEvent.processingFailed('Valor não extraído'));
           ErrorDialog.show(
             context,
             title: 'Valor Não Encontrado',
@@ -319,11 +336,11 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
         }
       }
     } catch (e) {
-      debugPrint('❌ Erro ao selecionar imagem: $e');
+      if (kDebugMode) {
+        print('❌ Erro ao selecionar imagem: $e');
+      }
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
+        _bloc.add(OdometerCameraEvent.processingFailed('Erro: $e'));
         ErrorDialog.show(
           context,
           title: 'Erro',
@@ -339,12 +356,15 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
       return;
     }
 
-    _currentZoomLevel = zoom.clamp(_minAvailableZoom, _maxAvailableZoom);
-    await _cameraController!.setZoomLevel(_currentZoomLevel);
-    setState(() {});
+    final state = _bloc.state;
+    final clampedZoom = zoom.clamp(state.minZoomLevel, state.maxZoomLevel);
+    await _cameraController!.setZoomLevel(clampedZoom);
+    _bloc.add(OdometerCameraEvent.setZoomLevel(clampedZoom));
   }
 
   void _showConfirmationDialog(String formattedValue, int rawValue) {
+    _bloc.add(const OdometerCameraEvent.reset()); // Reseta processing
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -398,10 +418,10 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
               Navigator.of(context).pop();
               _confirmValue(rawValue);
             },
-            child: const Text('Usar Este Valor'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.green,
             ),
+            child: const Text('Usar Este Valor'),
           ),
         ],
       ),
@@ -425,163 +445,171 @@ class _OdometerCameraPageState extends State<OdometerCameraPage> {
   void dispose() {
     _cameraController?.dispose();
     _ocrService.dispose();
+    _bloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Capturar Odômetro'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.photo_library),
-            onPressed: _pickFromGallery,
-            tooltip: 'Selecionar da galeria',
-          ),
-        ],
-      ),
-      body: _isProcessing
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'Processando imagem...',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Aguarde enquanto extraímos o valor do odômetro',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+    return BlocProvider.value(
+      value: _bloc,
+      child: BlocBuilder<OdometerCameraBloc, OdometerCameraState>(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Capturar Odômetro'),
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            )
-          : _isInitialized && _cameraController != null
-              ? GestureDetector(
-                  onScaleUpdate: (details) {
-                    if (details.scale != 1.0) {
-                      final newZoom = _currentZoomLevel * details.scale;
-                      _setZoomLevel(newZoom);
-                    }
-                  },
-                  child: Stack(
-                    children: [
-                      // Preview da câmera
-                      Positioned.fill(
-                        child: CameraPreview(_cameraController!),
-                      ),
-                    // Overlay com guia visual
-                    Positioned.fill(
-                      child: _buildOverlay(),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.photo_library),
+                  onPressed: _pickFromGallery,
+                  tooltip: 'Selecionar da galeria',
+                ),
+              ],
+            ),
+            body: state.isProcessing
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          'Processando imagem...',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Aguarde enquanto extraímos o valor do odômetro',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    // Controles de zoom
-                    Positioned(
-                      right: 16,
-                      top: 100,
-                      child: Column(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.add, color: Colors.white),
-                            onPressed: () => _setZoomLevel(_currentZoomLevel + 0.5),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.black.withOpacity(0.5),
+                  )
+                : state.isInitialized && _cameraController != null
+                    ? GestureDetector(
+                        onScaleUpdate: (details) {
+                          if (details.scale != 1.0) {
+                            final newZoom = state.currentZoomLevel * details.scale;
+                            _setZoomLevel(newZoom);
+                          }
+                        },
+                        child: Stack(
+                          children: [
+                            // Preview da câmera
+                            Positioned.fill(
+                              child: CameraPreview(_cameraController!),
+                            ),
+                          // Overlay com guia visual
+                          Positioned.fill(
+                            child: _buildOverlay(),
+                          ),
+                          // Controles de zoom
+                          Positioned(
+                            right: 16,
+                            top: 100,
+                            child: Column(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.add, color: Colors.white),
+                                  onPressed: () => _setZoomLevel(state.currentZoomLevel + 0.5),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                Container(
+                                  width: 50,
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  child: RotatedBox(
+                                    quarterTurns: 3,
+                                    child: Slider(
+                                      value: state.currentZoomLevel,
+                                      min: state.minZoomLevel,
+                                      max: state.maxZoomLevel,
+                                      onChanged: _setZoomLevel,
+                                      activeColor: Colors.white,
+                                      inactiveColor: Colors.white.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.remove, color: Colors.white),
+                                  onPressed: () => _setZoomLevel(state.currentZoomLevel - 0.5),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Container(
-                            width: 50,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: RotatedBox(
-                              quarterTurns: 3,
-                              child: Slider(
-                                value: _currentZoomLevel,
-                                min: _minAvailableZoom,
-                                max: _maxAvailableZoom,
-                                onChanged: _setZoomLevel,
-                                activeColor: Colors.white,
-                                inactiveColor: Colors.white.withOpacity(0.3),
+                          // Botão de captura
+                          Positioned(
+                            bottom: 40,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: FloatingActionButton(
+                                onPressed: _capturePhoto,
+                                backgroundColor: Colors.red,
+                                child: const Icon(Icons.camera_alt, size: 32),
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.remove, color: Colors.white),
-                            onPressed: () => _setZoomLevel(_currentZoomLevel - 0.5),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.black.withOpacity(0.5),
+                          // Instruções
+                          Positioned(
+                            top: 16,
+                            left: 16,
+                            right: 16,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Dicas para melhor resultado:',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    '• Use o zoom para aproximar o odômetro\n'
+                                    '• Após capturar, recorte apenas a área do odômetro\n'
+                                    '• Certifique-se de que está bem iluminado\n'
+                                    '• Evite reflexos e sombras',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    // Botão de captura
-                    Positioned(
-                      bottom: 40,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: FloatingActionButton(
-                          onPressed: _capturePhoto,
-                          backgroundColor: Colors.red,
-                          child: const Icon(Icons.camera_alt, size: 32),
                         ),
+                      )
+                    : const Center(
+                        child: CircularProgressIndicator(),
                       ),
-                    ),
-                    // Instruções
-                    Positioned(
-                      top: 16,
-                      left: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Dicas para melhor resultado:',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '• Use o zoom para aproximar o odômetro\n'
-                              '• Após capturar, recorte apenas a área do odômetro\n'
-                              '• Certifique-se de que está bem iluminado\n'
-                              '• Evite reflexos e sombras',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  ),
-                )
-              : const Center(
-                  child: CircularProgressIndicator(),
-                ),
+          );
+        },
+      ),
     );
   }
 
@@ -598,14 +626,9 @@ class OdometerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
-
-    final borderPaint = Paint()
-      ..color = Colors.red.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
 
     // Área central para posicionar o odômetro (60% da largura, 30% da altura)
     final rectWidth = size.width * 0.6;
@@ -707,4 +730,3 @@ class OdometerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
