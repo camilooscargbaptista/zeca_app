@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../../../core/config/flavor_config.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/common/custom_toast.dart';
 import '../bloc/autonomous_registration_bloc.dart';
 
@@ -159,7 +160,7 @@ class _AutonomousRegisterPageState extends State<AutonomousRegisterPage> {
         title: const Text(
           'Cadastro Autônomo',
           style: TextStyle(
-            color: Color(0xFF212121),
+            color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -308,9 +309,9 @@ class _AutonomousRegisterPageState extends State<AutonomousRegisterPage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAFA),
+                          color: AppColors.grey50,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE0E0E0)),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +333,7 @@ class _AutonomousRegisterPageState extends State<AutonomousRegisterPage> {
                                   text: TextSpan(
                                     style: const TextStyle(
                                       fontSize: 14,
-                                      color: Color(0xFF424242),
+                                      color: AppColors.grey800,
                                       height: 1.4,
                                     ),
                                     children: [
@@ -383,7 +384,7 @@ class _AutonomousRegisterPageState extends State<AutonomousRegisterPage> {
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+                    border: Border(top: BorderSide(color: AppColors.border)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -436,7 +437,7 @@ class _AutonomousRegisterPageState extends State<AutonomousRegisterPage> {
         text,
         style: const TextStyle(
           fontSize: 12,
-          color: Color(0xFF757575),
+          color: AppColors.textSecondary,
         ),
       ),
     );

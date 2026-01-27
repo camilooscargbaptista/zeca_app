@@ -37,14 +37,14 @@ class ApiService {
       
       if (accessToken != null) {
         _authToken = accessToken;
-        print('✅ Token carregado do storage na inicialização');
+        if (kDebugMode) print('✅ Token carregado do storage na inicialização');
       }
       if (refreshToken != null) {
         _refreshToken = refreshToken;
-        print('✅ Refresh token carregado do storage na inicialização');
+        if (kDebugMode) print('✅ Refresh token carregado do storage na inicialização');
       }
     } catch (e) {
-      print('⚠️ Erro ao carregar tokens do storage: $e');
+      if (kDebugMode) print('⚠️ Erro ao carregar tokens do storage: $e');
     }
 
     // Interceptor para logging (apenas em dev)
@@ -82,17 +82,17 @@ class ApiService {
           final deviceId = await _deviceService.getDeviceId();
           options.headers['x-device-id'] = deviceId;
         } catch (e) {
-          print('⚠️ Erro ao adicionar Device ID no header: $e');
+          if (kDebugMode) print('⚠️ Erro ao adicionar Device ID no header: $e');
         }
         
         handler.next(options);
       },
       onError: (error, handler) async {
-        print('API Error: ${error.message}');
+        if (kDebugMode) print('API Error: ${error.message}');
         
         // Tratar erro 429 (Too Many Requests) com retry com backoff exponencial
         if (error.response?.statusCode == 429) {
-          print('⚠️ Rate limit atingido (429). Tentando retry com backoff...');
+          if (kDebugMode) print('⚠️ Rate limit atingido (429). Tentando retry com backoff...');
           
           // Máximo de 3 tentativas com backoff exponencial
           int maxRetries = 3;
@@ -101,7 +101,7 @@ class ApiService {
           while (retryCount < maxRetries) {
             // Backoff exponencial: 2s, 4s, 8s
             final delaySeconds = 2 * (1 << retryCount);
-            print('⏳ Aguardando ${delaySeconds}s antes de retry ${retryCount + 1}/$maxRetries...');
+            if (kDebugMode) print('⏳ Aguardando ${delaySeconds}s antes de retry ${retryCount + 1}/$maxRetries...');
             await Future.delayed(Duration(seconds: delaySeconds));
             
             try {
@@ -113,13 +113,13 @@ class ApiService {
               
               final dio = Dio();
               final response = await dio.fetch(opts);
-              print('✅ Retry bem-sucedido após ${retryCount + 1} tentativa(s)');
+              if (kDebugMode) print('✅ Retry bem-sucedido após ${retryCount + 1} tentativa(s)');
               handler.resolve(response);
               return;
             } catch (retryError) {
               retryCount++;
               if (retryCount >= maxRetries) {
-                print('❌ Falhou após $maxRetries tentativas. Erro: $retryError');
+                if (kDebugMode) print('❌ Falhou após $maxRetries tentativas. Erro: $retryError');
                 // Continuar com o erro original
                 break;
               }
@@ -130,7 +130,7 @@ class ApiService {
         // Se erro 401 (não autorizado), tentar refresh token
         if (error.response?.statusCode == 401) {
           try {
-            print('🔄 Tentando refresh token após erro 401...');
+            if (kDebugMode) print('🔄 Tentando refresh token após erro 401...');
             
             // Buscar refresh token do storage se não estiver em memória
             String? refreshTokenToUse = _refreshToken;
@@ -142,12 +142,12 @@ class ApiService {
                   _refreshToken = refreshTokenToUse;
                 }
               } catch (e) {
-                print('⚠️ Erro ao buscar refresh token do storage: $e');
+                if (kDebugMode) print('⚠️ Erro ao buscar refresh token do storage: $e');
               }
             }
             
             if (refreshTokenToUse == null) {
-              print('❌ Refresh token não encontrado');
+              if (kDebugMode) print('❌ Refresh token não encontrado');
               handler.next(error);
               return;
             }
@@ -167,10 +167,10 @@ class ApiService {
                   refreshRetries++;
                   if (refreshRetries < maxRefreshRetries) {
                     final delaySeconds = 2 * (1 << refreshRetries);
-                    print('⏳ Rate limit no refresh token. Aguardando ${delaySeconds}s...');
+                    if (kDebugMode) print('⏳ Rate limit no refresh token. Aguardando ${delaySeconds}s...');
                     await Future.delayed(Duration(seconds: delaySeconds));
                   } else {
-                    print('❌ Falha ao renovar token após $maxRefreshRetries tentativas');
+                    if (kDebugMode) print('❌ Falha ao renovar token após $maxRefreshRetries tentativas');
                     refreshResponse = {
                       'success': false,
                       'error': 'Rate limit no refresh token',
@@ -188,7 +188,7 @@ class ApiService {
             }
             
             if (refreshResponse != null && refreshResponse['success'] == true) {
-              print('✅ Token renovado com sucesso no interceptor');
+              if (kDebugMode) print('✅ Token renovado com sucesso no interceptor');
               
               // Atualizar token no storage também (já foi feito no refreshToken, mas garantir)
               if (refreshResponse['data']?['access_token'] != null) {
@@ -205,16 +205,16 @@ class ApiService {
               handler.resolve(response);
               return;
             } else {
-              print('⚠️ Falha ao renovar token: ${refreshResponse?['error']}');
+              if (kDebugMode) print('⚠️ Falha ao renovar token: ${refreshResponse?['error']}');
               
               // Se refresh token falhou, tentar re-login automático
               try {
-                print('🔄 Tentando re-login automático após falha no refresh token...');
+                if (kDebugMode) print('🔄 Tentando re-login automático após falha no refresh token...');
                 final tokenManager = TokenManagerService();
                 final autoLoginSuccess = await tokenManager.ensureValidToken(allowAutoLogin: true);
                 
                 if (autoLoginSuccess) {
-                  print('✅ Re-login automático bem-sucedido! Retry da requisição original...');
+                  if (kDebugMode) print('✅ Re-login automático bem-sucedido! Retry da requisição original...');
                   // Retry da requisição original com novo token
                   final opts = error.requestOptions;
                   final newToken = await getIt<StorageService>().getAccessToken();
@@ -228,10 +228,10 @@ class ApiService {
                     return;
                   }
                 } else {
-                  print('❌ Re-login automático também falhou');
+                  if (kDebugMode) print('❌ Re-login automático também falhou');
                 }
               } catch (autoLoginError) {
-                print('⚠️ Erro ao tentar re-login automático: $autoLoginError');
+                if (kDebugMode) print('⚠️ Erro ao tentar re-login automático: $autoLoginError');
               }
               
               // NÃO limpar tokens - dados offline não podem ser perdidos
@@ -239,15 +239,15 @@ class ApiService {
               // Os dados ficam salvos localmente e serão sincronizados quando token for renovado
             }
           } catch (e) {
-            print('⚠️ Erro ao tentar refresh token: $e');
+            if (kDebugMode) print('⚠️ Erro ao tentar refresh token: $e');
             
             // Tentar re-login automático também em caso de exceção
             try {
-              print('🔄 Tentando re-login automático após exceção no refresh token...');
+              if (kDebugMode) print('🔄 Tentando re-login automático após exceção no refresh token...');
               final tokenManager = TokenManagerService();
               await tokenManager.ensureValidToken(allowAutoLogin: true);
             } catch (autoLoginError) {
-              print('⚠️ Erro ao tentar re-login automático: $autoLoginError');
+              if (kDebugMode) print('⚠️ Erro ao tentar re-login automático: $autoLoginError');
             }
             
             // NÃO limpar tokens - preservar dados offline
@@ -309,7 +309,7 @@ class ApiService {
       final storageService = getIt<StorageService>();
       await storageService.clearTokens();
     } catch (e) {
-      print('⚠️ Erro ao limpar tokens do storage: $e');
+      if (kDebugMode) print('⚠️ Erro ao limpar tokens do storage: $e');
     }
   }
 
@@ -374,8 +374,8 @@ class ApiService {
       final deviceId = await _deviceService.getDeviceId();
       final deviceInfo = await _deviceService.getDeviceInfo();
       
-      print('🔐 Login com Device ID: $deviceId');
-      print('📱 Device Info: ${deviceInfo['os']} ${deviceInfo['os_version']} - ${deviceInfo['device_model']}');
+      if (kDebugMode) print('🔐 Login com Device ID: $deviceId');
+      if (kDebugMode) print('📱 Device Info: ${deviceInfo['os']} ${deviceInfo['os_version']} - ${deviceInfo['device_model']}');
       
       final response = await _dio.post(
         '/auth/login',
@@ -442,9 +442,9 @@ class ApiService {
             password: password,
             userType: userType,
           );
-          print('✅ Credenciais salvas para re-login automático');
+          if (kDebugMode) print('✅ Credenciais salvas para re-login automático');
         } catch (e) {
-          print('⚠️ Erro ao salvar credenciais: $e');
+          if (kDebugMode) print('⚠️ Erro ao salvar credenciais: $e');
         }
         
         return {

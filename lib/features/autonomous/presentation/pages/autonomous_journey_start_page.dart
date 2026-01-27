@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
 
@@ -236,7 +237,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
     final primaryColor = FlavorConfig.instance.primaryColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -305,7 +306,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _onConfirm,
@@ -400,7 +401,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -442,18 +443,18 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF9E9E9E)),
+        Icon(icon, size: 14, color: AppColors.grey500),
         const SizedBox(width: 8),
         Text(
           '$label ',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF424242)),
+          style: TextStyle(fontSize: 14, color: AppColors.grey800),
         ),
         Text(
           value,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF212121),
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -480,14 +481,14 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
           // Header
           const Row(
             children: [
-              Icon(Icons.directions_car, size: 20, color: Color(0xFFE53935)),
+              Icon(Icons.directions_car, size: 20, color: AppColors.error),
               SizedBox(width: 8),
               Text(
                 'Veículo',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF212121),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -502,11 +503,11 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -554,7 +555,7 @@ class _AutonomousJourneyStartPageState extends State<AutonomousJourneyStartPage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFE3F2FD),
+              color: AppColors.primaryBlueLight,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/flavor_config.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
 
@@ -47,7 +48,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
     final primaryColor = FlavorConfig.instance.primaryColor;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
@@ -91,7 +92,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE3F2FD),
+                      color: AppColors.primaryBlueLight,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -108,7 +109,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF212121),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -118,7 +119,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
                     'Para começar a usar o ZECA, você precisa cadastrar pelo menos um veículo.',
                     style: TextStyle(
                       fontSize: 15,
-                      color: Color(0xFF757575),
+                      color: AppColors.textSecondary,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -175,7 +176,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             decoration: const BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+              border: Border(top: BorderSide(color: AppColors.border)),
             ),
             child: SizedBox(
               width: double.infinity,
@@ -241,7 +242,7 @@ class AutonomousFirstAccessPage extends StatelessWidget {
               text,
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF424242),
+                color: AppColors.grey800,
                 height: 1.4,
               ),
             ),
