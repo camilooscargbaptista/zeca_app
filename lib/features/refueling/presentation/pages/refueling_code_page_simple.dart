@@ -630,10 +630,12 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
       final token = await _apiService.getToken();
       
       if (token != null && token.isNotEmpty) {
-        debugPrint('📡 [RefuelingCodePage] Tentando conectar via WebSocket...');
+        debugPrint('📡 [RefuelingCodePage] Conectando WebSocket com timeout de 30 minutos...');
         
-        _webSocketService.connect(
+        // NOVO: Usar connectForRefueling para conexão persistente com timeout
+        _webSocketService.connectForRefueling(
           token: token,
+          refuelingCode: cleanCode,
           onRefuelingPendingValidation: (data) {
             debugPrint('🎯 [WebSocket] Evento recebido: $data');
             
@@ -715,7 +717,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
              }
           },
           onConnected: () {
-            debugPrint('✅ [WebSocket] Conectado! Usando WebSocket para notificações');
+            debugPrint('✅ [WebSocket] Conectado com timeout de 30 min! Usando WebSocket para notificações');
             if (mounted) {
               setState(() {
                 _usingWebSocket = true;
@@ -726,31 +728,25 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
             debugPrint('❌ [WebSocket] Erro: $error - Ativando fallback de polling');
             _startPollingFallback(cleanCode);
           },
-          onDisconnected: () {
-            debugPrint('🔌 [WebSocket] Desconectado');
-            // Se desconectar, ativar polling como fallback
-            if (mounted && !_pollingService.isPolling) {
-              _startPollingFallback(cleanCode);
-            }
-          },
         );
         
-        // Também iniciar polling com intervalo maior como backup
+        // Polling fallback: inicia após 3 minutos, verifica a cada 1 minuto
         // (caso WebSocket falhe silenciosamente)
-        _startPollingFallback(cleanCode, intervalSeconds: 60);
+        debugPrint('⏳ [RefuelingCodePage] Polling fallback será iniciado após 3 minutos');
+        _startPollingFallback(cleanCode, intervalSeconds: 60, delaySeconds: 180);
         
       } else {
-        debugPrint('⚠️ [RefuelingCodePage] Token não disponível, usando polling');
-        _startPollingFallback(cleanCode);
+        debugPrint('⚠️ [RefuelingCodePage] Token não disponível, usando polling imediato');
+        _startPollingFallback(cleanCode, intervalSeconds: 60, delaySeconds: 0);
       }
     } catch (e) {
       debugPrint('❌ [RefuelingCodePage] Erro ao conectar WebSocket: $e');
-      _startPollingFallback(cleanCode);
+      _startPollingFallback(cleanCode, intervalSeconds: 60, delaySeconds: 0);
     }
   }
   
   /// Fallback de polling quando WebSocket não está disponível
-  void _startPollingFallback(String cleanCode, {int intervalSeconds = 15}) async {
+  void _startPollingFallback(String cleanCode, {int intervalSeconds = 60, int delaySeconds = 180}) async {
     if (_pollingService.isPolling) {
       debugPrint('⚠️ [RefuelingCodePage] Polling já está ativo');
       return;
@@ -774,7 +770,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
       debugPrint('⚠️ [RefuelingCodePage] Erro ao ler JWT: $e');
     }
     
-    debugPrint('🔄 [RefuelingCodePage] Iniciando polling (fallback) a cada ${intervalSeconds}s - isAutonomous: $isAutonomous');
+    debugPrint('🔄 [RefuelingCodePage] Iniciando polling (fallback) - delay: ${delaySeconds}s, intervalo: ${intervalSeconds}s, isAutonomous: $isAutonomous');
     
     if (isAutonomous) {
       // AUTÔNOMO: Verificar status CONCLUIDO e navegar para tela de sucesso
@@ -782,6 +778,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
         refuelingCode: cleanCode,
         targetStatus: 'CONCLUIDO',
         intervalSeconds: intervalSeconds,
+        delaySeconds: delaySeconds,
         onStatusReached: (data) {
           debugPrint('✅ [RefuelingCodePage AUTÔNOMO] Status CONCLUIDO detectado (CALLBACK AUTOMÁTICO)!');
           

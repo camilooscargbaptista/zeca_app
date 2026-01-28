@@ -20,6 +20,11 @@ class WebSocketService {
   bool _isConnecting = false;
   String? _currentDriverId;
   
+  // === NOVO: Timeout e código para conexão persistente ===
+  Timer? _timeoutTimer;
+  String? _currentRefuelingCode;
+  static const int CONNECTION_TIMEOUT_MINUTES = 30;
+  
   // Callbacks para eventos
   Function(Map<String, dynamic>)? _onRefuelingPendingValidation;
   Function(Map<String, dynamic>)? _onAutonomousPaymentConfirmed;
@@ -235,6 +240,11 @@ class WebSocketService {
   void disconnect() {
     debugPrint('🔌 [WebSocket] Desconectando...');
     
+    // Cancelar timeout se existir
+    _timeoutTimer?.cancel();
+    _timeoutTimer = null;
+    _currentRefuelingCode = null;
+    
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
@@ -251,6 +261,58 @@ class WebSocketService {
     _connectionStatusController.add(false);
     
     debugPrint('✅ [WebSocket] Desconectado');
+  }
+
+  /// Conectar para abastecimento específico com timeout de 30 minutos
+  /// 
+  /// Esta é a forma preferida de conectar durante o fluxo de abastecimento.
+  /// O WebSocket permanece conectado até:
+  /// - Timeout de 30 minutos
+  /// - Receber evento de conclusão/cancelamento
+  /// - Chamada explícita de disconnect()
+  void connectForRefueling({
+    required String token,
+    required String refuelingCode,
+    Function(Map<String, dynamic>)? onRefuelingPendingValidation,
+    Function(Map<String, dynamic>)? onAutonomousPaymentConfirmed,
+    Function()? onConnected,
+    Function(String)? onError,
+  }) {
+    debugPrint('🚀 [WebSocket] connectForRefueling iniciado para código: $refuelingCode');
+    
+    // Salvar código atual para validação de eventos
+    _currentRefuelingCode = refuelingCode;
+    
+    // Cancelar timeout anterior se existir
+    _timeoutTimer?.cancel();
+    
+    // Conectar WebSocket
+    connect(
+      token: token,
+      onRefuelingPendingValidation: onRefuelingPendingValidation,
+      onAutonomousPaymentConfirmed: onAutonomousPaymentConfirmed,
+      onConnected: () {
+        debugPrint('✅ [WebSocket] Conectado para código: $refuelingCode');
+        onConnected?.call();
+      },
+      onError: onError,
+    );
+    
+    // Configurar timeout de 30 minutos
+    _timeoutTimer = Timer(Duration(minutes: CONNECTION_TIMEOUT_MINUTES), () {
+      debugPrint('⏰ [WebSocket] Timeout de $CONNECTION_TIMEOUT_MINUTES minutos atingido. Desconectando...');
+      disconnect();
+    });
+    
+    debugPrint('⏱️ [WebSocket] Timeout configurado para $CONNECTION_TIMEOUT_MINUTES minutos');
+  }
+  
+  /// Getter para código de abastecimento atual
+  String? get currentRefuelingCode => _currentRefuelingCode;
+  
+  /// Verificar se está conectado para um código específico
+  bool isConnectedForCode(String code) {
+    return _isConnected && _currentRefuelingCode == code;
   }
 
   /// Reconectar manualmente

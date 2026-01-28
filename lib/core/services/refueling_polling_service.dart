@@ -190,38 +190,71 @@ class RefuelingPollingService {
   /// [refuelingCode] - Código de abastecimento para buscar refueling
   /// [targetStatus] - Status alvo a aguardar (ex: 'CONCLUIDO')
   /// [onStatusReached] - Callback chamado quando o status é atingido (recebe dados do refueling)
-  /// [intervalSeconds] - Intervalo entre verificações (padrão: 15 segundos)
+  /// [intervalSeconds] - Intervalo entre verificações (padrão: 60 segundos = 1 minuto)
+  /// [delaySeconds] - Delay inicial antes de iniciar polling (padrão: 180 segundos = 3 minutos)
   void startPollingForStatus({
     required String refuelingCode,
     required String targetStatus,
     required Function(Map<String, dynamic>) onStatusReached,
-    int intervalSeconds = 15,
+    int intervalSeconds = 60, // ALTERADO: 1 minuto
+    int delaySeconds = 180,   // NOVO: 3 minutos de delay inicial
   }) {
-    debugPrint('🚀 [POLLING] startPollingForStatus chamado: code=$refuelingCode, targetStatus=$targetStatus, intervalSeconds=$intervalSeconds');
+    debugPrint('🚀 [POLLING] startPollingForStatus chamado: code=$refuelingCode, targetStatus=$targetStatus');
+    debugPrint('⏱️ [POLLING] Delay inicial: ${delaySeconds}s, Intervalo: ${intervalSeconds}s');
     
     stopPolling();
 
     _currentRefuelingCode = refuelingCode;
     _isPolling = true;
 
-    // Verificação imediata
-    debugPrint('🔍 [POLLING] Executando primeira verificação imediata...');
-    _checkStatusForTarget(targetStatus, onStatusReached);
-
-    // Configurar polling periódico
-    _pollingTimer = Timer.periodic(
-      Duration(seconds: intervalSeconds),
-      (_) {
-        if (_isPolling) {
-          debugPrint('⏰ [POLLING] Verificação periódica para status $targetStatus...');
-          _checkStatusForTarget(targetStatus, onStatusReached);
-        } else {
-          _pollingTimer?.cancel();
+    // NOVO: Delay inicial antes de começar o polling (fallback para WebSocket)
+    if (delaySeconds > 0) {
+      debugPrint('⏳ [POLLING] Aguardando ${delaySeconds}s (${delaySeconds ~/ 60} min) antes de iniciar polling...');
+      
+      _pollingTimer = Timer(Duration(seconds: delaySeconds), () {
+        if (!_isPolling) {
+          debugPrint('⚠️ [POLLING] Polling foi cancelado durante o delay inicial');
+          return;
         }
-      },
-    );
+        
+        debugPrint('🔍 [POLLING] Delay inicial concluído. Iniciando polling periódico...');
+        
+        // Verificação imediata após o delay
+        _checkStatusForTarget(targetStatus, onStatusReached);
+        
+        // Configurar polling periódico
+        _pollingTimer = Timer.periodic(
+          Duration(seconds: intervalSeconds),
+          (_) {
+            if (_isPolling) {
+              debugPrint('⏰ [POLLING] Verificação periódica para status $targetStatus...');
+              _checkStatusForTarget(targetStatus, onStatusReached);
+            } else {
+              _pollingTimer?.cancel();
+            }
+          },
+        );
+      });
+    } else {
+      // Sem delay - comportamento antigo para compatibilidade
+      debugPrint('🔍 [POLLING] Executando primeira verificação imediata...');
+      _checkStatusForTarget(targetStatus, onStatusReached);
 
-    debugPrint('🔄 [POLLING] Polling iniciado para status: $targetStatus');
+      // Configurar polling periódico
+      _pollingTimer = Timer.periodic(
+        Duration(seconds: intervalSeconds),
+        (_) {
+          if (_isPolling) {
+            debugPrint('⏰ [POLLING] Verificação periódica para status $targetStatus...');
+            _checkStatusForTarget(targetStatus, onStatusReached);
+          } else {
+            _pollingTimer?.cancel();
+          }
+        },
+      );
+    }
+
+    debugPrint('🔄 [POLLING] Polling configurado - delay: ${delaySeconds}s, intervalo: ${intervalSeconds}s');
   }
 
   /// Verificar status alvo (para AUTÔNOMO verificando CONCLUIDO)
