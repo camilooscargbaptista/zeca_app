@@ -1407,12 +1407,14 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                       const SizedBox(height: 16),
                       // KM Input com último registro e validação
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Campo de digitação à esquerda
                           Expanded(
+                            flex: 3,
                             child: TextFormField(
                               controller: _kmController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: false),
                               inputFormatters: [
                                 OdometerFormatter(),
                               ],
@@ -1430,19 +1432,22 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                               ),
                             ),
                           ),
-                          if (_lastOdometer != null) ...[
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          const SizedBox(width: 12),
+                          // Badge de Último KM à direita (sempre visível)
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Colors.grey[50],
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFF2196F3), width: 1.5),
+                                border: Border.all(color: Colors.grey[300]!),
                               ),
                               child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Último',
+                                    'Último KM',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: Colors.grey[600],
@@ -1451,17 +1456,19 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    OdometerFormatter.formatValue(_lastOdometer!.toInt()),
-                                    style: const TextStyle(
-                                      fontSize: 13,
+                                    _lastOdometer != null 
+                                        ? '${OdometerFormatter.formatValue(_lastOdometer!.toInt())} km'
+                                        : '-- km',
+                                    style: TextStyle(
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2196F3),
+                                      color: _lastOdometer != null ? AppColors.zecaBlue : Colors.grey[500],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
+                          ),
                         ],
                       ),
                       // Aviso quando KM é menor ou igual ao último
