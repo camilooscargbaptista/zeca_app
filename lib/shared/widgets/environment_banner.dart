@@ -19,42 +19,40 @@ class EnvironmentBanner extends StatelessWidget {
 
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: Stack(
+      child: Column(
         children: [
-          child,
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                color: _getBannerColor(config.flavor),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _getBannerIcon(config.flavor),
-                      size: 14,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getBannerText(config.flavor),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.none,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+          // Banner de ambiente no topo
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 4,
+              bottom: 4,
+            ),
+            color: _getBannerColor(config.flavor),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _getBannerIcon(config.flavor),
+                  size: 14,
+                  color: Colors.white,
                 ),
-              ),
+                const SizedBox(width: 6),
+                Text(
+                  _getBannerText(config.flavor),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.none,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
+          // Conteúdo do app
+          Expanded(child: child),
         ],
       ),
     );
