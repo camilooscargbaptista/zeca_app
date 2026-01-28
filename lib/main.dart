@@ -9,6 +9,7 @@ import 'core/services/token_manager_service.dart';
 import 'routes/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/journey/data/services/journey_storage_service.dart';
+import 'shared/widgets/environment_banner.dart';
 
 Future<void> main() async {
   // Capturar erros não tratados
@@ -130,12 +131,14 @@ class ZecaApp extends StatelessWidget {
       
       return BlocProvider<AuthBloc>(
         create: (context) => authBloc,
-        child: MaterialApp.router(
-          title: config.appName,
-          theme: config.theme,
-          routerConfig: router.router,
-          // debugShowCheckedModeBanner: config.isDevelopment,
-          debugShowCheckedModeBanner: false,
+        child: EnvironmentBanner(
+          child: MaterialApp.router(
+            title: config.appName,
+            theme: config.theme,
+            routerConfig: router.router,
+            // debugShowCheckedModeBanner: config.isDevelopment,
+            debugShowCheckedModeBanner: false,
+          ),
         ),
       );
     } catch (e, stackTrace) {

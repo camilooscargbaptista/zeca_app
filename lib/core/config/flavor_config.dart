@@ -83,7 +83,7 @@ class FlavorConfig {
           flavor: flavor,
           name: 'staging',
           appName: 'ZECA STAGING',
-          baseUrl: 'https://api-staging.zeca.com.br',
+          baseUrl: 'https://stg.abastecacomzeca.com.br',
           primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
