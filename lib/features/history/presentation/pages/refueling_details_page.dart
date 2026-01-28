@@ -186,7 +186,8 @@ class _RefuelingDetailsPageState extends State<RefuelingDetailsPage> {
   Widget _buildMainInfoCard() {
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
-    final datetime = DateTime.tryParse(_data!['refueling_datetime'] ?? '');
+    // Converte UTC para timezone local
+    final datetime = DateTime.tryParse(_data!['refueling_datetime'] ?? '')?.toLocal();
     
     final quantityLiters = double.tryParse(_data!['quantity_liters']?.toString() ?? '0') ?? 0;
     final totalAmount = double.tryParse(_data!['total_amount']?.toString() ?? '0') ?? 0;

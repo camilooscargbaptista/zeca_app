@@ -158,7 +158,8 @@ class _PendingRefuelingsPageState extends State<PendingRefuelingsPage> {
     if (dateString == null) return 'N/A';
     
     try {
-      final date = DateTime.parse(dateString);
+      // Converte UTC para timezone local
+      final date = DateTime.parse(dateString).toLocal();
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return dateString;

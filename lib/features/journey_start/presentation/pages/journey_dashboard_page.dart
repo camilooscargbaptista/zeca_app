@@ -188,13 +188,14 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
   String _formatDate(String? dateStr) {
     if (dateStr == null) return '';
     try {
-      final date = DateTime.parse(dateStr);
+      // Parse e converte para timezone local (backend retorna UTC)
+      final date = DateTime.parse(dateStr).toLocal();
       final now = DateTime.now();
       final diff = now.difference(date);
       
-      if (diff.inDays == 0) {
+      if (diff.inDays == 0 && date.day == now.day) {
         return 'Hoje às ${DateFormat('HH:mm').format(date)}';
-      } else if (diff.inDays == 1) {
+      } else if (diff.inDays == 0 || (diff.inDays == 1 && date.day == now.day - 1)) {
         return 'Ontem às ${DateFormat('HH:mm').format(date)}';
       } else if (diff.inDays < 7) {
         return '${diff.inDays} dias atrás';
