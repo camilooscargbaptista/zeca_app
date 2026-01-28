@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'flavor_config.dart';
 
 /// Configuração de API do ZECA App
@@ -12,10 +13,13 @@ class ApiConfig {
   /// Usa FlavorConfig.instance para obter a URL correta
   static String get baseUrl {
     try {
-      return FlavorConfig.instance.baseUrl;
+      final url = FlavorConfig.instance.baseUrl;
+      debugPrint('🌐 [ApiConfig] baseUrl = $url (flavor: ${FlavorConfig.instance.name})');
+      return url;
     } catch (e) {
       // Fallback caso FlavorConfig não tenha sido inicializado
       // Isso NÃO deve acontecer em produção!
+      debugPrint('⚠️ [ApiConfig] FlavorConfig não inicializado, usando fallback!');
       return 'https://www.abastecacomzeca.com.br';
     }
   }

@@ -40,6 +40,7 @@ class FlavorConfig {
   }
   
   static void initialize(Flavor flavor) {
+    debugPrint('🔧 [FlavorConfig] Inicializando com flavor: $flavor');
     switch (flavor) {
       case Flavor.brandA:
         _instance = FlavorConfig._(
