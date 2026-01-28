@@ -983,89 +983,102 @@ class _HomePageSimpleState extends State<HomePageSimple> {
               ),
             ],
             
-            // ===== CARD: VEÍCULO SELECIONADO (Compacto) =====
+            // ===== CARD: VEÍCULO (Design Mockup) =====
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header do card
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Icon(Icons.local_shipping, color: AppColors.zecaBlue, size: 16),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'VEÍCULO SELECIONADO',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    if (_vehicleData != null) ...[
-                      // Layout compacto: Placa + Info
-                      Row(
-                        children: [
-                          // Badge da Placa
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [AppColors.zecaBlue, Colors.blue[800]!],
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border(
+                    left: BorderSide(color: Colors.green[500]!, width: 4),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_vehicleData != null) ...[
+                        // Layout compacto: Placa + Info (conforme mockup)
+                        Row(
+                          children: [
+                            // Badge da Placa
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [AppColors.zecaBlue, Colors.blue[800]!],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _vehicleData!['placa'] ?? '---',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.2,
+                              child: Text(
+                                _vehicleData!['placa'] ?? '---',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Info do veículo
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Diesel',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                            const SizedBox(width: 12),
+                            // Info do veículo
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Diesel',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  'Consumo: ${_vehicleData!['consumo_medio']?.toStringAsFixed(1) ?? '--'} km/L',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
+                                  const SizedBox(height: 2),
+                                  // Meta line: Consumo • Último KM
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Consumo: ',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                      Text(
+                                        _vehicleData!['consumo_medio'] != null 
+                                            ? '${_vehicleData!['consumo_medio'].toStringAsFixed(1)} km/L'
+                                            : '-- km/L',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.zecaBlue,
+                                        ),
+                                      ),
+                                      Text(
+                                        '  •  ',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                                      ),
+                                      Text(
+                                        'Último: ',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                      Text(
+                                        _vehicleData!['ultimo_km'] != null 
+                                            ? '${OdometerFormatter.formatValue((_vehicleData!['ultimo_km'] as num).toInt())} km'
+                                            : '-- km',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.zecaBlue,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
+                          ],
+                        ),
+                      ] else ...[
                       // Sem jornada ativa
                       Container(
                         padding: const EdgeInsets.all(12),
