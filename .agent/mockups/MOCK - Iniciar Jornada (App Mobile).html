@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<!-- saved from url=(0120)file:///Users/camilooscargirardellibaptista/Documentos/camilo/ZECA/zeca_app/.agent/mockups/MOCK-app-iniciar-jornada.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Iniciar Jornada (App Mobile)</title>
+    <link href="./MOCK - Iniciar Jornada (App Mobile)_files/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .state-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            background: #E3F2FD;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 780px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin-top: 50px;
+        }
+
+        /* Header azul */
+        .header-blue {
+            background: #2A70C0;
+            padding: 44px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: #F44336;
+            border-radius: 50%;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            height: calc(100% - 76px - 80px);
+            overflow-y: auto;
+        }
+
+        /* User Info Compact */
+        .user-info-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: #2A70C0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .user-cpf {
+            font-size: 12px;
+            color: #757575;
+        }
+
+        .user-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-frota {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge-autonomo {
+            background: #FF9800;
+            color: white;
+        }
+
+        /* Section title */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            margin-bottom: 12px;
+        }
+
+        .section-title i {
+            color: #2A70C0;
+        }
+
+        /* Vehicle search card */
+        .vehicle-search-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-label {
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #212121;
+        }
+
+        .input-field::placeholder {
+            color: #BDBDBD;
+        }
+
+        .search-btn {
+            background: #2A70C0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Vehicle selected card */
+        .vehicle-selected-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .vehicle-selected-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .vehicle-selected-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4CAF50;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .vehicle-selected-status i {
+            font-size: 16px;
+        }
+
+        .change-btn {
+            color: #2A70C0;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .vehicle-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 12px;
+        }
+
+        .vehicle-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #9E9E9E;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #424242;
+            font-weight: 500;
+        }
+
+        /* Vehicle Summary Card (KPIs) */
+        .vehicle-summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .summary-icon {
+            width: 36px;
+            height: 36px;
+            background: #FFF3E0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .summary-icon i {
+            color: #FF9800;
+            font-size: 16px;
+        }
+
+        .summary-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .kpi-grid {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .kpi-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+        }
+
+        .kpi-icon.blue {
+            background: #E3F2FD;
+        }
+
+        .kpi-icon.blue i {
+            color: #2A70C0;
+        }
+
+        .kpi-icon.green {
+            background: #E8F5E9;
+        }
+
+        .kpi-icon.green i {
+            color: #4CAF50;
+        }
+
+        .kpi-icon.purple {
+            background: #F3E5F5;
+        }
+
+        .kpi-icon.purple i {
+            color: #9C27B0;
+        }
+
+        .kpi-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #424242;
+        }
+
+        .kpi-value.empty {
+            color: #BDBDBD;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: #757575;
+            margin-top: 2px;
+        }
+
+        /* Info box */
+        .info-box {
+            background: #E3F2FD;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-box i {
+            color: #2A70C0;
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .info-box span {
+            font-size: 14px;
+            color: #1565C0;
+            line-height: 1.4;
+        }
+
+        /* Bottom button area */
+        .bottom-action {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #E53935;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        .btn-primary i {
+            font-size: 14px;
+        }
+
+        /* Notes section */
+        .notes-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #FFF8E1;
+            border-radius: 12px;
+            max-width: 800px;
+        }
+
+        .notes-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F57C00;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notes-list {
+            list-style: none;
+        }
+
+        .notes-list li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #5D4037;
+            border-bottom: 1px solid #FFE0B2;
+        }
+
+        .notes-list li:last-child {
+            border-bottom: none;
+        }
+
+        .notes-list strong {
+            color: #E65100;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- ESTADO 1: Buscar Veículo (Inicial) -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 1: Buscar Veículo</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Iniciar Jornada</span>
+            <div class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- User Info Compact -->
+            <div class="user-info-compact">
+                <div class="user-avatar">PO</div>
+                <div class="user-details">
+                    <div class="user-name">Pedro Oliveira</div>
+                    <div class="user-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <span class="user-badge badge-frota">Frota</span>
+            </div>
+
+            <!-- Section: Veículo -->
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                Veículo
+            </div>
+
+            <!-- Search Card -->
+            <div class="vehicle-search-card">
+                <div class="search-row">
+                    <div class="input-group">
+                        <label class="input-label">Placa do Veículo</label>
+                        <input type="text" class="input-field" placeholder="ABC-1234">
+                    </div>
+                    <button class="search-btn">Buscar</button>
+                </div>
+            </div>
+
+            <!-- Vehicle Summary - Empty State -->
+            <div class="vehicle-summary-card">
+                <div class="summary-header">
+                    <div class="summary-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="summary-title">Resumo do Veículo</span>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-item">
+                        <div class="kpi-icon blue">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <span class="kpi-value empty">--</span>
+                        <span class="kpi-label">Último KM</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon green">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+                        <span class="kpi-value empty">--</span>
+                        <span class="kpi-label">Km/L Médio</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon purple">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span class="kpi-value empty">0</span>
+                        <span class="kpi-label">Abast. Mês</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <span>Selecione um veículo para iniciar sua jornada de trabalho.</span>
+            </div>
+        </div>
+
+        <!-- Bottom Action - Disabled -->
+        <div class="bottom-action">
+            <button class="btn-primary" disabled="">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 2: Veículo Selecionado -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 2: Veículo Selecionado</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Iniciar Jornada</span>
+            <div class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- User Info Compact -->
+            <div class="user-info-compact">
+                <div class="user-avatar">PO</div>
+                <div class="user-details">
+                    <div class="user-name">Pedro Oliveira</div>
+                    <div class="user-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <span class="user-badge badge-frota">Frota</span>
+            </div>
+
+            <!-- Vehicle Selected Card (campo de busca OCULTO) -->
+            <div class="vehicle-selected-card">
+                <div class="vehicle-selected-header">
+                    <div class="vehicle-selected-status">
+                        <i class="fas fa-check-circle"></i>
+                        Veículo Selecionado
+                    </div>
+                    <button class="change-btn">Trocar</button>
+                </div>
+                <div class="vehicle-title">Volvo FH 540 (2022)</div>
+                <div class="vehicle-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Placa</span>
+                        <span class="detail-value">ABC-1234</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Cor</span>
+                        <span class="detail-value">Branco</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Combustível</span>
+                        <span class="detail-value">Diesel S10</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">RENAVAM</span>
+                        <span class="detail-value">12345678901</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Summary - With Data -->
+            <div class="vehicle-summary-card">
+                <div class="summary-header">
+                    <div class="summary-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="summary-title">Resumo do Veículo</span>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-item">
+                        <div class="kpi-icon blue">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <span class="kpi-value">125.430</span>
+                        <span class="kpi-label">Último KM</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon green">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+                        <span class="kpi-value">3.2</span>
+                        <span class="kpi-label">Km/L Médio</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon purple">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span class="kpi-value">5</span>
+                        <span class="kpi-label">Abast. Mês</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Action - Enabled -->
+        <div class="bottom-action">
+            <button class="btn-primary">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 3: Motorista Autônomo -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 3: Autônomo (sem busca)</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Iniciar Jornada</span>
+            <div class="notification-btn">
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- User Info Compact - Autônomo -->
+            <div class="user-info-compact">
+                <div class="user-avatar">MA</div>
+                <div class="user-details">
+                    <div class="user-name">Maria Autonoma</div>
+                    <div class="user-cpf">CPF: 111.222.333-44</div>
+                </div>
+                <span class="user-badge badge-autonomo">Autônomo</span>
+            </div>
+
+            <!-- Vehicle Selected Card (único veículo, sem busca) -->
+            <div class="vehicle-selected-card">
+                <div class="vehicle-selected-header">
+                    <div class="vehicle-selected-status">
+                        <i class="fas fa-check-circle"></i>
+                        Meu Veículo
+                    </div>
+                    <button class="change-btn">Editar</button>
+                </div>
+                <div class="vehicle-title">Scania R450 (2021)</div>
+                <div class="vehicle-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Placa</span>
+                        <span class="detail-value">XYZ-5678</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Cor</span>
+                        <span class="detail-value">Vermelho</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Combustível</span>
+                        <span class="detail-value">Diesel S10</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">RENAVAM</span>
+                        <span class="detail-value">98765432109</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Summary - With Data -->
+            <div class="vehicle-summary-card">
+                <div class="summary-header">
+                    <div class="summary-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="summary-title">Resumo do Veículo</span>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-item">
+                        <div class="kpi-icon blue">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <span class="kpi-value">312.150</span>
+                        <span class="kpi-label">Último KM</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon green">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+                        <span class="kpi-value">2.8</span>
+                        <span class="kpi-label">Km/L Médio</span>
+                    </div>
+                    <div class="kpi-item">
+                        <div class="kpi-icon purple">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <span class="kpi-value">3</span>
+                        <span class="kpi-label">Abast. Mês</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Action - Enabled -->
+        <div class="bottom-action">
+            <button class="btn-primary">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NOTAS DE IMPLEMENTAÇÃO -->
+    <!-- ============================================ -->
+    <div class="notes-section">
+        <div class="notes-title">
+            <i class="fas fa-sticky-note"></i>
+            Regras de Negócio &amp; Estados Condicionais
+        </div>
+        <ul class="notes-list">
+            <li><strong>RN-JORNADA-001:</strong> Campo de busca só aparece se veículo NÃO estiver selecionado</li>
+            <li><strong>RN-JORNADA-002:</strong> Após selecionar veículo, oculta campo de busca e mostra Card verde com
+                "Trocar"</li>
+            <li><strong>RN-JORNADA-003:</strong> Botão "Iniciar Jornada" aparece UMA ÚNICA VEZ (no rodapé fixo)</li>
+            <li><strong>RN-JORNADA-004:</strong> Botão "Trocar" permite voltar ao estado de busca (apenas para
+                frotistas)</li>
+            <li><strong>RN-JORNADA-005:</strong> Info do usuário é COMPACTA (1 linha, não card grande)</li>
+            <li><strong>RN-JORNADA-006:</strong> Badge "Frota" (verde) ou "Autônomo" (laranja) no header do usuário</li>
+            <li><strong>RN-JORNADA-007:</strong> Autônomos NÃO veem campo de busca (veem direto seu único veículo)</li>
+            <li><strong>RN-JORNADA-008:</strong> Autônomos veem "Editar" em vez de "Trocar" (navega para edição do
+                veículo)</li>
+            <li><strong>RN-JORNADA-009:</strong> Botão "Iniciar Jornada" fica DESABILITADO até veículo ser selecionado
+            </li>
+            <li><strong>RN-JORNADA-010:</strong> Card "Resumo do Veículo" mostra 3 KPIs: Último KM, Km/L Médio, Abast.
+                Mês</li>
+            <li><strong>RN-JORNADA-011:</strong> KPIs ficam "--" quando veículo não selecionado ou sem dados</li>
+            <li><strong>RN-JORNADA-012:</strong> Info box azul só aparece quando veículo NÃO está selecionado</li>
+        </ul>
+    </div>
+
+
+</body></html>

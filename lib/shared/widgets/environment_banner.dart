@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/config/flavor_config.dart';
 
 /// Widget que mostra um banner indicando o ambiente atual (DEV/STAGING)
+/// O banner fica sobreposto na área da barra de status, não afeta o layout.
 /// Não é exibido em produção.
 class EnvironmentBanner extends StatelessWidget {
   final Widget child;
@@ -19,40 +20,48 @@ class EnvironmentBanner extends StatelessWidget {
 
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: Column(
+      child: Stack(
         children: [
-          // Banner de ambiente no topo
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 4,
-              bottom: 4,
-            ),
-            color: _getBannerColor(config.flavor),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _getBannerIcon(config.flavor),
-                  size: 14,
-                  color: Colors.white,
+          // Conteúdo do app (sem alteração de layout)
+          child,
+          // Banner sobreposto na área da status bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Container(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top,
+                  bottom: 2,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  _getBannerText(config.flavor),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.none,
-                  ),
-                  textAlign: TextAlign.center,
+                decoration: BoxDecoration(
+                  color: _getBannerColor(config.flavor).withOpacity(0.95),
                 ),
-              ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _getBannerIcon(config.flavor),
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _getBannerText(config.flavor),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          // Conteúdo do app
-          Expanded(child: child),
         ],
       ),
     );
@@ -83,9 +92,9 @@ class EnvironmentBanner extends StatelessWidget {
   String _getBannerText(Flavor flavor) {
     switch (flavor) {
       case Flavor.dev:
-        return '🔧 DESENVOLVIMENTO';
+        return 'DEV';
       case Flavor.staging:
-        return '🧪 STAGING - stg.abastecacomzeca.com.br';
+        return 'STAGING - stg.abastecacomzeca.com.br';
       default:
         return flavor.name.toUpperCase();
     }

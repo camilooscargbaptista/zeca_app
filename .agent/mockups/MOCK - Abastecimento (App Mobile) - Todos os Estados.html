@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<!-- saved from url=(0121)file:///Users/camilooscargirardellibaptista/Documentos/camilo/ZECA/zeca_app/.agent/mockups/MOCK-app-abastecimento-v2.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Abastecimento (App Mobile) - Todos os Estados</title>
+    <link href="./MOCK - Abastecimento (App Mobile) - Todos os Estados_files/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .state-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            background: #E3F2FD;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 780px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin-top: 50px;
+        }
+
+        /* Header azul */
+        .header-blue {
+            background: #2A70C0;
+            padding: 44px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background: #F44336;
+            border-radius: 50%;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            height: calc(100% - 76px - 80px);
+            overflow-y: auto;
+        }
+
+        /* Vehicle card compacto */
+        .vehicle-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .vehicle-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plate-badge {
+            background: linear-gradient(135deg, #2A70C0, #1E5EAA);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-fuel-type {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .vehicle-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 3px;
+            flex-wrap: wrap;
+        }
+
+        .meta-text {
+            font-size: 11px;
+            color: #757575;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: #2A70C0;
+        }
+
+        /* Station card */
+        .station-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .station-card.validated {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .station-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .station-icon {
+            width: 40px;
+            height: 40px;
+            background: #E8F5E9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .station-icon i {
+            color: #4CAF50;
+            font-size: 18px;
+        }
+
+        .station-icon.pending {
+            background: #FFF3E0;
+        }
+
+        .station-icon.pending i {
+            color: #F57C00;
+        }
+
+        .station-icon.error {
+            background: #FFEBEE;
+        }
+
+        .station-icon.error i {
+            color: #E53935;
+        }
+
+        .station-details {
+            flex: 1;
+        }
+
+        .station-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .station-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-parceria {
+            background: #4CAF50;
+        }
+
+        .badge-autonomo {
+            background: #FF9800;
+        }
+
+        .badge-frota {
+            background: #2A70C0;
+        }
+
+        .station-address-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .station-address {
+            font-size: 12px;
+            color: #757575;
+            flex: 1;
+        }
+
+        .change-link {
+            color: #2A70C0;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Fuel prices inline */
+        .fuel-prices-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .fuel-chip {
+            background: linear-gradient(135deg, #43A047, #2E7D32);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .fuel-chip.arla {
+            background: linear-gradient(135deg, #1E88E5, #1565C0);
+        }
+
+        .fuel-chip-name {
+            font-size: 9px;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+
+        .fuel-chip-price {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* CNPJ Input row */
+        .cnpj-input-section {
+            margin-top: 12px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .input-field.error {
+            border-color: #E53935;
+        }
+
+        .input-field::placeholder {
+            color: #BDBDBD;
+        }
+
+        .btn-validar {
+            background: #2A70C0;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Form section */
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-size: 11px;
+            color: #757575;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .last-km-badge {
+            background: white;
+            border: 2px solid #2A70C0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .last-km-label {
+            font-size: 9px;
+            color: #757575;
+        }
+
+        .last-km-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2A70C0;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            background: white;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        /* Checkbox ARLA */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #E3F2FD;
+            border-radius: 10px;
+        }
+
+        .checkbox-input {
+            width: 20px;
+            height: 20px;
+            accent-color: #2A70C0;
+        }
+
+        .checkbox-label {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .checkbox-price {
+            font-weight: 600;
+            color: #2A70C0;
+        }
+
+        /* Info tip */
+        .info-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: #E3F2FD;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .info-tip i {
+            color: #2A70C0;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .info-tip span {
+            font-size: 12px;
+            color: #1565C0;
+            line-height: 1.4;
+        }
+
+        /* Error box */
+        .error-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: #FFEBEE;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .error-box i {
+            color: #E53935;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .error-box-content {
+            flex: 1;
+        }
+
+        .error-box-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #C62828;
+        }
+
+        .error-box-text {
+            font-size: 11px;
+            color: #E53935;
+            margin-top: 2px;
+        }
+
+        /* Warning box */
+        .warning-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: #FFF8E1;
+            border: 1px solid #FFE082;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .warning-box i {
+            color: #F57C00;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .warning-box-content {
+            flex: 1;
+        }
+
+        .warning-box-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #E65100;
+        }
+
+        .warning-box-text {
+            font-size: 11px;
+            color: #F57C00;
+            margin-top: 2px;
+        }
+
+        /* Alert - Sem jornada */
+        .no-journey-alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #FFF3E0;
+            border: 1px solid #FFE0B2;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .no-journey-alert i {
+            color: #F57C00;
+            font-size: 22px;
+        }
+
+        .no-journey-content {
+            flex: 1;
+        }
+
+        .no-journey-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #E65100;
+        }
+
+        .no-journey-text {
+            font-size: 12px;
+            color: #F57C00;
+            margin-top: 2px;
+        }
+
+        .btn-small {
+            background: #F57C00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Bottom button area */
+        .bottom-action {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #2A70C0;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        .btn-primary i {
+            font-size: 16px;
+        }
+
+        /* Notes section */
+        .notes-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #FFF8E1;
+            border-radius: 12px;
+            max-width: 800px;
+        }
+
+        .notes-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F57C00;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notes-list {
+            list-style: none;
+        }
+
+        .notes-list li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #5D4037;
+            border-bottom: 1px solid #FFE0B2;
+        }
+
+        .notes-list li:last-child {
+            border-bottom: none;
+        }
+
+        .notes-list strong {
+            color: #E65100;
+        }
+
+        .notes-list code {
+            background: #FFF3E0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- ESTADO 1: Sem Jornada Ativa -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 1: Sem Jornada Ativa</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Alerta Sem Jornada -->
+            <div class="no-journey-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="no-journey-content">
+                    <div class="no-journey-title">Nenhuma jornada ativa</div>
+                    <div class="no-journey-text">Inicie uma jornada para abastecer.</div>
+                </div>
+                <button class="btn-small">Iniciar</button>
+            </div>
+
+            <!-- Info -->
+            <div class="info-tip">
+                <i class="fas fa-info-circle"></i>
+                <span>Para gerar um código de abastecimento, você precisa primeiro iniciar uma jornada e selecionar um
+                    veículo.</span>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary" disabled="">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 2: Veículo Selecionado + Buscar Posto -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 2: Buscar Posto (CNPJ)</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-fuel-type">Diesel S10</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Consumo: <span class="meta-value">3.4 km/L</span></span>
+                            <span class="meta-text">•</span>
+                            <span class="meta-text">Último: <span class="meta-value">223.343 km</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Search Card -->
+            <div class="station-card">
+                <div class="station-header">
+                    <div class="station-icon pending">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="station-details">
+                        <div class="station-name">CNPJ do Posto</div>
+                        <div class="station-address">Digite o CNPJ para validar o posto</div>
+                    </div>
+                </div>
+                <div class="cnpj-input-section">
+                    <div class="input-row">
+                        <input type="text" class="input-field" placeholder="00.000.000/0000-00">
+                        <button class="btn-validar">Validar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary" disabled="">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 3: Posto Inválido / Erro -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 3: CNPJ Inválido</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-fuel-type">Diesel S10</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Consumo: <span class="meta-value">3.4 km/L</span></span>
+                            <span class="meta-text">•</span>
+                            <span class="meta-text">Último: <span class="meta-value">223.343 km</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Search Card - Error -->
+            <div class="station-card">
+                <div class="station-header">
+                    <div class="station-icon error">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="station-details">
+                        <div class="station-name">CNPJ do Posto</div>
+                        <div class="station-address">Tente novamente com um CNPJ válido</div>
+                    </div>
+                </div>
+                <div class="cnpj-input-section">
+                    <div class="input-row">
+                        <input type="text" class="input-field error" value="12.345.678/0001-00">
+                        <button class="btn-validar">Validar</button>
+                    </div>
+                    <div class="error-box">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div class="error-box-content">
+                            <div class="error-box-title">Posto não encontrado</div>
+                            <div class="error-box-text">O CNPJ informado não corresponde a nenhum posto cadastrado na
+                                rede ZECA.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary" disabled="">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 4: Posto Validado + Sem Combustível Compatível -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 4: Sem Combustível Compatível</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-fuel-type">Diesel S10</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Consumo: <span class="meta-value">3.4 km/L</span></span>
+                            <span class="meta-text">•</span>
+                            <span class="meta-text">Último: <span class="meta-value">223.343 km</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Card - Validated but no compatible fuel -->
+            <div class="station-card validated">
+                <div class="station-header">
+                    <div class="station-icon error">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="station-details">
+                        <div class="station-name-row">
+                            <span class="station-name">Posto Shell Centro</span>
+                        </div>
+                        <div class="station-address-row">
+                            <span class="station-address">Av. Paulista, 1000 - São Paulo</span>
+                            <a class="change-link"><i class="fas fa-exchange-alt"></i> Trocar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-box">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div class="error-box-content">
+                        <div class="error-box-title">Posto sem combustível compatível</div>
+                        <div class="error-box-text">O veículo utiliza Diesel S10, mas o posto só oferece: Gasolina,
+                            Etanol</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary" disabled="">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 5: Tudo OK - Pronto para Gerar -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 5: Pronto para Gerar ✅</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-fuel-type">Diesel S10</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Consumo: <span class="meta-value">3.4 km/L</span></span>
+                            <span class="meta-text">•</span>
+                            <span class="meta-text">Último: <span class="meta-value">223.343 km</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Card - Validated -->
+            <div class="station-card validated">
+                <div class="station-header">
+                    <div class="station-icon">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="station-details">
+                        <div class="station-name-row">
+                            <span class="station-name">Posto ZECA</span>
+                            <span class="badge badge-parceria">Parceria</span>
+                        </div>
+                        <div class="station-address-row">
+                            <span class="station-address">Rua Quirino Roquetti, 235 - Ribeirão Preto</span>
+                            <a class="change-link"><i class="fas fa-exchange-alt"></i> Trocar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fuel prices -->
+                <div class="fuel-prices-row">
+                    <div class="fuel-chip">
+                        <div class="fuel-chip-name">Diesel S10</div>
+                        <div class="fuel-chip-price">R$ 5.69/L</div>
+                    </div>
+                    <div class="fuel-chip arla">
+                        <div class="fuel-chip-name">ARLA 32</div>
+                        <div class="fuel-chip-price">R$ 3.49/L</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form section -->
+            <div class="form-section">
+                <!-- KM Atual -->
+                <div class="form-group">
+                    <label class="form-label">KM Atual</label>
+                    <div class="form-row">
+                        <input type="text" class="form-input" value="224.500" placeholder="0">
+                        <div class="last-km-badge">
+                            <div class="last-km-label">Último</div>
+                            <div class="last-km-value">223.343</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combustível -->
+                <div class="form-group">
+                    <label class="form-label">Combustível</label>
+                    <select class="form-select">
+                        <option>Diesel S10</option>
+                    </select>
+                </div>
+
+                <!-- ARLA Checkbox -->
+                <div class="checkbox-row">
+                    <input type="checkbox" class="checkbox-input" checked="">
+                    <span class="checkbox-label">Abastecer <strong>ARLA 32</strong> <span class="checkbox-price">(R$
+                            3.49/L)</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ESTADO 6: Aviso KM Menor que Último -->
+    <!-- ============================================ -->
+    <div class="mobile-frame">
+        <div class="state-label">Estado 6: Aviso - KM Inválido</div>
+
+        <!-- Header -->
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-bars"></i></div>
+            <span class="header-title">Abastecimento</span>
+            <div class="notification-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <div class="notification-badge"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Vehicle Card -->
+            <div class="vehicle-card">
+                <div class="vehicle-header">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-fuel-type">Diesel S10</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Consumo: <span class="meta-value">3.4 km/L</span></span>
+                            <span class="meta-text">•</span>
+                            <span class="meta-text">Último: <span class="meta-value">223.343 km</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Card - Validated -->
+            <div class="station-card validated">
+                <div class="station-header">
+                    <div class="station-icon">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="station-details">
+                        <div class="station-name-row">
+                            <span class="station-name">Posto ZECA</span>
+                            <span class="badge badge-parceria">Parceria</span>
+                        </div>
+                        <div class="station-address-row">
+                            <span class="station-address">Rua Quirino Roquetti, 235 - Ribeirão Preto</span>
+                            <a class="change-link"><i class="fas fa-exchange-alt"></i> Trocar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fuel-prices-row">
+                    <div class="fuel-chip">
+                        <div class="fuel-chip-name">Diesel S10</div>
+                        <div class="fuel-chip-price">R$ 5.69/L</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form section -->
+            <div class="form-section">
+                <!-- KM Atual - Com aviso -->
+                <div class="form-group">
+                    <label class="form-label">KM Atual</label>
+                    <div class="form-row">
+                        <input type="text" class="form-input" value="220.000" placeholder="0" style="border-color: #F57C00;">
+                        <div class="last-km-badge">
+                            <div class="last-km-label">Último</div>
+                            <div class="last-km-value">223.343</div>
+                        </div>
+                    </div>
+                    <div class="warning-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="warning-box-content">
+                            <div class="warning-box-title">KM menor que o último registro</div>
+                            <div class="warning-box-text">O KM informado (220.000) é menor que o último registro
+                                (223.343). Verifique se está correto.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combustível -->
+                <div class="form-group">
+                    <label class="form-label">Combustível</label>
+                    <select class="form-select">
+                        <option>Diesel S10</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom -->
+        <div class="bottom-action">
+            <button class="btn-primary">
+                <i class="fas fa-qrcode"></i>
+                GERAR CÓDIGO DE ABASTECIMENTO
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- NOTAS -->
+    <!-- ============================================ -->
+    <div class="notes-section">
+        <div class="notes-title"><i class="fas fa-clipboard-list"></i> Condições Dinâmicas da Tela</div>
+        <ul class="notes-list">
+            <li><strong>Estado 1:</strong> Se <code>_vehicleData == null</code> → Mostra alerta "Nenhuma jornada ativa"
+                + botão "Iniciar"</li>
+            <li><strong>Estado 2:</strong> Se <code>_vehicleConfirmed &amp;&amp; !_isStationValidated</code> → Mostra input de
+                CNPJ</li>
+            <li><strong>Estado 3:</strong> Se erro ao validar CNPJ → Mostra error-box com mensagem</li>
+            <li><strong>Estado 4:</strong> Se <code>_selectedFuel.isEmpty</code> (sem compatível) → Mostra error-box
+            </li>
+            <li><strong>Estado 5:</strong> Se
+                <code>_vehicleConfirmed &amp;&amp; _isStationValidated &amp;&amp; _selectedFuel.isNotEmpty</code> → Tudo OK, botão ativo
+            </li>
+            <li><strong>Estado 6:</strong> Se <code>_showKmWarning</code> → Mostra warning-box laranja</li>
+            <li><strong>Último KM:</strong> Aparece no card Veículo (sempre) + badge no form (se
+                <code>_lastOdometer != null</code>)</li>
+            <li><strong>ARLA:</strong> Checkbox só aparece se
+                <code>_hasArlaAvailable &amp;&amp; combustível.contains('diesel')</code></li>
+            <li><strong>Dropdown Combustível:</strong> Se <code>_availableFuels.length &gt; 1</code> → Dropdown; senão →
+                readonly</li>
+            <li><strong>Badge Posto:</strong> <code>Parceria</code> (verde), <code>Autônomo</code> (laranja),
+                <code>Frota</code> (azul)</li>
+            <li><strong>Botão:</strong> Sempre fixo. Cor <code>#2A70C0</code> (azul ZECA). Desabilitado quando condições
+                não atendidas.</li>
+        </ul>
+    </div>
+
+
+</body></html>
