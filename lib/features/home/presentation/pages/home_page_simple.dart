@@ -982,123 +982,113 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                 ),
               ),
             ],
-            // ===== CARD: VEÍCULO (Design Mockup) =====
+            // ===== CARD: VEÍCULO (Sem header - Design Mockup) =====
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border(
-                    left: BorderSide(color: Colors.green[500]!, width: 4),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_vehicleData != null) ...[
-                        // Layout compacto: Placa + Info
-                        Row(
-                          children: [
-                            // Badge da Placa
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [AppColors.zecaBlue, Colors.blue[800]!],
-                                ),
-                                borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_vehicleData != null) ...[
+                      // Layout compacto: Placa + Info
+                      Row(
+                        children: [
+                          // Badge da Placa
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppColors.zecaBlue, Colors.blue[800]!],
                               ),
-                              child: Text(
-                                _vehicleData!['placa'] ?? '---',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 1.2,
-                                ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _vehicleData!['placa'] ?? '---',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            // Info do veículo
+                          ),
+                          const SizedBox(width: 12),
+                          // Info do veículo
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Diesel',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Consumo: ${_vehicleData!['consumo_medio']?.toStringAsFixed(1) ?? '--'} km/L',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                Text(
+                                  'Último: ${_vehicleData!['ultimo_km'] != null ? OdometerFormatter.formatValue((_vehicleData!['ultimo_km'] as num).toInt()) : '--'} km',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      // Sem jornada ativa
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Colors.red[700], size: 20),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _vehicleData!['tipo_combustivel'] ?? _vehicleData!['fuel_type'] ?? _vehicleData!['tipoCombustivel'] ?? 'Diesel',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
+                                    'Nenhuma jornada ativa',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red[800],
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  // Consumo em uma linha
                                   Text(
-                                    'Consumo: ${_vehicleData!['consumo_medio']?.toStringAsFixed(1) ?? '--'} km/L',
+                                    'Inicie uma jornada para abastecer.',
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  // Último em outra linha
-                                  Text(
-                                    'Último: ${_vehicleData!['ultimo_km'] != null ? OdometerFormatter.formatValue((_vehicleData!['ultimo_km'] as num).toInt()) : '--'} km',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                                      fontSize: 11,
+                                      color: Colors.red[700],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            TextButton(
+                              onPressed: () => context.go('/journey'),
+                              child: const Text('Iniciar'),
+                            ),
                           ],
                         ),
-                        // Sem jornada ativa
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.warning_amber_rounded, color: Colors.red[700], size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Nenhuma jornada ativa',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.red[800],
-                                      ),
-                                    ),
-                                    Text(
-                                      'Inicie uma jornada para abastecer.',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.red[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => context.go('/journey'),
-                                child: const Text('Iniciar'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -1635,11 +1625,12 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                   ),
                 ),
               ),
+            ],
           ],
         ),
       ),
     ),
-    // Botão fixo no rodapé
+    // Botão fixo no rodapé (bottomNavigationBar)
     bottomNavigationBar: (_vehicleConfirmed && _isStationValidated)
         ? Container(
             padding: const EdgeInsets.all(16),
