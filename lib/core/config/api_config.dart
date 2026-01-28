@@ -1,25 +1,22 @@
+import 'flavor_config.dart';
+
+/// Configuração de API do ZECA App
+/// 
+/// URLs são definidas no [FlavorConfig] baseado no flavor/ambiente atual.
+/// Para mudar de ambiente, use um entrypoint diferente:
+/// - main_dev.dart - Desenvolvimento
+/// - main_staging.dart - Staging
+/// - main_prod.dart - Produção
 class ApiConfig {
-  // URLs base para diferentes ambientes
-  // URL local (LAN IP) para testes no dispositivo físico
-  static const String _baseUrlDev = 'https://816343baaf24.ngrok-free.app';
-  static const String _baseUrlStaging = 'https://api-staging.zeca.com.br';
-  static const String _baseUrlProd = 'https://www.abastecacomzeca.com.br';
-  
-  // Ambiente atual (pode ser alterado via build flavor)
-  // Para builds de produção (APK/IPA), alterar para 'prod'
-  static const String _currentEnvironment = 'prod';
-  
-  /// Retorna a URL base baseada no ambiente atual
+  /// Retorna a URL base baseada no flavor atual
+  /// Usa FlavorConfig.instance para obter a URL correta
   static String get baseUrl {
-    switch (_currentEnvironment) {
-      case 'dev':
-        return _baseUrlDev;
-      case 'staging':
-        return _baseUrlStaging;
-      case 'prod':
-        return _baseUrlProd;
-      default:
-        return _baseUrlDev;
+    try {
+      return FlavorConfig.instance.baseUrl;
+    } catch (e) {
+      // Fallback caso FlavorConfig não tenha sido inicializado
+      // Isso NÃO deve acontecer em produção!
+      return 'https://www.abastecacomzeca.com.br';
     }
   }
   
@@ -37,21 +34,41 @@ class ApiConfig {
   static const Duration timeout = Duration(seconds: 30);
   
   /// Configurações específicas por ambiente
-  static Map<String, dynamic> get environmentConfig => {
-    'dev': {
-      'debug': true,
-      'timeout': Duration(seconds: 60),
-      'retryAttempts': 3,
-    },
-    'staging': {
-      'debug': true,
-      'timeout': Duration(seconds: 30),
-      'retryAttempts': 2,
-    },
-    'prod': {
-      'debug': false,
-      'timeout': Duration(seconds: 30),
-      'retryAttempts': 2,
-    },
-  };
+  static Map<String, dynamic> get environmentConfig {
+    final flavor = FlavorConfig.instance.flavor;
+    
+    switch (flavor) {
+      case Flavor.dev:
+        return {
+          'debug': true,
+          'timeout': const Duration(seconds: 60),
+          'retryAttempts': 3,
+        };
+      case Flavor.staging:
+        return {
+          'debug': true,
+          'timeout': const Duration(seconds: 30),
+          'retryAttempts': 2,
+        };
+      case Flavor.prod:
+        return {
+          'debug': false,
+          'timeout': const Duration(seconds: 30),
+          'retryAttempts': 2,
+        };
+      default:
+        return {
+          'debug': true,
+          'timeout': const Duration(seconds: 30),
+          'retryAttempts': 2,
+        };
+    }
+  }
+  
+  /// Retorna nome do ambiente atual para debug
+  static String get environmentName => FlavorConfig.instance.name;
+  
+  /// Verifica se está em modo debug
+  static bool get isDebugMode => FlavorConfig.instance.isDevelopment || FlavorConfig.instance.isStaging;
 }
+

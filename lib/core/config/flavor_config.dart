@@ -70,7 +70,7 @@ class FlavorConfig {
           flavor: flavor,
           name: 'dev',
           appName: 'ZECA DEV',
-          baseUrl: 'https://api-dev.zeca.com',
+          baseUrl: 'https://www.abastecacomzeca.com.br', // TODO: trocar por URL de dev quando disponível
           primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
@@ -82,7 +82,7 @@ class FlavorConfig {
           flavor: flavor,
           name: 'staging',
           appName: 'ZECA STAGING',
-          baseUrl: 'https://api-staging.zeca.com',
+          baseUrl: 'https://api-staging.zeca.com.br',
           primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
@@ -94,7 +94,7 @@ class FlavorConfig {
           flavor: flavor,
           name: 'prod',
           appName: 'ZECA',
-          baseUrl: 'https://api.zeca.com',
+          baseUrl: 'https://www.abastecacomzeca.com.br',
           primaryColor: const Color(0xFF2A70C0), // Azul ZECA
           logoPath: 'assets/images/common/logo.png',
           theme: BrandATheme.theme,
