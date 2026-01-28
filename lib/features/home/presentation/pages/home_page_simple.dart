@@ -1115,6 +1115,46 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             // ===== CARD: POSTO / CNPJ (Compacto) =====
             if (_vehicleConfirmed) ...[
               const SizedBox(height: 12),
+              
+              // Card informativo azul - aparece apenas quando posto NÃO está validado
+              if (!_isStationValidated)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.shade100),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.info_outline,
+                          color: Colors.blue[700],
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Pergunte o CNPJ do posto no caixa antes de abastecer. Sem ele, não será possível gerar o código.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.blue[800],
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
