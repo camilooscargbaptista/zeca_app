@@ -1118,7 +1118,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
