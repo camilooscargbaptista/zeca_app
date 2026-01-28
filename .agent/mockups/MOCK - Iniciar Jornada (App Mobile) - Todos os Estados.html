@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Iniciar Jornada (App Mobile) - Todos os Estados</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .state-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            background: #E3F2FD;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 780px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin-top: 50px;
+        }
+
+        /* Header azul */
+        .header-blue {
+            background: #2A70C0;
+            padding: 44px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            position: relative;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            height: calc(100% - 76px - 80px);
+            overflow-y: auto;
+        }
+
+        /* Driver card */
+        .driver-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .driver-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2A70C0, #1E5EAA);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .driver-info {
+            flex: 1;
+        }
+
+        .driver-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .driver-cpf {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 2px;
+        }
+
+        .badge-frota {
+            background: #2A70C0;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Section title */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+
+        .section-title i {
+            color: #757575;
+            font-size: 16px;
+        }
+
+        .section-title span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+        }
+
+        /* Vehicle search card */
+        .vehicle-search-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-field i {
+            color: #9E9E9E;
+        }
+
+        .input-placeholder {
+            color: #BDBDBD;
+        }
+
+        .input-value {
+            color: #212121;
+            font-weight: 500;
+        }
+
+        .btn-buscar {
+            background: #2A70C0;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Vehicle selected card */
+        .vehicle-selected-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .vehicle-selected-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .vehicle-selected-header i {
+            color: #4CAF50;
+        }
+
+        .vehicle-selected-header span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .vehicle-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plate-badge {
+            background: linear-gradient(135deg, #2A70C0, #1E5EAA);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+        }
+
+        .vehicle-details {
+            flex: 1;
+        }
+
+        .vehicle-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .vehicle-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 4px;
+        }
+
+        .meta-text {
+            font-size: 12px;
+            color: #757575;
+        }
+
+        .change-link {
+            color: #2A70C0;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Bottom button */
+        .bottom-button {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: white;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #2A70C0;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary.disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        .btn-primary i {
+            font-size: 18px;
+        }
+
+        /* Info tip */
+        .info-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: #E3F2FD;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .info-tip i {
+            color: #2A70C0;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .info-tip span {
+            font-size: 12px;
+            color: #1565C0;
+            line-height: 1.4;
+        }
+
+        /* No content message */
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: #9E9E9E;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: #BDBDBD;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Vehicle summary card */
+        .vehicle-summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .summary-header i {
+            color: #757575;
+        }
+
+        .summary-header span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2A70C0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #757575;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Estado 1: Tela Inicial - Campo de busca vazio -->
+    <div class="mobile-frame">
+        <div class="state-label">1. Tela Inicial - Sem Veículo</div>
+
+        <div class="header-blue">
+            <div class="back-btn"><i class="fas fa-bars"></i></div>
+            <div class="header-title">Iniciar Jornada</div>
+            <div class="notification-btn"><i class="fas fa-bell"></i></div>
+        </div>
+
+        <div class="content">
+            <!-- Driver Card -->
+            <div class="driver-card">
+                <div class="driver-avatar">PO</div>
+                <div class="driver-info">
+                    <div class="driver-name">Pedro Oliveira</div>
+                    <div class="driver-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <div class="badge-frota">Frota</div>
+            </div>
+
+            <!-- Vehicle Section -->
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                <span>Veículo</span>
+            </div>
+
+            <div class="vehicle-search-card">
+                <div class="input-row">
+                    <div class="input-field">
+                        <i class="fas fa-hashtag"></i>
+                        <span class="input-placeholder">ABC-1234</span>
+                    </div>
+                    <button class="btn-buscar">Buscar</button>
+                </div>
+            </div>
+
+            <div class="empty-state">
+                <i class="fas fa-truck"></i>
+                <p>Digite a placa do veículo para iniciar</p>
+            </div>
+        </div>
+
+        <div class="bottom-button">
+            <button class="btn-primary disabled">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- Estado 2: Veículo Selecionado - Campo de busca oculto, link Trocar -->
+    <div class="mobile-frame">
+        <div class="state-label">2. Veículo Selecionado</div>
+
+        <div class="header-blue">
+            <div class="back-btn"><i class="fas fa-bars"></i></div>
+            <div class="header-title">Iniciar Jornada</div>
+            <div class="notification-btn"><i class="fas fa-bell"></i></div>
+        </div>
+
+        <div class="content">
+            <!-- Driver Card -->
+            <div class="driver-card">
+                <div class="driver-avatar">PO</div>
+                <div class="driver-info">
+                    <div class="driver-name">Pedro Oliveira</div>
+                    <div class="driver-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <div class="badge-frota">Frota</div>
+            </div>
+
+            <!-- Vehicle Section -->
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                <span>Veículo</span>
+            </div>
+
+            <!-- Vehicle Selected - SEM campo de busca, COM link Trocar -->
+            <div class="vehicle-selected-card">
+                <div class="vehicle-selected-header">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Veículo Selecionado</span>
+                </div>
+                <div class="vehicle-content">
+                    <div class="plate-badge">ABC-1234</div>
+                    <div class="vehicle-details">
+                        <div class="vehicle-name">Volvo FH 540 (2022)</div>
+                        <div class="vehicle-meta">
+                            <span class="meta-text">Cor: Branco</span>
+                            <span class="meta-text">Combustível: Diesel S10</span>
+                        </div>
+                    </div>
+                    <a class="change-link">
+                        <i class="fas fa-exchange-alt"></i>
+                        Trocar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Vehicle Summary -->
+            <div class="vehicle-summary-card">
+                <div class="summary-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Resumo do Veículo</span>
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Abastecimentos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2.450L</div>
+                        <div class="stat-label">Total Litros</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">3.2 km/L</div>
+                        <div class="stat-label">Consumo Médio</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-tip">
+                <i class="fas fa-info-circle"></i>
+                <span>Ao iniciar a jornada, você poderá abastecer e registrar o KM rodado.</span>
+            </div>
+        </div>
+
+        <div class="bottom-button">
+            <button class="btn-primary">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- Estado 3: Digitando placa -->
+    <div class="mobile-frame">
+        <div class="state-label">3. Digitando Placa</div>
+
+        <div class="header-blue">
+            <div class="back-btn"><i class="fas fa-bars"></i></div>
+            <div class="header-title">Iniciar Jornada</div>
+            <div class="notification-btn"><i class="fas fa-bell"></i></div>
+        </div>
+
+        <div class="content">
+            <!-- Driver Card -->
+            <div class="driver-card">
+                <div class="driver-avatar">PO</div>
+                <div class="driver-info">
+                    <div class="driver-name">Pedro Oliveira</div>
+                    <div class="driver-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <div class="badge-frota">Frota</div>
+            </div>
+
+            <!-- Vehicle Section -->
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                <span>Veículo</span>
+            </div>
+
+            <div class="vehicle-search-card">
+                <div class="input-row">
+                    <div class="input-field" style="border-color: #2A70C0;">
+                        <i class="fas fa-hashtag"></i>
+                        <span class="input-value">ABC-12</span>
+                        <span
+                            style="display: inline-block; width: 2px; height: 18px; background: #2A70C0; animation: blink 1s infinite;"></span>
+                    </div>
+                    <button class="btn-buscar">Buscar</button>
+                </div>
+            </div>
+
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>Termine de digitar e clique em Buscar</p>
+            </div>
+        </div>
+
+        <div class="bottom-button">
+            <button class="btn-primary disabled">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <!-- Estado 4: Veículo NÃO encontrado -->
+    <div class="mobile-frame">
+        <div class="state-label">4. Veículo Não Encontrado</div>
+
+        <div class="header-blue">
+            <div class="back-btn"><i class="fas fa-bars"></i></div>
+            <div class="header-title">Iniciar Jornada</div>
+            <div class="notification-btn"><i class="fas fa-bell"></i></div>
+        </div>
+
+        <div class="content">
+            <!-- Driver Card -->
+            <div class="driver-card">
+                <div class="driver-avatar">PO</div>
+                <div class="driver-info">
+                    <div class="driver-name">Pedro Oliveira</div>
+                    <div class="driver-cpf">CPF: 555.666.777-88</div>
+                </div>
+                <div class="badge-frota">Frota</div>
+            </div>
+
+            <!-- Vehicle Section -->
+            <div class="section-title">
+                <i class="fas fa-truck"></i>
+                <span>Veículo</span>
+            </div>
+
+            <div class="vehicle-search-card">
+                <div class="input-row">
+                    <div class="input-field" style="border-color: #E53935;">
+                        <i class="fas fa-hashtag" style="color: #E53935;"></i>
+                        <span class="input-value">XYZ-9999</span>
+                    </div>
+                    <button class="btn-buscar">Buscar</button>
+                </div>
+
+                <div
+                    style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: #FFEBEE; border-radius: 10px; margin-top: 12px;">
+                    <i class="fas fa-exclamation-circle" style="color: #E53935; font-size: 16px;"></i>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600; color: #C62828;">Veículo não encontrado</div>
+                        <div style="font-size: 11px; color: #E53935; margin-top: 2px;">Verifique a placa e tente
+                            novamente</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-button">
+            <button class="btn-primary disabled">
+                <i class="fas fa-play"></i>
+                Iniciar Jornada
+            </button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</body>
+
+</html>

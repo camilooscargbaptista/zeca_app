@@ -847,14 +847,20 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
             if (_isAutonomous)
               _buildAutonomousVehicleSelector()
             else
-              _buildFleetVehicleSearch(),
+              // FROTA: Ocultar campo de busca quando veículo já foi selecionado
+              if (!_vehicleSearched || _vehicleData == null)
+                _buildFleetVehicleSearch(),
             
             // Resultado quando veículo selecionado/buscado
             if (_vehicleSearched && _vehicleData != null) ...[
               const SizedBox(height: 16),
               _buildVehicleResult(),
-              const SizedBox(height: 16),
-              if (!_vehicleConfirmed) _buildActionButtons(),
+              // FROTA: Botões inline removidos (botão Iniciar está no rodapé)
+              // AUTONOMO: Mantém os botões inline
+              if (!_vehicleConfirmed && _isAutonomous) ...[
+                const SizedBox(height: 16),
+                _buildActionButtons(),
+              ],
             ],
           ],
         ),
@@ -1032,6 +1038,27 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
                     color: Colors.green[700],
                   ),
                 ),
+                const Spacer(),
+                // FROTA: Link Trocar para trocar de veículo
+                if (!_isAutonomous)
+                  GestureDetector(
+                    onTap: _cancelVehicle,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.swap_horiz, color: AppColors.zecaBlue, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Trocar',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.zecaBlue,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
             const Divider(height: 16),
