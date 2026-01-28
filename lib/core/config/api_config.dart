@@ -1,27 +1,8 @@
+import 'flavor_config.dart';
+
 class ApiConfig {
-  // URLs base para diferentes ambientes
-  // URL local (LAN IP) para testes no dispositivo físico
-  static const String _baseUrlDev = 'https://816343baaf24.ngrok-free.app';
-  static const String _baseUrlStaging = 'https://api-staging.zeca.com.br';
-  static const String _baseUrlProd = 'https://www.abastecacomzeca.com.br';
-  
-  // Ambiente atual (pode ser alterado via build flavor)
-  // Para builds de produção (APK/IPA), alterar para 'prod'
-  static const String _currentEnvironment = 'prod';
-  
-  /// Retorna a URL base baseada no ambiente atual
-  static String get baseUrl {
-    switch (_currentEnvironment) {
-      case 'dev':
-        return _baseUrlDev;
-      case 'staging':
-        return _baseUrlStaging;
-      case 'prod':
-        return _baseUrlProd;
-      default:
-        return _baseUrlDev;
-    }
-  }
+  /// Retorna a URL base baseada no FlavorConfig
+  static String get baseUrl => FlavorConfig.instance.baseUrl;
   
   /// Retorna a URL completa da API
   static String get apiUrl => '$baseUrl/api/v1';
@@ -36,22 +17,15 @@ class ApiConfig {
   /// Timeout para requisições
   static const Duration timeout = Duration(seconds: 30);
   
+  /// Verifica se está em ambiente de desenvolvimento/staging
+  static bool get isDebugEnvironment => 
+      FlavorConfig.instance.isDevelopment || FlavorConfig.instance.isStaging;
+  
   /// Configurações específicas por ambiente
   static Map<String, dynamic> get environmentConfig => {
-    'dev': {
-      'debug': true,
-      'timeout': Duration(seconds: 60),
-      'retryAttempts': 3,
-    },
-    'staging': {
-      'debug': true,
-      'timeout': Duration(seconds: 30),
-      'retryAttempts': 2,
-    },
-    'prod': {
-      'debug': false,
-      'timeout': Duration(seconds: 30),
-      'retryAttempts': 2,
-    },
+    'debug': isDebugEnvironment,
+    'timeout': timeout,
+    'retryAttempts': isDebugEnvironment ? 3 : 2,
   };
 }
+

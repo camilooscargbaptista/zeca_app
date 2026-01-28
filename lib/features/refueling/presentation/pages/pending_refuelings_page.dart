@@ -144,7 +144,7 @@ class _PendingRefuelingsPageState extends State<PendingRefuelingsPage> {
 
     // Navegar para a tela de validação (usando go para substituir a pilha)
     context.go(
-      '/refueling-waiting',
+      '/fleet-confirmation',
       extra: {
         'refueling_id': refuelingId,
         'refueling_code': refuelingCode,

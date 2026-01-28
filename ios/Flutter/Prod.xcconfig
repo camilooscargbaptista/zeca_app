@@ -1,0 +1,5 @@
+// Production environment configuration
+// This file overrides FLUTTER_TARGET for production builds
+FLUTTER_TARGET=lib/main_prod.dart
+PRODUCT_BUNDLE_IDENTIFIER=com.zeca.app
+PRODUCT_NAME=ZECA

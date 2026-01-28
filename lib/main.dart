@@ -10,6 +10,7 @@ import 'core/services/token_manager_service.dart';
 import 'routes/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/journey/data/services/journey_storage_service.dart';
+import 'shared/widgets/environment_banner.dart';
 
 Future<void> main() async {
   // Capturar erros não tratados
@@ -158,6 +159,11 @@ class ZecaApp extends StatelessWidget {
           theme: config.theme,
           routerConfig: router.router,
           debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            return EnvironmentBanner(
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
         ),
       );
     } catch (e, stackTrace) {

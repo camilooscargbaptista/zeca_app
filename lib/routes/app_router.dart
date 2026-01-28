@@ -9,6 +9,9 @@ import '../features/refueling/presentation/pages/refueling_waiting_page.dart';
 import '../features/refueling/presentation/pages/pending_refuelings_page.dart';
 import '../features/refueling/presentation/pages/autonomous_payment_success_page.dart';
 import '../features/refueling/data/models/payment_confirmed_model.dart';
+// Novas páginas de confirmação (v2)
+import '../features/refueling/presentation/pages/fleet_confirmation_page.dart';
+import '../features/refueling/presentation/pages/autonomous_payment_page.dart';
 import '../features/journey/presentation/pages/journey_page.dart';
 import '../features/journey/presentation/bloc/journey_bloc.dart';
 import '../features/journey/presentation/bloc/journey_event.dart';
@@ -115,6 +118,32 @@ class AppRouter {
         path: '/pending-refuelings',
         name: 'pending-refuelings',
         builder: (context, state) => const PendingRefuelingsPage(),
+      ),
+      // Nova rota: Confirmação de Frota (v2)
+      GoRoute(
+        path: '/fleet-confirmation',
+        name: 'fleet-confirmation',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return FleetConfirmationPage(
+            refuelingCode: extra?['refueling_code'] ?? '',
+            vehicleData: extra?['vehicle_data'],
+            stationData: extra?['station_data'],
+          );
+        },
+      ),
+      // Nova rota: Pagamento Autônomo (v2)
+      GoRoute(
+        path: '/autonomous-payment',
+        name: 'autonomous-payment',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AutonomousPaymentPage(
+            refuelingCode: extra?['refueling_code'] ?? '',
+            vehicleData: extra?['vehicle_data'],
+            stationData: extra?['station_data'],
+          );
+        },
       ),
       GoRoute(
         path: '/autonomous-success',

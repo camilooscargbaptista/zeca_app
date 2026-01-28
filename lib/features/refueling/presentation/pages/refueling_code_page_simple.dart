@@ -649,10 +649,10 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
               // E marcar flag para não parar no dispose
               _shouldStopServiceOnDispose = false;
               
-              debugPrint('🚀 [WebSocket] Navegando para /refueling-waiting com refuelingId: $refuelingId');
+              debugPrint('🚀 [WebSocket] Navegando para /fleet-confirmation com refuelingId: $refuelingId');
               
               context.go(
-                '/refueling-waiting',
+                '/fleet-confirmation',
                 extra: {
                   'refueling_id': refuelingId,
                   'refueling_code': _refuelingCode,
@@ -859,7 +859,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
             _pollingService.stopPolling();
             
             context.go(
-              '/refueling-waiting',
+              '/fleet-confirmation',
               extra: {
                 'refueling_id': refuelingId,
                 'refueling_code': _refuelingCode,
@@ -1181,7 +1181,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           // Mostrar modal de sucesso e navegar após clicar em OK
           if (mounted) {
           // Log antes de mostrar o modal
-          debugPrint('🔗 Preparando navegação para: /refueling-waiting');
+          debugPrint('🔗 Preparando navegação para: /fleet-confirmation');
           debugPrint('📦 Dados de navegação: $navigationData');
           
           await SuccessDialog.show(
@@ -1200,7 +1200,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
               // para garantir que o modal foi fechado
               Future.delayed(const Duration(milliseconds: 500), () {
                 if (mounted) {
-                  debugPrint('🚀 Executando navegação para /refueling-waiting');
+                  debugPrint('🚀 Executando navegação para /fleet-confirmation');
                   debugPrint('📦 Extra sendo enviado: $navigationData');
                   debugPrint('📦 Tipo do extra: ${navigationData.runtimeType}');
                   
@@ -1211,7 +1211,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                   try {
                     debugPrint('🔄 Tentativa 1: context.goNamed...');
                     context.goNamed(
-                      'refueling-waiting',
+                      'fleet-confirmation',
                       extra: navigationData,
                     );
                     debugPrint('✅ context.goNamed executado');
@@ -1246,7 +1246,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                   if (!navigationSuccess) {
                     try {
                       debugPrint('🔄 Tentativa 3: context.push...');
-                      context.push('/refueling-waiting', extra: navigationData);
+                      context.push('/fleet-confirmation', extra: navigationData);
                       debugPrint('✅ context.push executado');
                       navigationSuccess = true;
                     } catch (e3, stackTrace) {
@@ -1259,7 +1259,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                   if (!navigationSuccess) {
                     try {
                       debugPrint('🔄 Tentativa 4: context.go...');
-                      context.go('/refueling-waiting', extra: navigationData);
+                      context.go('/fleet-confirmation', extra: navigationData);
                       debugPrint('✅ context.go executado');
                       navigationSuccess = true;
                     } catch (e4) {
@@ -1271,7 +1271,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                   if (!navigationSuccess) {
                     try {
                       debugPrint('🔄 Tentativa 5: context.go sem extra...');
-                      context.go('/refueling-waiting');
+                      context.go('/fleet-confirmation');
                       debugPrint('✅ context.go sem extra executado');
                       navigationSuccess = true;
                     } catch (e5) {

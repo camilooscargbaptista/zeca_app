@@ -87,3 +87,4 @@ google_maps_api_key.txt
 lib/firebase_options.dart
 ios/Runner/GoogleService-Info.plist
 macos/Runner/GoogleService-Info.plist
+ios/Flutter/flutter_env.xcconfig

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/storage_service.dart';
 import '../network/dio_client.dart';
 import '../../routes/app_router.dart';
+import '../../features/refueling/presentation/bloc/refueling_confirmation_bloc.dart';
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -42,6 +43,10 @@ Future<void> configureDependencies() async {
   // Register AppRouter manually
   print('🔧 [DI] Registrando AppRouter...');
   getIt.registerLazySingleton<AppRouter>(() => AppRouter());
+  
+  // Register RefuelingConfirmationBloc as factory (creates new instance each time)
+  print('🔧 [DI] Registrando RefuelingConfirmationBloc...');
+  getIt.registerFactory<RefuelingConfirmationBloc>(() => RefuelingConfirmationBloc());
   
   // GeocodingService é registrado automaticamente pelo @injectable
   

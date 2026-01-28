@@ -1,0 +1,5 @@
+// Staging environment configuration
+// This file overrides FLUTTER_TARGET for staging builds
+FLUTTER_TARGET=lib/main_staging.dart
+PRODUCT_BUNDLE_IDENTIFIER=com.zeca.app.staging
+PRODUCT_NAME=ZECA STG

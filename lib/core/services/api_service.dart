@@ -377,6 +377,20 @@ class ApiService {
       if (kDebugMode) print('🔐 Login com Device ID: $deviceId');
       if (kDebugMode) print('📱 Device Info: ${deviceInfo['os']} ${deviceInfo['os_version']} - ${deviceInfo['device_model']}');
       
+      // DEBUG: Log da URL completa sendo chamada
+      final fullUrl = '${_dio.options.baseUrl}/auth/login';
+      print('🌐 [LOGIN DEBUG] URL completa: $fullUrl');
+      print('🌐 [LOGIN DEBUG] Base URL: ${_dio.options.baseUrl}');
+      
+      final requestData = {
+        'userType': userType,
+        'cpf': cpf,
+        'password': '***HIDDEN***',
+        'device_id': deviceId,
+        'device_info': deviceInfo,
+      };
+      print('📤 [LOGIN DEBUG] Request data: $requestData');
+      
       final response = await _dio.post(
         '/auth/login',
         data: {
@@ -387,6 +401,9 @@ class ApiService {
           'device_info': deviceInfo,   // JWT Sliding Window
         },
       );
+      
+      print('📥 [LOGIN DEBUG] Status Code: ${response.statusCode}');
+      print('📥 [LOGIN DEBUG] Response: ${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
