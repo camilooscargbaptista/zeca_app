@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1.0">
+    <title>ZECA App - Modais de Notificação de Abastecimento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1565C0;
+            --primary-blue-dark: #0D47A1;
+            --success-green: #4CAF50;
+            --error-red: #F44336;
+            --warning-orange: #FF9800;
+            --info-blue: #2196F3;
+            --text-primary: #1E1E1E;
+            --text-secondary: #757575;
+            --background: #F5F5F5;
+            --card-bg: #FFFFFF;
+            --overlay: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-blue-dark);
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .mockup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mockup-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            background: var(--overlay);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Modal Base */
+        .modal {
+            background: var(--card-bg);
+            border-radius: 20px;
+            width: 320px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+        }
+
+        .modal-icon.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--error-red);
+        }
+
+        .modal-icon.warning {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-orange);
+        }
+
+        .modal-icon.info {
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--info-blue);
+        }
+
+        .modal-icon.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-green);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .modal-message {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .modal-detail {
+            background: #F5F5F5;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .modal-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .modal-detail-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .modal-detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-reason {
+            background: #FFF8E1;
+            border-left: 4px solid var(--warning-orange);
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            text-align: left;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .modal-reason-label {
+            font-size: 12px;
+            color: var(--warning-orange);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .modal-reason-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-style: italic;
+        }
+
+        .modal-code {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .modal-code span {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-blue-dark);
+        }
+
+        .btn-secondary {
+            background: #F5F5F5;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E0E0E0;
+        }
+
+        /* Info Box for Validated */
+        .info-box {
+            background: #E3F2FD;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .info-row:last-child {
+            border-top: 1px solid rgba(33, 150, 243, 0.2);
+            margin-top: 8px;
+            padding-top: 16px;
+        }
+
+        .info-icon {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--info-blue);
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .info-value.highlight {
+            font-size: 18px;
+            color: var(--primary-blue);
+        }
+
+        /* Legend */
+        .legend {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .legend h3 {
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .legend-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .legend-table th,
+        .legend-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .legend-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .legend-table td {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .event-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .event-badge.cancelled {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--error-red);
+        }
+
+        .event-badge.error {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-orange);
+        }
+
+        .event-badge.validated {
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--info-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔔 Modais de Notificação - Abastecimento</h1>
+
+    <div class="mockup-grid">
+        <!-- Modal 1: Cancelamento -->
+        <div class="mockup-container">
+            <div class="mockup-title">1. Abastecimento Cancelado</div>
+            <div class="phone-frame">
+                <div class="modal">
+                    <div class="modal-icon error">❌</div>
+                    <h2 class="modal-title">Abastecimento Cancelado</h2>
+                    <p class="modal-message">O posto cancelou este abastecimento.</p>
+
+                    <div class="modal-reason">
+                        <div class="modal-reason-label">MOTIVO</div>
+                        <div class="modal-reason-text">"Cliente desistiu do abastecimento"</div>
+                    </div>
+
+                    <div class="modal-code">Código: <span>ABC123</span></div>
+
+                    <button class="btn btn-primary">Voltar para Início</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal 2: Erro -->
+        <div class="mockup-container">
+            <div class="mockup-title">2. Erro no Abastecimento</div>
+            <div class="phone-frame">
+                <div class="modal">
+                    <div class="modal-icon warning">⚠️</div>
+                    <h2 class="modal-title">Erro no Abastecimento</h2>
+                    <p class="modal-message">Ocorreu um erro ao processar seu abastecimento.</p>
+                    <p class="modal-message" style="margin-top: -8px;">Entre em contato com o time ZECA.</p>
+
+                    <button class="btn btn-primary">Tentar Novamente</button>
+                    <button class="btn btn-secondary">Voltar para Início</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal 3: Validado pelo Posto -->
+        <div class="mockup-container">
+            <div class="mockup-title">3. Validado pelo Posto</div>
+            <div class="phone-frame">
+                <div class="modal">
+                    <div class="modal-icon info">ℹ️</div>
+                    <h2 class="modal-title">Validado pelo Posto</h2>
+                    <p class="modal-message">O posto validou seu abastecimento em seu nome.</p>
+
+                    <div class="info-box">
+                        <div class="info-row">
+                            <div class="info-icon">⛽</div>
+                            <div class="info-content">
+                                <div class="info-label">Posto</div>
+                                <div class="info-value">Shell Centro</div>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon">🚗</div>
+                            <div class="info-content">
+                                <div class="info-label">Veículo</div>
+                                <div class="info-value">ABC-1234</div>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-icon">💰</div>
+                            <div class="info-content">
+                                <div class="info-label">Valor Total</div>
+                                <div class="info-value highlight">R$ 268,00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-reason">
+                        <div class="modal-reason-label">JUSTIFICATIVA DO POSTO</div>
+                        <div class="modal-reason-text">"Motorista ausente após 30 minutos"</div>
+                    </div>
+
+                    <button class="btn btn-primary">Entendi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <h3>📋 Eventos WebSocket Correspondentes</h3>
+        <table class="legend-table">
+            <thead>
+                <tr>
+                    <th>Modal</th>
+                    <th>Evento WebSocket</th>
+                    <th>Quando Emitido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1. Abastecimento Cancelado</td>
+                    <td><span class="event-badge cancelled">refueling:cancelled</span></td>
+                    <td>Quando o posto cancela o abastecimento antes do motorista validar</td>
+                </tr>
+                <tr>
+                    <td>2. Erro no Abastecimento</td>
+                    <td><span class="event-badge error">refueling:error</span></td>
+                    <td>Quando ocorre erro no processamento do abastecimento</td>
+                </tr>
+                <tr>
+                    <td>3. Validado pelo Posto</td>
+                    <td><span class="event-badge validated">refueling:validated_by_station</span></td>
+                    <td>Quando o posto valida o abastecimento no lugar do motorista</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

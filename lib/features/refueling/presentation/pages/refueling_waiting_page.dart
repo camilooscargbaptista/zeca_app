@@ -12,6 +12,7 @@ import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../shared/widgets/dialogs/success_dialog.dart';
 import '../../../../core/services/websocket_service.dart';
 import '../../data/models/payment_confirmed_model.dart';
+import '../widgets/refueling_notification_dialogs.dart';
 import 'autonomous_payment_success_page.dart';
 
 class RefuelingWaitingPage extends StatefulWidget {
@@ -102,12 +103,14 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       // AUTÔNOMO: WebSocket como principal + polling como fallback (verifica CONCLUIDO)
       debugPrint('🚗 [RefuelingWaitingPage] AUTÔNOMO - configurando WebSocket + polling fallback');
       _setupWebSocketListener();
+      _setupNotificationListeners(); // Novos eventos: cancelled, error, validated_by_station
       // Polling fallback: verifica status CONCLUIDO
       _startPollingForAutonomous();
     } else {
       // FROTA: WebSocket como principal + polling como fallback (AGUARDANDO_VALIDACAO_MOTORISTA)
       debugPrint('🚛 [RefuelingWaitingPage] FROTA - configurando WebSocket + polling fallback');
       _setupFleetWebSocketListener();
+      _setupNotificationListeners(); // Novos eventos: cancelled, error, validated_by_station
       
       // Se já temos o refuelingId, carregar dados imediatamente
       if (widget.refuelingId.isNotEmpty) {
@@ -264,6 +267,89 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         }
       } catch (e) {
         debugPrint('❌ [RefuelingWaitingPage] Erro ao processar evento de validação FROTA: $e');
+      }
+    });
+  }
+
+  /// Configurar listeners para eventos de notificação (cancelamento, erro, validação pelo posto)
+  /// Deve ser chamado para TODOS os fluxos (autônomo e frota)
+  void _setupNotificationListeners() {
+    debugPrint('🔔 [RefuelingWaitingPage] Configurando listeners de notificação para código: ${widget.refuelingCode}');
+    
+    // ❌ Listener para abastecimento cancelado pelo posto
+    WebSocketService().listenForRefuelingCancelled((data) {
+      debugPrint('❌ [RefuelingWaitingPage] Evento refueling:cancelled recebido: $data');
+      
+      try {
+        final eventCode = data['refueling_code']?.toString() ?? data['refuelingCode']?.toString() ?? '';
+        
+        if (eventCode == widget.refuelingCode && mounted) {
+          _pollingService.stopPolling();
+          
+          final cancellationReason = data['cancellation_reason']?.toString() ?? 'Motivo não informado';
+          
+          RefuelingNotificationDialogs.showCancelledModal(
+            context,
+            refuelingCode: widget.refuelingCode,
+            cancellationReason: cancellationReason,
+            onClose: () => context.go('/home'),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [RefuelingWaitingPage] Erro ao processar refueling:cancelled: $e');
+      }
+    });
+    
+    // ⚠️ Listener para erro no abastecimento
+    WebSocketService().listenForRefuelingError((data) {
+      debugPrint('⚠️ [RefuelingWaitingPage] Evento refueling:error recebido: $data');
+      
+      try {
+        final eventCode = data['refueling_code']?.toString() ?? data['refuelingCode']?.toString() ?? '';
+        
+        if (eventCode == widget.refuelingCode && mounted) {
+          _pollingService.stopPolling();
+          
+          RefuelingNotificationDialogs.showErrorModal(
+            context,
+            onRetry: () {
+              // Tentar novamente = voltar para gerar novo código
+              context.go('/home');
+            },
+            onClose: () => context.go('/home'),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [RefuelingWaitingPage] Erro ao processar refueling:error: $e');
+      }
+    });
+    
+    // ℹ️ Listener para validação pelo posto (em nome do motorista)
+    WebSocketService().listenForRefuelingValidatedByStation((data) {
+      debugPrint('ℹ️ [RefuelingWaitingPage] Evento refueling:validated_by_station recebido: $data');
+      
+      try {
+        final eventCode = data['refueling_code']?.toString() ?? data['refuelingCode']?.toString() ?? '';
+        
+        if (eventCode == widget.refuelingCode && mounted) {
+          _pollingService.stopPolling();
+          
+          final stationName = data['station_name']?.toString() ?? 'Posto desconhecido';
+          final vehiclePlate = data['vehicle_plate']?.toString() ?? '';
+          final totalAmount = double.tryParse(data['total_amount']?.toString() ?? '0') ?? 0.0;
+          final justification = data['justification']?.toString() ?? 'Motorista ausente';
+          
+          RefuelingNotificationDialogs.showValidatedByStationModal(
+            context,
+            stationName: stationName,
+            vehiclePlate: vehiclePlate,
+            totalAmount: totalAmount,
+            justification: justification,
+            onClose: () => context.go('/home'),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [RefuelingWaitingPage] Erro ao processar refueling:validated_by_station: $e');
       }
     });
   }

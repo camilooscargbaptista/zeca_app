@@ -23,6 +23,9 @@ class WebSocketService {
   // Callbacks para eventos
   Function(Map<String, dynamic>)? _onRefuelingPendingValidation;
   Function(Map<String, dynamic>)? _onAutonomousPaymentConfirmed;
+  Function(Map<String, dynamic>)? _onRefuelingCancelled;
+  Function(Map<String, dynamic>)? _onRefuelingError;
+  Function(Map<String, dynamic>)? _onRefuelingValidatedByStation;
   Function()? _onConnected;
   Function(String)? _onError;
   Function()? _onDisconnected;
@@ -144,6 +147,42 @@ class WebSocketService {
       }
     });
 
+    // ❌ EVENTO: Abastecimento Cancelado pelo Posto
+    _socket!.on('refueling:cancelled', (data) {
+      debugPrint('❌ [WebSocket] Evento recebido: refueling:cancelled');
+      debugPrint('📦 [WebSocket] Dados: $data');
+      
+      if (data is Map<String, dynamic>) {
+        _onRefuelingCancelled?.call(data);
+      } else if (data is Map) {
+        _onRefuelingCancelled?.call(Map<String, dynamic>.from(data));
+      }
+    });
+
+    // ⚠️ EVENTO: Erro no Abastecimento
+    _socket!.on('refueling:error', (data) {
+      debugPrint('⚠️ [WebSocket] Evento recebido: refueling:error');
+      debugPrint('📦 [WebSocket] Dados: $data');
+      
+      if (data is Map<String, dynamic>) {
+        _onRefuelingError?.call(data);
+      } else if (data is Map) {
+        _onRefuelingError?.call(Map<String, dynamic>.from(data));
+      }
+    });
+
+    // ℹ️ EVENTO: Validado pelo Posto (em nome do motorista)
+    _socket!.on('refueling:validated_by_station', (data) {
+      debugPrint('ℹ️ [WebSocket] Evento recebido: refueling:validated_by_station');
+      debugPrint('📦 [WebSocket] Dados: $data');
+      
+      if (data is Map<String, dynamic>) {
+        _onRefuelingValidatedByStation?.call(data);
+      } else if (data is Map) {
+        _onRefuelingValidatedByStation?.call(Map<String, dynamic>.from(data));
+      }
+    });
+
     // Evento de erro
     _socket!.on('error', (data) {
       debugPrint('❌ [WebSocket] Erro do servidor: $data');
@@ -243,5 +282,20 @@ class WebSocketService {
   /// Quando o posto registra abastecimento e precisa validação do motorista
   void listenForFleetPendingValidation(Function(Map<String, dynamic>) callback) {
     _onRefuelingPendingValidation = callback;
+  }
+
+  /// Registrar listener para evento de abastecimento cancelado pelo posto
+  void listenForRefuelingCancelled(Function(Map<String, dynamic>) callback) {
+    _onRefuelingCancelled = callback;
+  }
+
+  /// Registrar listener para evento de erro no abastecimento
+  void listenForRefuelingError(Function(Map<String, dynamic>) callback) {
+    _onRefuelingError = callback;
+  }
+
+  /// Registrar listener para evento de validação pelo posto (em nome do motorista)
+  void listenForRefuelingValidatedByStation(Function(Map<String, dynamic>) callback) {
+    _onRefuelingValidatedByStation = callback;
   }
 }
