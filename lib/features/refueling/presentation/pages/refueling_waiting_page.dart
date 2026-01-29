@@ -378,7 +378,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       refuelingCode: widget.refuelingId.isEmpty && widget.refuelingCode.isNotEmpty 
           ? widget.refuelingCode 
           : null,
-      intervalSeconds: 15,
+      intervalSeconds: 5, // Polling mais rápido
       // NOVO: callback multi-status para tratar diferentes cenários
       onStatusWithData: (status, refuelingId, data) async {
         debugPrint('🔔 [RefuelingWaitingPage] Status recebido: $status, id: $refuelingId');
@@ -522,7 +522,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     _pollingService.startPollingForStatus(
       refuelingCode: widget.refuelingCode,
       targetStatus: 'CONCLUIDO',
-      intervalSeconds: 15,
+      intervalSeconds: 5, // Polling mais rápido
       onStatusReached: (data) async {
         debugPrint('✅ [POLLING AUTÔNOMO] Status CONCLUIDO detectado! Navegando para sucesso...');
         if (mounted) {
@@ -571,7 +571,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     
     _pollingService.startPolling(
       refuelingId: refuelingId,
-      intervalSeconds: 10, // Mais frequente: posto pode validar a qualquer momento
+      intervalSeconds: 3, // Polling rápido: posto pode validar a qualquer momento
       onStatusWithData: (status, id, data) async {
         debugPrint('🔔 [MONITORING] Status detectado: $status');
         

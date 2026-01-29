@@ -628,7 +628,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
     debugPrint('📡 [RefuelingCodePage] WebSocket DESABILITADO (bug biblioteca socket_io_client)');
     
     // Iniciar polling imediatamente com intervalo de 10 segundos
-    _startPollingFallback(cleanCode, intervalSeconds: 10, delaySeconds: 0);
+    _startPollingFallback(cleanCode, intervalSeconds: 3, delaySeconds: 0);
   }
   
   /// Polling otimizado para verificar status do abastecimento

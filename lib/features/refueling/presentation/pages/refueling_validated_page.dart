@@ -75,7 +75,7 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
     _pollingService.startPolling(
       refuelingId: widget.refuelingId.isNotEmpty ? widget.refuelingId : null,
       refuelingCode: widget.refuelingCode,
-      intervalSeconds: 10,
+      intervalSeconds: 3, // Polling rápido para detectar validação do posto
       onStatusWithData: (status, id, data) async {
         debugPrint('🔔 [VALIDATED] Status detectado: $status');
         
