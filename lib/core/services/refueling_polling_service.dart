@@ -17,6 +17,10 @@ class RefuelingPollingService {
   /// Usado para tratar múltiplos status (AGUARDANDO_VALIDACAO_MOTORISTA, CONCLUIDO, CONTESTADO)
   Function(String status, String refuelingId, Map<String, dynamic> data)? _onStatusWithData;
   bool _isPolling = false;
+  
+  /// Contador de 404 consecutivos - se chegar a 3, considera como CANCELADO
+  int _notFoundCount = 0;
+  static const int _maxNotFoundBeforeCancelled = 3;
 
   /// Iniciar polling para um refueling_id ou código de abastecimento
   /// 
@@ -51,6 +55,7 @@ class RefuelingPollingService {
     _onStatusChanged = onStatusChanged;
     _onStatusWithData = onStatusWithData;
     _isPolling = true;
+    _notFoundCount = 0; // Reset contador de 404
 
     debugPrint('✅ [POLLING] Polling configurado: _isPolling=$_isPolling, _currentRefuelingId=$_currentRefuelingId, _currentRefuelingCode=$_currentRefuelingCode');
 
@@ -131,14 +136,26 @@ class RefuelingPollingService {
                 return; // Já encontrou, não precisa verificar novamente
               } else {
                 debugPrint('⏳ [POLLING] Status ainda não é AGUARDANDO_VALIDACAO_MOTORISTA (atual: $status), continuando polling...');
+                _notFoundCount = 0; // Reset contador quando encontra o registro
               }
             } else {
               debugPrint('⚠️ [POLLING] Refueling não encontrado pelo código (ainda não foi registrado pelo posto)');
               // Continuar tentando - não retornar aqui, deixar continuar
             }
           } else {
-            // Se não encontrou, pode ser que ainda não foi registrado - continuar tentando
-            debugPrint('⚠️ [POLLING] Refueling não encontrado ou erro: ${codeResponse['error']} (continuando polling...)');
+            // Se não encontrou, pode ser que ainda não foi registrado - ou foi cancelado
+            _notFoundCount++;
+            debugPrint('⚠️ [POLLING] Refueling não encontrado ou erro: ${codeResponse['error']} (404 #$_notFoundCount de $_maxNotFoundBeforeCancelled)');
+            
+            // Se atingiu o limite de 404 consecutivos, considerar como CANCELADO
+            if (_notFoundCount >= _maxNotFoundBeforeCancelled) {
+              debugPrint('❌ [POLLING] $_maxNotFoundBeforeCancelled 404s consecutivos - considerando como CANCELADO');
+              if (_onStatusWithData != null) {
+                _onStatusWithData?.call('CANCELADO', _currentRefuelingCode ?? '', {});
+              }
+              stopPolling();
+              return;
+            }
             // Não retornar aqui - deixar continuar para verificar novamente na próxima iteração
           }
         } catch (e) {

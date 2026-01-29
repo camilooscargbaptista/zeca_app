@@ -47,6 +47,12 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
   Map<String, dynamic>? _refuelingData;
   String? _currentRefuelingId; // ID atual do refueling (pode vir dos dados carregados)
   
+  // Dados da empresa para CNPJ (carregado do user_data)
+  String _cnpjEmpresa = '';
+  String _nomeEmpresa = '';
+  // KM do veículo (carregado do journey_vehicle_data)
+  int _kmVeiculo = 0;
+  
   // Controllers para edição (se contestar)
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _kmController = TextEditingController();
@@ -77,6 +83,28 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       final token = await storageService.getAccessToken();
       
       debugPrint('🔍 [RefuelingWaitingPage] Token obtido: ${token != null ? 'SIM' : 'NÃO'}');
+      
+      // NOVO: Carregar CNPJ da empresa do user_data
+      final userData = storageService.getUserData();
+      if (userData != null) {
+        _cnpjEmpresa = userData['cnpj']?.toString() ?? 
+                       userData['empresa_cnpj']?.toString() ?? 
+                       userData['company']?['cnpj']?.toString() ?? '';
+        _nomeEmpresa = userData['empresa']?.toString() ?? 
+                       userData['empresa_nome']?.toString() ?? 
+                       userData['company']?['nome']?.toString() ?? '';
+        debugPrint('📋 [WAITING] CNPJ carregado: $_cnpjEmpresa, Empresa: $_nomeEmpresa');
+      }
+      
+      // NOVO: Carregar KM do veículo do journey_vehicle_data
+      final vehicleData = await storageService.getJourneyVehicleData();
+      if (vehicleData != null) {
+        _kmVeiculo = vehicleData['km'] ?? vehicleData['mileage'] ?? vehicleData['odometer'] ?? 0;
+        debugPrint('📋 [WAITING] KM carregado: $_kmVeiculo');
+      }
+      
+      // Atualizar UI com os dados carregados
+      if (mounted) setState(() {});
       
       if (token != null) {
         // Decodificar JWT para ler is_autonomous
@@ -1644,16 +1672,18 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
   Widget _buildDriverEstimateCard() {
     final liters = widget.driverEstimate?['liters'] ?? 0.0;
     
-    // Tentar obter KM do storage ou do journey_vehicle_data
+    // Tentar obter KM do driverEstimate, vehicleData, ou storage (_kmVeiculo)
     String kmDisplay = '---';
     
-    // O KM pode estar no vehicleData ou no driverEstimate
     if (widget.driverEstimate?['km'] != null) {
       kmDisplay = _formatKm(widget.driverEstimate!['km']);
     } else if (widget.vehicleData?['km'] != null) {
       kmDisplay = _formatKm(widget.vehicleData!['km']);
     } else if (widget.vehicleData?['mileage'] != null) {
       kmDisplay = _formatKm(widget.vehicleData!['mileage']);
+    } else if (_kmVeiculo > 0) {
+      // Fallback: usar KM carregado do storage
+      kmDisplay = _formatKm(_kmVeiculo);
     }
     
     return Container(
@@ -1741,17 +1771,21 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
 
   /// Card com CNPJ da frota para emissão de Nota Fiscal
   Widget _buildCnpjCard() {
-    // Tentar obter CNPJ e nome da empresa do storage
+    // Tentar obter CNPJ e nome da empresa do vehicleData ou do storage
     String cnpj = '---';
     String empresaNome = '';
     
-    // O CNPJ pode vir do storage (empresa_cnpj) ou do vehicleData
+    // O CNPJ pode vir do vehicleData ou do storage (_cnpjEmpresa)
     if (widget.vehicleData?['empresa_cnpj'] != null) {
       cnpj = _formatCnpj(widget.vehicleData!['empresa_cnpj'].toString());
       empresaNome = widget.vehicleData?['empresa_nome'] ?? '';
     } else if (widget.vehicleData?['cnpj'] != null) {
       cnpj = _formatCnpj(widget.vehicleData!['cnpj'].toString());
       empresaNome = widget.vehicleData?['empresa'] ?? '';
+    } else if (_cnpjEmpresa.isNotEmpty) {
+      // Fallback: usar CNPJ carregado do storage (user_data)
+      cnpj = _formatCnpj(_cnpjEmpresa);
+      empresaNome = _nomeEmpresa;
     }
     
     return Container(
