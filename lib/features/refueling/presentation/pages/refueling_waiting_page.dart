@@ -20,6 +20,7 @@ class RefuelingWaitingPage extends StatefulWidget {
   final String refuelingCode;
   final Map<String, dynamic>? vehicleData;
   final Map<String, dynamic>? stationData;
+  final Map<String, dynamic>? driverEstimate; // Dados digitados pelo motorista
   final bool isAutonomous;
   
   const RefuelingWaitingPage({
@@ -28,6 +29,7 @@ class RefuelingWaitingPage extends StatefulWidget {
     required this.refuelingCode,
     this.vehicleData,
     this.stationData,
+    this.driverEstimate,
     this.isAutonomous = false,
   }) : super(key: key);
 

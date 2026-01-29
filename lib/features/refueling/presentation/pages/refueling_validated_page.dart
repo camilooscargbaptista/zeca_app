@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/refueling_polling_service.dart';
@@ -59,12 +60,14 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
 
   /// Calcula valor total automaticamente
   void _calcularValorTotal() {
-    final litros = double.tryParse(_litrosController.text) ?? 0;
-    final preco = double.tryParse(_precoLitroController.text) ?? 0;
+    // Converte formato brasileiro (vírgula) para ponto decimal
+    final litros = double.tryParse(_litrosController.text.replaceAll(',', '.')) ?? 0;
+    final preco = double.tryParse(_precoLitroController.text.replaceAll(',', '.')) ?? 0;
     
     if (litros > 0 && preco > 0) {
       final total = litros * preco;
-      _valorTotalController.text = total.toStringAsFixed(2);
+      // Formata de volta para padrão brasileiro (vírgula)
+      _valorTotalController.text = total.toStringAsFixed(2).replaceAll('.', ',');
     }
   }
 
@@ -159,9 +162,10 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
     setState(() => _isSubmitting = true);
     
     try {
-      final litros = double.tryParse(_litrosController.text) ?? 0;
-      final preco = double.tryParse(_precoLitroController.text) ?? 0;
-      final total = double.tryParse(_valorTotalController.text) ?? 0;
+      // Converte formato brasileiro (vírgula) para ponto decimal
+      final litros = double.tryParse(_litrosController.text.replaceAll(',', '.')) ?? 0;
+      final preco = double.tryParse(_precoLitroController.text.replaceAll(',', '.')) ?? 0;
+      final total = double.tryParse(_valorTotalController.text.replaceAll(',', '.')) ?? 0;
       
       // Validar valores numéricos
       if (litros <= 0 || preco <= 0 || total <= 0) {
@@ -194,24 +198,34 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
         // Continuar mesmo se falhar o salvamento da estimativa
       }
       
-      // Limpar estado pendente
-      await PendingValidationStorage.clearPendingValidation();
+      // Manter o estado pendente (não limpar ainda)
       _pollingService.stopPolling();
       
-      // Navegar para HOME
+      // Navegar para tela de espera com os dados digitados pelo motorista
       if (mounted) {
-        SuccessDialog.show(
-          context,
-          title: 'Pronto!',
-          message: 'Vá ao caixa para finalizar o abastecimento.',
-          onPressed: () {
-            Navigator.of(context).pop();
-            context.go('/home');
+        context.go('/refueling-waiting', extra: {
+          'refueling_id': widget.refuelingId,
+          'refueling_code': widget.refuelingCode,
+          'vehicle_data': widget.vehicleData,
+          'station_data': widget.stationData,
+          // Dados digitados pelo motorista para mostrar na tela
+          'driver_estimate': {
+            'liters': litros,
+            'price': preco,
+            'total': total,
           },
-        );
+        });
       }
     } catch (e) {
       debugPrint('❌ Erro ao finalizar: $e');
+      if (mounted) {
+        ErrorDialog.show(
+          context,
+          title: 'Erro',
+          message: 'Não foi possível salvar os dados. Tente novamente.',
+          onPressed: () => Navigator.of(context).pop(),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -433,7 +447,9 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
               child: _buildInputField(
                 label: 'LITROS',
                 controller: _litrosController,
-                hint: '150.5',
+                hint: '150,50',
+                suffix: 'L',
+                inputFormatters: [_VolumeInputFormatter()],
               ),
             ),
             const SizedBox(width: 10),
@@ -441,7 +457,9 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
               child: _buildInputField(
                 label: 'PREÇO/LITRO (R\$)',
                 controller: _precoLitroController,
-                hint: '5.89',
+                hint: '5,89',
+                prefix: 'R\$ ',
+                inputFormatters: [_MoneyInputFormatter()],
               ),
             ),
           ],
@@ -452,7 +470,9 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
         _buildInputField(
           label: 'VALOR TOTAL (R\$)',
           controller: _valorTotalController,
-          hint: '886.35',
+          hint: '886,35',
+          prefix: 'R\$ ',
+          inputFormatters: [_MoneyInputFormatter()],
         ),
       ],
     );
@@ -462,6 +482,9 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
     required String label,
     required TextEditingController controller,
     required String hint,
+    String? prefix,
+    String? suffix,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,9 +503,12 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           style: const TextStyle(fontSize: 14),
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+            prefixText: prefix,
+            suffixText: suffix,
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -543,6 +569,64 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
           color: Color(0xFF2196F3),
         ),
       ),
+    );
+  }
+}
+
+/// Formatador para valores de volume (litros)
+/// Formato brasileiro: 150,50
+class _VolumeInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Remove tudo exceto dígitos e vírgula
+    String cleaned = newValue.text.replaceAll(RegExp(r'[^\d,]'), '');
+    
+    // Permite apenas uma vírgula
+    final parts = cleaned.split(',');
+    if (parts.length > 2) {
+      cleaned = '${parts[0]},${parts[1]}';
+    }
+    
+    // Limita casas decimais a 2
+    if (parts.length == 2 && parts[1].length > 2) {
+      cleaned = '${parts[0]},${parts[1].substring(0, 2)}';
+    }
+    
+    return TextEditingValue(
+      text: cleaned,
+      selection: TextSelection.collapsed(offset: cleaned.length),
+    );
+  }
+}
+
+/// Formatador para valores monetários
+/// Formato brasileiro: 5,89 ou 886,35
+class _MoneyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Remove tudo exceto dígitos e vírgula
+    String cleaned = newValue.text.replaceAll(RegExp(r'[^\d,]'), '');
+    
+    // Permite apenas uma vírgula
+    final parts = cleaned.split(',');
+    if (parts.length > 2) {
+      cleaned = '${parts[0]},${parts[1]}';
+    }
+    
+    // Limita casas decimais a 2
+    if (parts.length == 2 && parts[1].length > 2) {
+      cleaned = '${parts[0]},${parts[1].substring(0, 2)}';
+    }
+    
+    return TextEditingValue(
+      text: cleaned,
+      selection: TextSelection.collapsed(offset: cleaned.length),
     );
   }
 }

@@ -109,6 +109,7 @@ class AppRouter {
             refuelingCode: extra?['refueling_code'] ?? '',
             vehicleData: extra?['vehicle_data'],
             stationData: extra?['station_data'],
+            driverEstimate: extra?['driver_estimate'],
           );
         },
       ),
