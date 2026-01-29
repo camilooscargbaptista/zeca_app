@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/refueling_polling_service.dart';
 import '../../../../core/services/pending_validation_storage.dart';
@@ -449,7 +450,13 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
                 controller: _litrosController,
                 hint: '150,50',
                 suffix: 'L',
-                inputFormatters: [_VolumeInputFormatter()],
+                inputFormatters: [
+                  CurrencyTextInputFormatter.currency(
+                    locale: 'pt_BR',
+                    decimalDigits: 2,
+                    symbol: '',
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 10),
@@ -459,7 +466,13 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
                 controller: _precoLitroController,
                 hint: '5,89',
                 prefix: 'R\$ ',
-                inputFormatters: [_MoneyInputFormatter()],
+                inputFormatters: [
+                  CurrencyTextInputFormatter.currency(
+                    locale: 'pt_BR',
+                    decimalDigits: 2,
+                    symbol: '',
+                  ),
+                ],
               ),
             ),
           ],
@@ -472,7 +485,13 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
           controller: _valorTotalController,
           hint: '886,35',
           prefix: 'R\$ ',
-          inputFormatters: [_MoneyInputFormatter()],
+          inputFormatters: [
+            CurrencyTextInputFormatter.currency(
+              locale: 'pt_BR',
+              decimalDigits: 2,
+              symbol: '',
+            ),
+          ],
         ),
       ],
     );
@@ -569,64 +588,6 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
           color: Color(0xFF2196F3),
         ),
       ),
-    );
-  }
-}
-
-/// Formatador para valores de volume (litros)
-/// Formato brasileiro: 150,50
-class _VolumeInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    // Remove tudo exceto dígitos e vírgula
-    String cleaned = newValue.text.replaceAll(RegExp(r'[^\d,]'), '');
-    
-    // Permite apenas uma vírgula
-    final parts = cleaned.split(',');
-    if (parts.length > 2) {
-      cleaned = '${parts[0]},${parts[1]}';
-    }
-    
-    // Limita casas decimais a 2
-    if (parts.length == 2 && parts[1].length > 2) {
-      cleaned = '${parts[0]},${parts[1].substring(0, 2)}';
-    }
-    
-    return TextEditingValue(
-      text: cleaned,
-      selection: TextSelection.collapsed(offset: cleaned.length),
-    );
-  }
-}
-
-/// Formatador para valores monetários
-/// Formato brasileiro: 5,89 ou 886,35
-class _MoneyInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    // Remove tudo exceto dígitos e vírgula
-    String cleaned = newValue.text.replaceAll(RegExp(r'[^\d,]'), '');
-    
-    // Permite apenas uma vírgula
-    final parts = cleaned.split(',');
-    if (parts.length > 2) {
-      cleaned = '${parts[0]},${parts[1]}';
-    }
-    
-    // Limita casas decimais a 2
-    if (parts.length == 2 && parts[1].length > 2) {
-      cleaned = '${parts[0]},${parts[1].substring(0, 2)}';
-    }
-    
-    return TextEditingValue(
-      text: cleaned,
-      selection: TextSelection.collapsed(offset: cleaned.length),
     );
   }
 }
