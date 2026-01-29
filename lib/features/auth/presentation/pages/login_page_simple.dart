@@ -385,79 +385,113 @@ class _LoginPageSimpleState extends State<LoginPageSimple> {
           final pendingValidation = await PendingValidationStorage.getPendingValidation();
           
           if (pendingValidation != null) {
-            // Há validação pendente - navegar para tela de aguardando
-            debugPrint('✅ Validação pendente encontrada. Recuperando...');
-            debugPrint('📦 RefuelingId: ${pendingValidation['refuelingId']}');
-            debugPrint('📦 RefuelingCode: ${pendingValidation['refuelingCode']}');
+            // Verificar se realmente ainda está pendente consultando a API
+            debugPrint('🔍 Verificando status real do abastecimento pendente...');
+            bool stillPending = false;
             
-            // Mostrar mensagem informativa
-            if (mounted) {
-              SuccessDialog.show(
-                context,
-                title: 'Validação Pendente',
-                message: 'Você tem uma validação de abastecimento pendente. Redirecionando...',
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Navegar para tela de aguardando com dados salvos
-                  Future.delayed(const Duration(milliseconds: 300), () {
-                    if (mounted) {
-                      context.go('/refueling-waiting', extra: {
-                        'refueling_id': pendingValidation['refuelingId'],
-                        'refueling_code': pendingValidation['refuelingCode'],
-                        'vehicle_data': pendingValidation['vehicleData'] as Map<String, dynamic>?,
-                        'station_data': pendingValidation['stationData'] as Map<String, dynamic>?,
-                      });
-                    }
-                  });
-                },
-              );
+            try {
+              final refuelingId = pendingValidation['refuelingId'] as String?;
+              if (refuelingId != null && refuelingId.isNotEmpty) {
+                final statusResponse = await apiService.getPendingValidation(refuelingId);
+                
+                if (statusResponse['success'] == true && statusResponse['data'] != null) {
+                  final status = statusResponse['data']['status']?.toString().toUpperCase();
+                  debugPrint('📊 Status real do abastecimento: $status');
+                  
+                  // Só considera pendente se status realmente exige validação
+                  stillPending = status == 'AGUARDANDO_VALIDACAO_MOTORISTA';
+                  
+                  if (!stillPending) {
+                    debugPrint('⚠️ Abastecimento não está mais pendente (status: $status). Limpando storage...');
+                    await PendingValidationStorage.clearPendingValidation();
+                  }
+                } else {
+                  // Não encontrou (404 ou erro) - limpar storage
+                  debugPrint('⚠️ Abastecimento não encontrado ou erro. Limpando storage...');
+                  await PendingValidationStorage.clearPendingValidation();
+                }
+              }
+            } catch (e) {
+              debugPrint('⚠️ Erro ao verificar status real: $e - Limpando storage por segurança');
+              await PendingValidationStorage.clearPendingValidation();
+            }
+            
+            if (stillPending) {
+              // Realmente está pendente - navegar para tela de aguardando
+              debugPrint('✅ Validação pendente CONFIRMADA. Recuperando...');
+              debugPrint('📦 RefuelingId: ${pendingValidation['refuelingId']}');
+              debugPrint('📦 RefuelingCode: ${pendingValidation['refuelingCode']}');
+              
+              // Mostrar mensagem informativa
+              if (mounted) {
+                SuccessDialog.show(
+                  context,
+                  title: 'Validação Pendente',
+                  message: 'Você tem uma validação de abastecimento pendente. Redirecionando...',
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    // Navegar para tela de aguardando com dados salvos
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        context.go('/refueling-waiting', extra: {
+                          'refueling_id': pendingValidation['refuelingId'],
+                          'refueling_code': pendingValidation['refuelingCode'],
+                          'vehicle_data': pendingValidation['vehicleData'] as Map<String, dynamic>?,
+                          'station_data': pendingValidation['stationData'] as Map<String, dynamic>?,
+                        });
+                      }
+                    });
+                  },
+                );
+              }
+              return; // Sair aqui, não continuar para verificação de tipo de usuário
+            }
+          }
+          
+          // Sem validação pendente (ou já foi processada) - verificar tipo de usuário
+          final companyType = userData['user']?['company']?['type'] as String?;
+          final isAutonomo = companyType == 'AUTONOMO';
+          
+          debugPrint('🚗 Company type: $companyType, isAutonomo: $isAutonomo');
+          
+          if (isAutonomo) {
+            // Usuário autônomo - verificar se tem veículos cadastrados
+            try {
+              final vehicleCount = await apiService.countAutonomousVehicles();
+              final count = vehicleCount['data']?['count'] as int? ?? 0;
+              
+              debugPrint('🚗 Veículos do autônomo: $count');
+              
+              if (count == 0) {
+                // Sem veículos - ir para tela de primeiro acesso
+                SuccessDialog.show(
+                  context,
+                  title: 'Login Realizado',
+                  message: 'Bem-vindo! Cadastre seu primeiro veículo.',
+                );
+                context.go('/autonomous/first-access');
+              } else {
+                // Tem veículos - ir para tela de início de jornada autônomo
+                SuccessDialog.show(
+                  context,
+                  title: 'Login Realizado',
+                  message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
+                );
+                context.go('/autonomous/journey-start');
+              }
+            } catch (e) {
+              debugPrint('⚠️ Erro ao verificar veículos: $e');
+              // Em caso de erro, ir para first-access por segurança
+              context.go('/autonomous/first-access');
             }
           } else {
-            // Sem validação pendente - verificar tipo de usuário
-            final companyType = userData['user']?['company']?['type'] as String?;
-            final isAutonomo = companyType == 'AUTONOMO';
-            
-            debugPrint('🚗 Company type: $companyType, isAutonomo: $isAutonomo');
-            
-            if (isAutonomo) {
-              // Usuário autônomo - verificar se tem veículos cadastrados
-              try {
-                final vehicleCount = await apiService.countAutonomousVehicles();
-                final count = vehicleCount['data']?['count'] as int? ?? 0;
-                
-                debugPrint('🚗 Veículos do autônomo: $count');
-                
-                if (count == 0) {
-                  // Sem veículos - ir para tela de primeiro acesso
-                  SuccessDialog.show(
-                    context,
-                    title: 'Login Realizado',
-                    message: 'Bem-vindo! Cadastre seu primeiro veículo.',
-                  );
-                  context.go('/autonomous/first-access');
-                } else {
-                  // Tem veículos - ir para tela de início de jornada autônomo
-                  SuccessDialog.show(
-                    context,
-                    title: 'Login Realizado',
-                    message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
-                  );
-                  context.go('/autonomous/journey-start');
-                }
-              } catch (e) {
-                debugPrint('⚠️ Erro ao verificar veículos: $e');
-                // Em caso de erro, ir para first-access por segurança
-                context.go('/autonomous/first-access');
-              }
-            } else {
-              // Usuário normal - ir para tela de início de jornada
-              SuccessDialog.show(
-                context,
-                title: 'Login Realizado',
-                message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
-              );
-              context.go('/journey-start');
-            }
+            // Usuário normal - ir para tela de início de jornada
+            SuccessDialog.show(
+              context,
+              title: 'Login Realizado',
+              message: 'Bem-vindo, ${userData['user']?['name'] ?? 'Usuário'}!',
+            );
+            context.go('/journey-start');
           }
         }
       } else {

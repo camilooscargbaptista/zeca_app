@@ -85,6 +85,9 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
   url_launcher: ^6.3.2
+  
+  # Fontes (código de abastecimento com zero distinguível)
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:

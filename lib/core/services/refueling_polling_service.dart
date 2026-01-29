@@ -13,18 +13,23 @@ class RefuelingPollingService {
   String? _currentRefuelingId;
   String? _currentRefuelingCode; // Código de abastecimento (para buscar refueling)
   Function(String)? _onStatusChanged;
+  /// NOVO: Callback que retorna status, refuelingId e dados completos
+  /// Usado para tratar múltiplos status (AGUARDANDO_VALIDACAO_MOTORISTA, CONCLUIDO, CONTESTADO)
+  Function(String status, String refuelingId, Map<String, dynamic> data)? _onStatusWithData;
   bool _isPolling = false;
 
   /// Iniciar polling para um refueling_id ou código de abastecimento
   /// 
   /// [refuelingId] - ID do abastecimento para monitorar (opcional)
   /// [refuelingCode] - Código de abastecimento para buscar refueling (opcional)
-  /// [onStatusChanged] - Callback chamado quando o status muda
+  /// [onStatusChanged] - Callback chamado quando o status muda para AGUARDANDO_VALIDACAO_MOTORISTA
+  /// [onStatusWithData] - NOVO: Callback com status, refuelingId e dados (para tratar múltiplos status)
   /// [intervalSeconds] - Intervalo entre verificações (padrão: 15 segundos)
   void startPolling({
     String? refuelingId,
     String? refuelingCode,
     Function(String)? onStatusChanged,
+    Function(String status, String refuelingId, Map<String, dynamic> data)? onStatusWithData,
     int intervalSeconds = 15,
   }) {
     debugPrint('🚀 [POLLING] startPolling chamado: refuelingId=$refuelingId, refuelingCode=$refuelingCode, intervalSeconds=$intervalSeconds');
@@ -44,6 +49,7 @@ class RefuelingPollingService {
     _currentRefuelingId = refuelingId;
     _currentRefuelingCode = refuelingCode;
     _onStatusChanged = onStatusChanged;
+    _onStatusWithData = onStatusWithData;
     _isPolling = true;
 
     debugPrint('✅ [POLLING] Polling configurado: _isPolling=$_isPolling, _currentRefuelingId=$_currentRefuelingId, _currentRefuelingCode=$_currentRefuelingCode');
@@ -151,23 +157,36 @@ class RefuelingPollingService {
         if (response['success'] == true && response['data'] != null) {
           final data = response['data'] as Map<String, dynamic>;
           final status = data['status'] as String?;
+          final statusUpper = status?.toUpperCase() ?? '';
           
           debugPrint('📊 [POLLING] Status atual: $status');
           
           if (status != null) {
-            // Verificar se status mudou para aguardando validação
-            if (status == 'AGUARDANDO_VALIDACAO_MOTORISTA' || 
-                status == 'aguardando_validacao_motorista' ||
-                status.toUpperCase() == 'AGUARDANDO_VALIDACAO_MOTORISTA') {
-              // Atualizar refueling_id se ainda não tínhamos
-              if (_currentRefuelingId == null && data['id'] != null) {
-                _currentRefuelingId = data['id'] as String;
+            // Atualizar refueling_id se ainda não tínhamos
+            if (_currentRefuelingId == null && data['id'] != null) {
+              _currentRefuelingId = data['id'] as String;
+            }
+            
+            // NOVO: Chamar callback multi-status se registrado
+            if (_onStatusWithData != null) {
+              // Detectar múltiplos status relevantes
+              if (statusUpper == 'AGUARDANDO_VALIDACAO_MOTORISTA' ||
+                  statusUpper == 'VALIDADO' ||
+                  statusUpper == 'CONCLUIDO' ||
+                  statusUpper == 'CONTESTADO' ||
+                  statusUpper == 'CANCELADO') {
+                debugPrint('🎯 [POLLING] Status relevante detectado: $status! Chamando onStatusWithData...');
+                _onStatusWithData?.call(statusUpper, refuelingIdToCheck, data);
+                return; // Status tratado
               }
-              
+            }
+            
+            // Fallback: callback antigo (compatibilidade)
+            if (statusUpper == 'AGUARDANDO_VALIDACAO_MOTORISTA') {
               debugPrint('🎯 [POLLING] Status mudou para AGUARDANDO_VALIDACAO_MOTORISTA! Chamando callback...');
               _onStatusChanged?.call(refuelingIdToCheck);
             } else {
-              debugPrint('⏳ [POLLING] Status ainda não é AGUARDANDO_VALIDACAO_MOTORISTA (atual: $status), continuando polling...');
+              debugPrint('⏳ [POLLING] Status ainda não é final (atual: $status), continuando polling...');
             }
           } else {
             debugPrint('⚠️ [POLLING] Status é null nos dados retornados');
@@ -387,6 +406,84 @@ class RefuelingPollingService {
     } catch (e) {
       debugPrint('❌ Erro ao verificar status por código: $e');
       return null;
+    }
+  }
+
+  /// NOVO: Polling genérico que retorna dados para decisão na UI
+  /// 
+  /// Diferente de startPollingForStatus que tem lógica interna,
+  /// este método apenas faz polling e chama callback com os dados.
+  /// A lógica de decisão fica na camada de UI.
+  void startPollingGeneric({
+    required String refuelingCode,
+    required Function(Map<String, dynamic>) onDataReceived,
+    int intervalSeconds = 10,
+    int delaySeconds = 0,
+  }) {
+    debugPrint('🚀 [POLLING] startPollingGeneric chamado: code=$refuelingCode, interval=${intervalSeconds}s, delay=${delaySeconds}s');
+    
+    stopPolling();
+    
+    _currentRefuelingCode = refuelingCode;
+    _isPolling = true;
+    
+    debugPrint('✅ [POLLING] Polling genérico configurado: _isPolling=$_isPolling, code=$refuelingCode');
+    
+    void doPolling() {
+      debugPrint('🔍 [POLLING] Executando verificação...');
+      _checkStatusGeneric(refuelingCode, onDataReceived);
+    }
+    
+    void startTimer() {
+      // Verificação imediata
+      doPolling();
+      
+      // Configurar polling periódico
+      _pollingTimer = Timer.periodic(
+        Duration(seconds: intervalSeconds),
+        (_) {
+          if (_isPolling) {
+            debugPrint('⏰ [POLLING] Verificação periódica (a cada ${intervalSeconds}s)...');
+            doPolling();
+          } else {
+            debugPrint('⚠️ [POLLING] Polling não está mais ativo, cancelando timer');
+            _pollingTimer?.cancel();
+          }
+        },
+      );
+      
+      debugPrint('🔄 [POLLING] Polling genérico iniciado! (intervalo: ${intervalSeconds}s)');
+    }
+    
+    if (delaySeconds > 0) {
+      debugPrint('⏳ [POLLING] Aguardando ${delaySeconds}s antes de iniciar...');
+      _pollingTimer = Timer(Duration(seconds: delaySeconds), startTimer);
+    } else {
+      startTimer();
+    }
+  }
+  
+  /// Verificação genérica que retorna os dados brutos
+  Future<void> _checkStatusGeneric(String code, Function(Map<String, dynamic>) onDataReceived) async {
+    if (!_isPolling) {
+      debugPrint('⚠️ [POLLING] Polling não está ativo, ignorando verificação');
+      return;
+    }
+    
+    try {
+      final response = await _apiService.getRefuelingByCode(code);
+      
+      debugPrint('📥 [POLLING] Resposta: success=${response['success']}, error=${response['error']}');
+      
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        debugPrint('📊 [POLLING] Dados: id=${data['id']}, status=${data['status']}, is_pending_code=${data['is_pending_code']}');
+        onDataReceived(data);
+      } else {
+        debugPrint('⚠️ [POLLING] Sem dados ou erro: ${response['error']}');
+      }
+    } catch (e) {
+      debugPrint('❌ [POLLING] Erro ao verificar: $e');
     }
   }
 
