@@ -1256,7 +1256,17 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
+                    
+                    // NOVO: Card com dados digitados pelo motorista (para informar ao posto)
+                    if (widget.driverEstimate != null) ...[
+                      _buildDriverEstimateCard(),
+                      const SizedBox(height: 16),
+                      _buildCnpjCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    
+                    const SizedBox(height: 16),
                     
                     // PRIMEIRO: Card com dados registrados pelo posto (DESTAQUE VERDE)
                     if (hasData) ...[
@@ -1624,6 +1634,183 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         ],
       ),
     );
+  }
+
+  /// Card com dados digitados pelo motorista (Volume e KM)
+  /// Baseado no mockup MOCK-aguardando-registro.html
+  Widget _buildDriverEstimateCard() {
+    final liters = widget.driverEstimate?['liters'] ?? 0.0;
+    
+    // Tentar obter KM do storage ou do journey_vehicle_data
+    String kmDisplay = '---';
+    
+    // O KM pode estar no vehicleData ou no driverEstimate
+    if (widget.driverEstimate?['km'] != null) {
+      kmDisplay = _formatKm(widget.driverEstimate!['km']);
+    } else if (widget.vehicleData?['km'] != null) {
+      kmDisplay = _formatKm(widget.vehicleData!['km']);
+    } else if (widget.vehicleData?['mileage'] != null) {
+      kmDisplay = _formatKm(widget.vehicleData!['mileage']);
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.blue.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade400, width: 2),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.local_gas_station, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Informe ao Posto',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Volume
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'VOLUME',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                '${liters is double ? liters.toStringAsFixed(2).replaceAll('.', ',') : liters} L',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ],
+          ),
+          
+          Divider(color: Colors.blue.shade200, height: 24),
+          
+          // KM
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'QUILOMETRAGEM',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                '$kmDisplay km',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Card com CNPJ da frota para emissão de Nota Fiscal
+  Widget _buildCnpjCard() {
+    // Tentar obter CNPJ e nome da empresa do storage
+    String cnpj = '---';
+    String empresaNome = '';
+    
+    // O CNPJ pode vir do storage (empresa_cnpj) ou do vehicleData
+    if (widget.vehicleData?['empresa_cnpj'] != null) {
+      cnpj = _formatCnpj(widget.vehicleData!['empresa_cnpj'].toString());
+      empresaNome = widget.vehicleData?['empresa_nome'] ?? '';
+    } else if (widget.vehicleData?['cnpj'] != null) {
+      cnpj = _formatCnpj(widget.vehicleData!['cnpj'].toString());
+      empresaNome = widget.vehicleData?['empresa'] ?? '';
+    }
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.shade600),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.receipt_long, color: Colors.orange.shade700, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'CNPJ PARA NOTA FISCAL',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange.shade900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          
+          // CNPJ
+          Text(
+            cnpj,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange.shade800,
+              fontFamily: 'monospace',
+            ),
+          ),
+          
+          // Nome da empresa
+          if (empresaNome.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              empresaNome,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.brown.shade600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Formata CNPJ: 12345678000190 -> 12.345.678/0001-90
+  String _formatCnpj(String cnpj) {
+    final cleaned = cnpj.replaceAll(RegExp(r'[^\d]'), '');
+    if (cleaned.length != 14) return cnpj; // retorna original se inválido
+    return '${cleaned.substring(0, 2)}.${cleaned.substring(2, 5)}.${cleaned.substring(5, 8)}/${cleaned.substring(8, 12)}-${cleaned.substring(12, 14)}';
   }
 }
 

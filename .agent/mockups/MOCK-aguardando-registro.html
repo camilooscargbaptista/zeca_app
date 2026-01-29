@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Aguardando Registro do Posto</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 780px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Barra staging */
+        .staging-bar {
+            background: #F9A825;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            padding: 28px 0 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Header azul */
+        .header {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        /* Conteúdo */
+        .content {
+            padding: 20px;
+            background: #FAFAFA;
+            height: calc(100% - 120px);
+            overflow-y: auto;
+        }
+
+        /* Ícone de aguardando */
+        .waiting-icon {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .waiting-icon i {
+            font-size: 56px;
+            color: #2196F3;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        .waiting-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1976D2;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .waiting-subtitle {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        /* Card principal - Dados para o Posto */
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #E0E0E0;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .card-header i {
+            color: #2196F3;
+            font-size: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Dados principais - DESTAQUE */
+        .main-data {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 2px solid #2196F3;
+        }
+
+        .main-data-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .main-data-header i {
+            color: #1565C0;
+            font-size: 18px;
+        }
+
+        .main-data-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1565C0;
+        }
+
+        .main-data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #90CAF9;
+        }
+
+        .main-data-row:last-child {
+            border-bottom: none;
+        }
+
+        .main-data-label {
+            font-size: 12px;
+            color: #1976D2;
+            font-weight: 500;
+        }
+
+        .main-data-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0D47A1;
+        }
+
+        .main-data-value.highlight {
+            font-size: 24px;
+            color: #1565C0;
+        }
+
+        /* Info rows normais */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #F5F5F5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-value.plate {
+            background: #1565C0;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .info-value.code {
+            font-family: monospace;
+            font-size: 12px;
+            background: #F5F5F5;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* CNPJ Card - destaque especial */
+        .cnpj-card {
+            background: #FFF8E1;
+            border: 1px solid #FFB300;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .cnpj-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .cnpj-header i {
+            color: #F57C00;
+            font-size: 14px;
+        }
+
+        .cnpj-title {
+            font-size: 11px;
+            color: #E65100;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cnpj-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #E65100;
+            font-family: monospace;
+        }
+
+        .cnpj-empresa {
+            font-size: 12px;
+            color: #795548;
+            margin-top: 4px;
+        }
+
+        /* Mensagem de instrução */
+        .instruction-box {
+            background: #E8F5E9;
+            border: 1px solid #81C784;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .instruction-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .instruction-header i {
+            color: #2E7D32;
+            font-size: 14px;
+        }
+
+        .instruction-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2E7D32;
+        }
+
+        .instruction-text {
+            font-size: 12px;
+            color: #33691E;
+            line-height: 1.5;
+        }
+
+        /* Botões */
+        .btn-home {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            background: #F5F5F5;
+            border: 1px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .btn-home:hover {
+            background: #EEEEEE;
+        }
+
+        /* Polling indicator */
+        .polling-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px;
+            background: #F3E5F5;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .polling-dot {
+            width: 8px;
+            height: 8px;
+            background: #9C27B0;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .polling-text {
+            font-size: 11px;
+            color: #7B1FA2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mobile-frame">
+        <!-- Barra Staging -->
+        <div class="staging-bar">
+            ▲ STAGING - stg.abastecacomzeca.com.br
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="header-title">Aguardando Registro</div>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="content">
+            <!-- Ícone animado -->
+            <div class="waiting-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+
+            <div class="waiting-title">Registro em Andamento</div>
+            <div class="waiting-subtitle">
+                Informe os dados abaixo ao frentista<br>
+                para registro no sistema do posto.
+            </div>
+
+            <!-- DADOS PRINCIPAIS - Volume e KM -->
+            <div class="main-data">
+                <div class="main-data-header">
+                    <i class="fas fa-gas-pump"></i>
+                    <span class="main-data-title">Informe ao Posto</span>
+                </div>
+                <div class="main-data-row">
+                    <span class="main-data-label">VOLUME</span>
+                    <span class="main-data-value highlight">150,50 L</span>
+                </div>
+                <div class="main-data-row">
+                    <span class="main-data-label">QUILOMETRAGEM</span>
+                    <span class="main-data-value">125.430 km</span>
+                </div>
+            </div>
+
+            <!-- Instrução -->
+            <div class="instruction-box">
+                <div class="instruction-header">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="instruction-title">Importante</span>
+                </div>
+                <div class="instruction-text">
+                    Informe estes dados ao caixa/frentista para que ele registre
+                    o abastecimento no sistema do posto.
+                </div>
+            </div>
+
+            <!-- CNPJ para NF -->
+            <div class="cnpj-card">
+                <div class="cnpj-header">
+                    <i class="fas fa-file-invoice"></i>
+                    <span class="cnpj-title">CNPJ para Nota Fiscal</span>
+                </div>
+                <div class="cnpj-value">12.345.678/0001-90</div>
+                <div class="cnpj-empresa">Transportadora XYZ Ltda</div>
+            </div>
+
+            <!-- Informações do Abastecimento -->
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="card-title">Informações do Abastecimento</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Veículo</span>
+                    <span class="info-value plate">ABC-1234</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Posto</span>
+                    <span class="info-value">Posto ZECA</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Código</span>
+                    <span class="info-value code">YQN92026837AF1FF</span>
+                </div>
+            </div>
+
+            <!-- Polling indicator -->
+            <div class="polling-indicator">
+                <div class="polling-dot"></div>
+                <span class="polling-text">Aguardando confirmação do posto...</span>
+            </div>
+
+            <!-- Botão voltar -->
+            <button class="btn-home">
+                <i class="fas fa-home"></i>
+                Voltar para Início
+            </button>
+        </div>
+    </div>
+</body>
+
+</html>
