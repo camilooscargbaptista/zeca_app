@@ -120,6 +120,9 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         _loadRefuelingData(widget.refuelingId);
         // Verificar também se já está CONCLUIDO (caso seja autônomo mal detectado)
         _checkIfAlreadyCompleted(widget.refuelingId);
+        // CORREÇÃO: Iniciar polling para detectar CANCELADO e outros status
+        debugPrint('🔄 [RefuelingWaitingPage] FROTA (com ID) - iniciando polling para detectar mudanças de status...');
+        _startPolling();
       } else if (widget.refuelingCode.isNotEmpty) {
          // Se tem código, verificar status pelo código
          _checkIfAlreadyCompletedByCode(widget.refuelingCode);
