@@ -73,29 +73,17 @@ class WebSocketService {
     _isConnecting = true;
 
     try {
-      // URL do servidor WebSocket (mesmo servidor da API, namespace /refueling)
-      // Corrigir URL: converter https para wss e garantir porta 443 para evitar bug :0
-      String baseUrl = ApiConfig.baseUrl;
+      // URL base para Socket.IO - NÃO adicionar namespace na URL
+      // O namespace é configurado via option 'path' ou simplesmente /refueling
+      // Bug conhecido: socket_io_client adiciona porta :0 quando usa HTTPS sem porta explícita
+      final baseUrl = ApiConfig.baseUrl;
       
-      // Converter https:// para wss://
-      if (baseUrl.startsWith('https://')) {
-        baseUrl = baseUrl.replaceFirst('https://', 'wss://');
-        // Adicionar porta 443 se não tiver porta explícita
-        if (!baseUrl.contains(':443') && !RegExp(r':\d+').hasMatch(baseUrl)) {
-          baseUrl = baseUrl + ':443';
-        }
-      } else if (baseUrl.startsWith('http://')) {
-        baseUrl = baseUrl.replaceFirst('http://', 'ws://');
-      }
-      
-      final wsUrl = '$baseUrl/refueling';
-      
-      debugPrint('🔌 [WebSocket] Conectando a: $wsUrl');
+      debugPrint('🔌 [WebSocket] Conectando a: $baseUrl (namespace: /refueling)');
 
       _socket = IO.io(
-        wsUrl,
+        '$baseUrl/refueling', // Namespace na URL
         IO.OptionBuilder()
-          .setTransports(['websocket']) // Forçar WebSocket em vez de polling
+          .setTransports(['websocket', 'polling']) // Permitir fallback para polling HTTP
           .setExtraHeaders({'Authorization': 'Bearer $token'})
           .setAuth({'token': token})
           .enableAutoConnect()
@@ -103,6 +91,7 @@ class WebSocketService {
           .setReconnectionAttempts(5)
           .setReconnectionDelay(2000)
           .setReconnectionDelayMax(10000)
+          .enableForceNew() // Forçar nova conexão
           .build(),
       );
 
