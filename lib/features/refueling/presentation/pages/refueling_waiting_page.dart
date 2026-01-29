@@ -379,15 +379,129 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
           ? widget.refuelingCode 
           : null,
       intervalSeconds: 15,
-      onStatusChanged: (refuelingId) async {
-        // Quando status mudar para AGUARDANDO_VALIDACAO_MOTORISTA
-        if (mounted) {
-          _pollingService.stopPolling();
-          
-          // Buscar dados completos do abastecimento
-          await _loadRefuelingData(refuelingId);
+      // NOVO: callback multi-status para tratar diferentes cenários
+      onStatusWithData: (status, refuelingId, data) async {
+        debugPrint('🔔 [RefuelingWaitingPage] Status recebido: $status, id: $refuelingId');
+        
+        if (!mounted) return;
+        
+        _pollingService.stopPolling();
+        
+        switch (status) {
+          case 'AGUARDANDO_VALIDACAO_MOTORISTA':
+            // Posto registrou dados, motorista precisa confirmar
+            debugPrint('📋 Dados pendentes de validação');
+            await _loadRefuelingData(refuelingId);
+            break;
+            
+          case 'CONCLUIDO':
+            // Aprovado diretamente pelo posto (bypass validação motorista)
+            debugPrint('✅ Abastecimento concluído (aprovado pelo posto)');
+            await PendingValidationStorage.clearPendingValidation();
+            _navigateToSuccessFromPolling(data);
+            break;
+            
+          case 'CONTESTADO':
+          case 'CANCELADO':
+            // Abastecimento contestado/cancelado
+            debugPrint('❌ Abastecimento $status');
+            await PendingValidationStorage.clearPendingValidation();
+            _showStatusMessageAndNavigateHome(status);
+            break;
+            
+          default:
+            debugPrint('⚠️ Status não tratado: $status');
         }
       },
+    );
+  }
+  
+  /// Navegar para tela de sucesso quando polling detecta CONCLUIDO
+  void _navigateToSuccessFromPolling(Map<String, dynamic> data) {
+    if (!mounted) return;
+    
+    // Helper para parsear valores
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Verificar se é autônomo para rota correta
+        if (widget.isAutonomous) {
+          context.go('/autonomous-success', extra: {
+            'refuelingCode': widget.refuelingCode,
+            'status': 'CONCLUIDO',
+            'totalValue': parseDouble(data['total_amount']),
+            'quantityLiters': parseDouble(data['quantity_liters']),
+            'pricePerLiter': parseDouble(data['unit_price']),
+            'savings': parseDouble(data['savings']),
+            'stationName': data['station_name']?.toString() ?? widget.stationData?['nome'] ?? 'Posto',
+            'vehiclePlate': data['vehicle_plate']?.toString() ?? widget.vehicleData?['placa'] ?? '',
+            'timestamp': DateTime.now().toIso8601String(),
+          });
+        } else {
+          // Frota: mostrar sucesso simples e voltar para home
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+              title: const Text('Abastecimento Concluído'),
+              content: const Text(
+                'O posto validou e finalizou este abastecimento diretamente.\n\n'
+                'Nenhuma ação adicional é necessária.',
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    context.go('/home');
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    });
+  }
+  
+  /// Mostrar mensagem de status e navegar para home
+  void _showStatusMessageAndNavigateHome(String status) {
+    if (!mounted) return;
+    
+    String title = status == 'CONTESTADO' ? 'Abastecimento Contestado' : 'Abastecimento Cancelado';
+    String message = status == 'CONTESTADO' 
+        ? 'Este abastecimento foi contestado e não pode mais ser validado.'
+        : 'Este abastecimento foi cancelado.';
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          status == 'CONTESTADO' ? Icons.warning_amber : Icons.cancel,
+          color: status == 'CONTESTADO' ? Colors.orange : Colors.red,
+          size: 48,
+        ),
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.go('/home');
+            },
+            child: const Text('Voltar para Início'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -450,6 +564,51 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     );
   }
 
+  /// Polling de monitoramento: verifica se status muda enquanto
+  /// motorista está na tela de validação (ex: posto valida diretamente)
+  void _startMonitoringPolling(String refuelingId) {
+    debugPrint('🔄 [MONITORING] Iniciando polling de monitoramento para: $refuelingId');
+    
+    _pollingService.startPolling(
+      refuelingId: refuelingId,
+      intervalSeconds: 10, // Mais frequente: posto pode validar a qualquer momento
+      onStatusWithData: (status, id, data) async {
+        debugPrint('🔔 [MONITORING] Status detectado: $status');
+        
+        if (!mounted) return;
+        
+        // Ignorar se ainda está aguardando validação do motorista
+        if (status == 'AGUARDANDO_VALIDACAO_MOTORISTA') {
+          debugPrint('⏳ [MONITORING] Ainda aguardando validação do motorista, continuando...');
+          return; // Continua monitorando
+        }
+        
+        // Status mudou! Parar polling e reagir
+        _pollingService.stopPolling();
+        
+        switch (status) {
+          case 'VALIDADO':
+          case 'CONCLUIDO':
+            // Posto validou ou concluiu diretamente!
+            debugPrint('✅ [MONITORING] Posto validou/concluiu diretamente (status: $status)! Navegando para sucesso...');
+            await PendingValidationStorage.clearPendingValidation();
+            _navigateToSuccessFromPolling(data);
+            break;
+            
+          case 'CONTESTADO':
+          case 'CANCELADO':
+            debugPrint('⚠️ [MONITORING] Abastecimento $status');
+            await PendingValidationStorage.clearPendingValidation();
+            _showStatusMessageAndNavigateHome(status);
+            break;
+            
+          default:
+            debugPrint('❓ [MONITORING] Status inesperado: $status');
+        }
+      },
+    );
+  }
+
   Future<void> _loadRefuelingData(String refuelingId) async {
     setState(() {
       _isLoading = true;
@@ -483,6 +642,11 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
           
           _isLoading = false;
         });
+        
+        // NOVO: Iniciar polling de monitoramento para detectar
+        // se posto valida enquanto motorista está na tela
+        final refId = _currentRefuelingId ?? refuelingId;
+        _startMonitoringPolling(refId);
       } else {
         throw Exception('Dados não encontrados');
       }
@@ -490,6 +654,45 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       setState(() {
         _isLoading = false;
       });
+      
+      // Se erro 404, o abastecimento não está mais pendente - limpar estado local
+      final errorMessage = e.toString();
+      if (errorMessage.contains('404') || errorMessage.contains('não encontrados')) {
+        debugPrint('⚠️ Abastecimento não está mais pendente de validação. Limpando estado local.');
+        
+        // Limpar estado local
+        await PendingValidationStorage.clearPendingValidation();
+        
+        if (mounted) {
+          // Mostrar mensagem informativa e redirecionar
+          _pollingService.stopPolling();
+          
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                icon: const Icon(Icons.info_outline, color: Colors.blue, size: 48),
+                title: const Text('Validação Não Necessária'),
+                content: const Text(
+                  'Este abastecimento não requer mais sua validação.\n\n'
+                  'Pode ter sido cancelado, já validado ou está em outro status.',
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      context.go('/home');
+                    },
+                    child: const Text('Voltar para Início'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+        return;
+      }
       
       if (mounted) {
         ErrorDialog.show(
@@ -513,6 +716,79 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       return _refuelingData!['id'].toString();
     }
     return '';
+  }
+
+  /// Mostrar modal de confirmação antes de confirmar
+  void _showConfirmValidation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: Colors.green[700], size: 28),
+              const SizedBox(width: 8),
+              const Text('Confirmar Abastecimento?'),
+            ],
+          ),
+          content: _refuelingData != null
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Você confirma os seguintes dados?'),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildConfirmInfoRow('Quantidade', '${_refuelingData!['quantity_liters'] ?? '0'} L'),
+                          _buildConfirmInfoRow('Valor Total', 'R\$ ${_refuelingData!['total_amount'] ?? '0,00'}'),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : const Text('Você confirma que os dados do abastecimento estão corretos?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _confirmValidation();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Sim, Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildConfirmInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value, style: TextStyle(color: Colors.green[800], fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmValidation() async {
@@ -667,30 +943,73 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
   
   /// Mostrar modal de confirmação antes de rejeitar
   void _showRejectConfirmation() {
+    final TextEditingController reasonController = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirmar Rejeição'),
-          content: const Text(
-            'Tem certeza que deseja rejeitar os dados registrados pelo posto?\n\n'
-            'Você precisará informar os valores corretos para contestação.',
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+              const SizedBox(width: 8),
+              const Text('Rejeitar Abastecimento?'),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Informe o motivo da rejeição:',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: reasonController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Ex: Valor incorreto, quilometragem errada...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'O motivo é obrigatório';
+                    }
+                    if (value.trim().length < 5) {
+                      return 'Informe um motivo mais detalhado';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                _contestValidation();
+                if (formKey.currentState!.validate()) {
+                  final reason = reasonController.text.trim();
+                  Navigator.of(dialogContext).pop();
+                  _contestValidation(reason);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Rejeitar'),
+              child: const Text('Confirmar Rejeição'),
             ),
           ],
         );
@@ -698,7 +1017,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     );
   }
 
-  Future<void> _contestValidation() async {
+  Future<void> _contestValidation(String reason) async {
     final refuelingId = _getRefuelingId();
     
     if (refuelingId.isEmpty) {
@@ -736,7 +1055,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       }
 
       // Obter localização atual
-      debugPrint('📍 Obtendo localização para rejeição...');
+      debugPrint('📍 Obtendo localização para contestação...');
       final locationData = await _locationService.getCurrentLocation();
       
       if (locationData == null) {
@@ -757,10 +1076,13 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       // Obter nome do dispositivo
       final deviceName = _locationService.getDeviceName();
 
-      // Chamar API de rejeição
-      debugPrint('✅ Enviando rejeição com localização: ${locationData['latitude']}, ${locationData['longitude']}');
-      final response = await _apiService.rejectRefueling(
+      // Chamar API de contestação
+      debugPrint('⚠️ Enviando contestação com motivo: $reason');
+      debugPrint('📍 Localização: ${locationData['latitude']}, ${locationData['longitude']}');
+      
+      final response = await _apiService.contestRefueling(
         refuelingId: refuelingId,
+        reason: reason,
         device: deviceName,
         latitude: locationData['latitude'] as double,
         longitude: locationData['longitude'] as double,
@@ -781,8 +1103,8 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
           
           SuccessDialog.show(
             context,
-            title: 'Abastecimento Rejeitado',
-            message: 'O abastecimento foi rejeitado com sucesso.',
+            title: 'Contestação Enviada',
+            message: 'Sua contestação foi registrada e será analisada pelo posto.',
             onPressed: () {
               Navigator.of(context).pop();
               // Voltar para home
@@ -795,7 +1117,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
           );
         }
       } else {
-        throw Exception(response['error'] ?? 'Erro ao rejeitar abastecimento');
+        throw Exception(response['error'] ?? 'Erro ao contestar abastecimento');
       }
     } catch (e) {
       setState(() {
@@ -806,7 +1128,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         ErrorDialog.show(
           context,
           title: 'Erro',
-          message: 'Erro ao rejeitar abastecimento: $e',
+          message: 'Erro ao contestar abastecimento: $e',
         );
       }
     }
@@ -934,7 +1256,119 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
                     
                     const SizedBox(height: 40),
                     
-                    // Card com informações básicas
+                    // PRIMEIRO: Card com dados registrados pelo posto (DESTAQUE VERDE)
+                    if (hasData) ...[
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.green.shade500, Colors.green.shade700],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Título
+                            Row(
+                              children: [
+                                const Icon(Icons.checklist, color: Colors.white),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Dados Registrados pelo Posto',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 12),
+                              height: 1,
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                            // Grid 2x2 para dados principais
+                            Row(
+                              children: [
+                                // Quantidade
+                                Expanded(
+                                  child: _buildPostoGridItem(
+                                    'Quantidade',
+                                    _refuelingData!['quantity_liters'] != null
+                                        ? '${double.parse(_refuelingData!['quantity_liters'].toString()).toStringAsFixed(2)} L'
+                                        : 'N/A',
+                                    isBig: true,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Valor Total
+                                Expanded(
+                                  child: _buildPostoGridItem(
+                                    'Valor Total',
+                                    _refuelingData!['total_amount'] != null
+                                        ? 'R\$ ${double.parse(_refuelingData!['total_amount'].toString()).toStringAsFixed(2)}'
+                                        : 'N/A',
+                                    isBig: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                // Preço/Litro
+                                Expanded(
+                                  child: _buildPostoGridItem(
+                                    'Preço/Litro',
+                                    _refuelingData!['unit_price'] != null
+                                        ? 'R\$ ${double.parse(_refuelingData!['unit_price'].toString()).toStringAsFixed(2)}'
+                                        : 'N/A',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Quilometragem
+                                Expanded(
+                                  child: _buildPostoGridItem(
+                                    'Quilometragem',
+                                    _refuelingData!['odometer_reading'] != null
+                                        ? '${_formatKm(_refuelingData!['odometer_reading'])} km'
+                                        : 'N/A',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Atendente (se disponível)
+                            if (_refuelingData!['attendant_name'] != null) ...[
+                              Container(
+                                margin: const EdgeInsets.only(top: 12),
+                                padding: const EdgeInsets.only(top: 8),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(color: Colors.white.withOpacity(0.2)),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Atendente: ${_refuelingData!['attendant_name']}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white.withOpacity(0.85),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    
+                    // SEGUNDO: Card com informações básicas (branco)
                     Card(
                       elevation: 2,
                       child: Padding(
@@ -942,11 +1376,17 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Informações do Abastecimento',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.blue.shade700, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Informações do Abastecimento',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 16),
                             if (widget.vehicleData != null)
@@ -973,72 +1413,6 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
                         ),
                       ),
                     ),
-                    
-                    // Card com dados registrados pelo posto (quando disponível)
-                    if (hasData) ...[
-                      const SizedBox(height: 24),
-                      Card(
-                        elevation: 2,
-                        color: Colors.green[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: Colors.green[700]),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Dados Registrados pelo Posto',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green[900],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              if (_refuelingData!['quantity_liters'] != null)
-                                _buildDataRow(
-                                  'Quantidade (Litros)',
-                                  '${double.parse(_refuelingData!['quantity_liters'].toString()).toStringAsFixed(3)} L',
-                                ),
-                              if (_refuelingData!['odometer_reading'] != null)
-                                _buildDataRow(
-                                  'Quilometragem',
-                                  '${double.parse(_refuelingData!['odometer_reading'].toString()).toStringAsFixed(3)} km',
-                                ),
-                              if (_refuelingData!['pump_number'] != null)
-                                _buildDataRow(
-                                  'Bomba',
-                                  _refuelingData!['pump_number'].toString(),
-                                ),
-                              if (_refuelingData!['unit_price'] != null)
-                                _buildDataRow(
-                                  'Preço por Litro',
-                                  'R\$ ${double.parse(_refuelingData!['unit_price'].toString()).toStringAsFixed(2)}',
-                                ),
-                              if (_refuelingData!['total_amount'] != null)
-                                _buildDataRow(
-                                  'Valor Total',
-                                  'R\$ ${double.parse(_refuelingData!['total_amount'].toString()).toStringAsFixed(2)}',
-                                ),
-                              if (_refuelingData!['attendant_name'] != null)
-                                _buildDataRow(
-                                  'Atendente',
-                                  _refuelingData!['attendant_name'].toString(),
-                                ),
-                              if (_refuelingData!['notes'] != null && _refuelingData!['notes'].toString().isNotEmpty)
-                                _buildDataRow(
-                                  'Observações',
-                                  _refuelingData!['notes'].toString(),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                     
                     const SizedBox(height: 32),
                     
@@ -1107,7 +1481,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
                           // Botão Confirmar
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _isSubmitting ? null : _confirmValidation,
+                              onPressed: _isSubmitting ? null : _showConfirmValidation,
                               icon: _isSubmitting
                                   ? const SizedBox(
                                       width: 20,
@@ -1177,6 +1551,50 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         ),
       ],
     );
+  }
+
+  /// Item do grid de dados do posto (fundo translúcido, texto branco)
+  Widget _buildPostoGridItem(String label, String value, {bool isBig = false}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.85),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isBig ? 20 : 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Formata quilometragem: converte para inteiro (sem decimais)
+  String _formatKm(dynamic value) {
+    if (value == null) return '0';
+    if (value is int) return value.toString();
+    if (value is double) return value.toInt().toString();
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed?.toInt().toString() ?? value;
+    }
+    return value.toString();
   }
 
   Widget _buildDataRow(String label, String value) {

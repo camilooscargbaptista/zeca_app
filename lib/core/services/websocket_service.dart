@@ -80,7 +80,8 @@ class WebSocketService {
           ? 'https://${uri.host}:443'
           : 'http://${uri.host}:${uri.port == 0 ? 80 : uri.port}';
       
-      debugPrint('🔌 [WebSocket] Conectando a: $socketUrl/refueling');
+      debugPrint('� [WebSocket] BUILD v2.0 - FIX PORTA 443 APLICADO');
+      debugPrint('�🔌 [WebSocket] Conectando a: $socketUrl/refueling');
 
       _socket = IO.io(
         '$socketUrl/refueling', // Namespace na URL

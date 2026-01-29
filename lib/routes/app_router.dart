@@ -6,6 +6,7 @@ import '../features/auth/presentation/pages/login_page_simple.dart';
 import '../features/home/presentation/pages/home_page_simple.dart';
 import '../features/refueling/presentation/pages/refueling_code_page_simple.dart';
 import '../features/refueling/presentation/pages/refueling_waiting_page.dart';
+import '../features/refueling/presentation/pages/refueling_validated_page.dart';
 import '../features/refueling/presentation/pages/pending_refuelings_page.dart';
 import '../features/refueling/presentation/pages/autonomous_payment_success_page.dart';
 import '../features/refueling/data/models/payment_confirmed_model.dart';
@@ -104,6 +105,19 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return RefuelingWaitingPage(
+            refuelingId: extra?['refueling_id'] ?? '',
+            refuelingCode: extra?['refueling_code'] ?? '',
+            vehicleData: extra?['vehicle_data'],
+            stationData: extra?['station_data'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/refueling-validated',
+        name: 'refueling-validated',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return RefuelingValidatedPage(
             refuelingId: extra?['refueling_id'] ?? '',
             refuelingCode: extra?['refueling_code'] ?? '',
             vehicleData: extra?['vehicle_data'],

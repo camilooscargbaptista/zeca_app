@@ -939,10 +939,11 @@ class ApiService {
     }
   }
 
-  /// Rejeitar abastecimento
-  /// POST /api/v1/refueling/:id/reject
-  Future<Map<String, dynamic>> rejectRefueling({
+  /// Contestar abastecimento (rejeitar dados)
+  /// POST /api/v1/refueling/:id/contest
+  Future<Map<String, dynamic>> contestRefueling({
     required String refuelingId,
+    required String reason,
     required String device,
     required double latitude,
     required double longitude,
@@ -950,16 +951,23 @@ class ApiService {
   }) async {
     try {
       final requestData = {
+        'reason': reason,
         'device': device,
         'latitude': latitude,
         'longitude': longitude,
         if (address != null && address.isNotEmpty) 'address': address,
       };
 
+      debugPrint('📤 [API] POST /refueling/$refuelingId/contest');
+      debugPrint('📤 [API] Request data: $requestData');
+
       final response = await _dio.post(
-        '/refueling/$refuelingId/reject',
+        '/refueling/$refuelingId/contest',
         data: requestData,
       );
+
+      debugPrint('📥 [API] Status code: ${response.statusCode}');
+      debugPrint('📥 [API] Response data: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {
@@ -973,8 +981,12 @@ class ApiService {
         };
       }
     } on DioException catch (e) {
+      debugPrint('❌ [API] DioException: ${e.message}');
+      debugPrint('❌ [API] Status code: ${e.response?.statusCode}');
+      debugPrint('❌ [API] Response: ${e.response?.data}');
       return _handleDioError(e);
     } catch (e) {
+      debugPrint('❌ [API] Erro inesperado: $e');
       return {
         'success': false,
         'error': 'Erro inesperado: $e',
@@ -2220,6 +2232,56 @@ class ApiService {
       }
       return _handleDioError(e);
     } catch (e) {
+      return {
+        'success': false,
+        'error': 'Erro inesperado: $e',
+      };
+    }
+  }
+
+  /// Salvar estimativa de abastecimento do motorista
+  /// POST /api/v1/codes/:code/driver-estimate
+  Future<Map<String, dynamic>> saveDriverRefuelingEstimate({
+    required String code,
+    double? estimatedLiters,
+    double? estimatedPrice,
+    double? estimatedTotal,
+    double? latitude,
+    double? longitude,
+    String? deviceInfo,
+  }) async {
+    try {
+      debugPrint('📊 [API] Salvando estimativa do motorista para código: $code');
+      
+      final response = await _dio.post(
+        '/api/v1/codes/$code/driver-estimate',
+        data: {
+          if (estimatedLiters != null) 'estimated_liters': estimatedLiters,
+          if (estimatedPrice != null) 'estimated_price': estimatedPrice,
+          if (estimatedTotal != null) 'estimated_total': estimatedTotal,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          if (deviceInfo != null) 'device_info': deviceInfo,
+        },
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint('✅ [API] Estimativa salva com sucesso');
+        return {
+          'success': true,
+          'data': response.data['data'],
+        };
+      }
+
+      return {
+        'success': false,
+        'error': 'Erro ao salvar estimativa',
+      };
+    } on DioException catch (e) {
+      debugPrint('❌ [API] Erro ao salvar estimativa: ${e.message}');
+      return _handleDioError(e);
+    } catch (e) {
+      debugPrint('❌ [API] Erro inesperado ao salvar estimativa: $e');
       return {
         'success': false,
         'error': 'Erro inesperado: $e',

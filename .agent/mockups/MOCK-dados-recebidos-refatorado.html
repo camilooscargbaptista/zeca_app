@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOCK - Validação Abastecimento - Todos os Estados</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .state-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            background: #E3F2FD;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .state-label.new {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .state-label.refactor {
+            background: #FFF3E0;
+            color: #EF6C00;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 780px;
+            background: #FAFAFA;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin-top: 50px;
+        }
+
+        /* Header azul ZECA */
+        .header-blue {
+            background: #2A70C0;
+            padding: 44px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            position: relative;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            height: calc(100% - 76px - 80px);
+            overflow-y: auto;
+        }
+
+        /* Card padrão ZECA */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #424242;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #EEEEEE;
+        }
+
+        .card-title i {
+            color: #2A70C0;
+        }
+
+        /* Dados do Posto - DESTAQUE VERDE */
+        .posto-card {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .posto-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .posto-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .posto-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .posto-label {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        .posto-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .posto-value.big {
+            font-size: 20px;
+        }
+
+        .posto-full {
+            grid-column: span 2;
+            text-align: center;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Info row */
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #F5F5F5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-icon {
+            width: 36px;
+            height: 36px;
+            background: #E3F2FD;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2A70C0;
+            font-size: 14px;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #9E9E9E;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        /* Bottom buttons */
+        .bottom-buttons {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-reject {
+            background: #FFEBEE;
+            color: #D32F2F;
+            border: 2px solid #FFCDD2;
+        }
+
+        .btn-confirm {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-home {
+            background: #2A70C0;
+            color: white;
+            flex: 1;
+        }
+
+        /* Success state */
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #E8F5E9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .success-icon i {
+            font-size: 40px;
+            color: #4CAF50;
+        }
+
+        .success-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        .success-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #757575;
+            margin-bottom: 24px;
+        }
+
+        /* Observação do posto */
+        .obs-card {
+            background: #FFF8E1;
+            border: 1px solid #FFE082;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .obs-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #F57C00;
+            margin-bottom: 8px;
+        }
+
+        .obs-text {
+            font-size: 14px;
+            color: #424242;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ESTADO 1: Dados Recebidos (REFATORADO) - Destaque nos dados do posto -->
+    <div class="mobile-frame">
+        <div class="state-label refactor">📊 REFATORADO: Dados do Posto em Destaque</div>
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">Confirmar Abastecimento</div>
+            <div class="notification-btn"></div>
+        </div>
+
+        <div class="content">
+            <!-- PRIMEIRO: Dados do Posto (destaque azul) -->
+            <div class="posto-card">
+                <div class="posto-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Dados Registrados pelo Posto</span>
+                </div>
+                <div class="posto-grid">
+                    <div class="posto-item">
+                        <div class="posto-label">Quantidade</div>
+                        <div class="posto-value big">223.33 L</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Valor Total</div>
+                        <div class="posto-value big">R$ 1.270,75</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Preço/Litro</div>
+                        <div class="posto-value">R$ 5,69</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Quilometragem</div>
+                        <div class="posto-value">123.212 km</div>
+                    </div>
+                    <div class="posto-full">
+                        <div class="posto-label">Atendente: Maria Santos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEGUNDO: Informações básicas (compacto) -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Informações do Abastecimento</span>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-car"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Veículo</div>
+                        <div class="info-value">ABC-1234</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-gas-pump"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Posto</div>
+                        <div class="info-value">Posto ZECA</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-qrcode"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Código</div>
+                        <div class="info-value">PEGV-2026-E6043987</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-buttons">
+            <button class="btn btn-reject"><i class="fas fa-times"></i> Rejeitar</button>
+            <button class="btn btn-confirm"><i class="fas fa-check"></i> Confirmar</button>
+        </div>
+    </div>
+
+    <!-- ESTADO 2: NOVO - Aprovado pelo Posto (quando posto valida) -->
+    <div class="mobile-frame">
+        <div class="state-label new">✅ NOVO: Aprovado pelo Posto</div>
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">Abastecimento Validado</div>
+            <div class="notification-btn"></div>
+        </div>
+
+        <div class="content">
+            <!-- Ícone de sucesso -->
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="success-title">Validado pelo Posto</div>
+            <div class="success-subtitle">O abastecimento foi validado diretamente pelo posto</div>
+
+            <!-- Observação do posto (se houver) -->
+            <div class="obs-card">
+                <div class="obs-title">
+                    <i class="fas fa-comment-alt"></i>
+                    <span>Observação do Posto</span>
+                </div>
+                <div class="obs-text">"Motorista não estava presente no momento da finalização. Validado conforme
+                    procedimento interno."</div>
+            </div>
+
+            <!-- Dados do Posto (destaque azul) -->
+            <div class="posto-card">
+                <div class="posto-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Dados Registrados</span>
+                </div>
+                <div class="posto-grid">
+                    <div class="posto-item">
+                        <div class="posto-label">Quantidade</div>
+                        <div class="posto-value big">223.33 L</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Valor Total</div>
+                        <div class="posto-value big">R$ 1.270,75</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Preço/Litro</div>
+                        <div class="posto-value">R$ 5,69</div>
+                    </div>
+                    <div class="posto-item">
+                        <div class="posto-label">Quilometragem</div>
+                        <div class="posto-value">123.212 km</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações básicas -->
+            <div class="card">
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-car"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Veículo</div>
+                        <div class="info-value">ABC-1234</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-gas-pump"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">Posto</div>
+                        <div class="info-value">Posto ZECA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-buttons">
+            <button class="btn btn-home"><i class="fas fa-home"></i> Voltar ao Início</button>
+        </div>
+    </div>
+
+    <!-- ESTADO 3: MODAL - Confirmar Rejeição (com motivo) -->
+    <div class="mobile-frame">
+        <div class="state-label new">⚠️ MODAL: Confirmar Rejeição</div>
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">Confirmar Abastecimento</div>
+            <div class="notification-btn"></div>
+        </div>
+
+        <div class="content" style="filter: blur(2px); opacity: 0.5;">
+            <div class="posto-card">
+                <div class="posto-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Dados Registrados pelo Posto</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Informações do Abastecimento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL Overlay -->
+        <div
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div
+                style="background: white; border-radius: 16px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <!-- Header do modal -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div
+                        style="width: 60px; height: 60px; background: #FFEBEE; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 28px; color: #D32F2F;"></i>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #212121;">Rejeitar Abastecimento?</div>
+                    <div style="font-size: 13px; color: #757575; margin-top: 4px;">Informe o motivo da rejeição</div>
+                </div>
+
+                <!-- Campo de motivo -->
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #424242; display: block; margin-bottom: 8px;">Motivo
+                        da Rejeição *</label>
+                    <textarea
+                        style="width: 100%; height: 80px; border: 2px solid #E0E0E0; border-radius: 10px; padding: 12px; font-size: 14px; resize: none; font-family: inherit;"
+                        placeholder="Ex: Valor incorreto, quilometragem errada..."></textarea>
+                </div>
+
+                <!-- Botões -->
+                <div style="display: flex; gap: 12px;">
+                    <button
+                        style="flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 2px solid #E0E0E0; background: white; color: #424242; cursor: pointer;">Cancelar</button>
+                    <button
+                        style="flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; border: none; background: #D32F2F; color: white; cursor: pointer;">Confirmar
+                        Rejeição</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTADO 4: MODAL - Confirmar Validação (sem motivo) -->
+    <div class="mobile-frame">
+        <div class="state-label new">✅ MODAL: Confirmar Validação</div>
+        <div class="header-blue">
+            <div class="menu-btn"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">Confirmar Abastecimento</div>
+            <div class="notification-btn"></div>
+        </div>
+
+        <div class="content" style="filter: blur(2px); opacity: 0.5;">
+            <div class="posto-card">
+                <div class="posto-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Dados Registrados pelo Posto</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Informações do Abastecimento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL Overlay -->
+        <div
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div
+                style="background: white; border-radius: 16px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <!-- Header do modal -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div
+                        style="width: 60px; height: 60px; background: #E8F5E9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                        <i class="fas fa-check" style="font-size: 28px; color: #4CAF50;"></i>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #212121;">Confirmar Abastecimento?</div>
+                    <div style="font-size: 13px; color: #757575; margin-top: 4px;">Você confirma que os dados estão
+                        corretos?</div>
+                </div>
+
+                <!-- Resumo dos valores -->
+                <div style="background: #F5F5F5; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 13px; color: #757575;">Quantidade:</span>
+                        <span style="font-size: 13px; font-weight: 600; color: #212121;">223.33 L</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 13px; color: #757575;">Valor Total:</span>
+                        <span style="font-size: 15px; font-weight: 700; color: #4CAF50;">R$ 1.270,75</span>
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div style="display: flex; gap: 12px;">
+                    <button
+                        style="flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; border: 2px solid #E0E0E0; background: white; color: #424242; cursor: pointer;">Cancelar</button>
+                    <button
+                        style="flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; border: none; background: #4CAF50; color: white; cursor: pointer;">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
