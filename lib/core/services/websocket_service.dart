@@ -74,7 +74,21 @@ class WebSocketService {
 
     try {
       // URL do servidor WebSocket (mesmo servidor da API, namespace /refueling)
-      final wsUrl = '${ApiConfig.baseUrl}/refueling';
+      // Corrigir URL: converter https para wss e garantir porta 443 para evitar bug :0
+      String baseUrl = ApiConfig.baseUrl;
+      
+      // Converter https:// para wss://
+      if (baseUrl.startsWith('https://')) {
+        baseUrl = baseUrl.replaceFirst('https://', 'wss://');
+        // Adicionar porta 443 se não tiver porta explícita
+        if (!baseUrl.contains(':443') && !RegExp(r':\d+').hasMatch(baseUrl)) {
+          baseUrl = baseUrl + ':443';
+        }
+      } else if (baseUrl.startsWith('http://')) {
+        baseUrl = baseUrl.replaceFirst('http://', 'ws://');
+      }
+      
+      final wsUrl = '$baseUrl/refueling';
       
       debugPrint('🔌 [WebSocket] Conectando a: $wsUrl');
 
