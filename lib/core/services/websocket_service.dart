@@ -73,15 +73,17 @@ class WebSocketService {
     _isConnecting = true;
 
     try {
-      // URL base para Socket.IO - NÃO adicionar namespace na URL
-      // O namespace é configurado via option 'path' ou simplesmente /refueling
-      // Bug conhecido: socket_io_client adiciona porta :0 quando usa HTTPS sem porta explícita
-      final baseUrl = ApiConfig.baseUrl;
+      // FIX: Bug socket_io_client adiciona porta :0 quando HTTPS não tem porta explícita
+      // Solução: usar Uri.parse e construir URL com porta 443 explícita
+      final uri = Uri.parse(ApiConfig.baseUrl);
+      final socketUrl = uri.scheme == 'https' 
+          ? 'https://${uri.host}:443'
+          : 'http://${uri.host}:${uri.port == 0 ? 80 : uri.port}';
       
-      debugPrint('🔌 [WebSocket] Conectando a: $baseUrl (namespace: /refueling)');
+      debugPrint('🔌 [WebSocket] Conectando a: $socketUrl/refueling');
 
       _socket = IO.io(
-        '$baseUrl/refueling', // Namespace na URL
+        '$socketUrl/refueling', // Namespace na URL
         IO.OptionBuilder()
           .setTransports(['websocket', 'polling']) // Permitir fallback para polling HTTP
           .setExtraHeaders({'Authorization': 'Bearer $token'})
