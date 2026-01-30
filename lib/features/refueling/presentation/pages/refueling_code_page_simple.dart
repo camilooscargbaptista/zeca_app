@@ -723,6 +723,10 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
             'refueling_code': _refuelingCode,
             'vehicle_data': _vehicleData,
             'station_data': _stationData,
+            'driver_estimate': {
+              'km': int.tryParse(_kmAtual) ?? 0,
+              'liters': 0.0,
+            },
           },
         );
         break;
@@ -743,9 +747,13 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
         break;
         
       case 'CANCELADO':
-        debugPrint('❌ [Polling] CANCELADO - mostrando erro');
+      case 'RECUSED':
+        debugPrint('❌ [Polling] $status - posto cancelou');
         _pollingService.stopPolling();
-        _showErrorDialog('Abastecimento cancelado');
+        if (mounted) {
+          final reason = data['cancellation_reason']?.toString() ?? 'O posto cancelou o abastecimento.';
+          _showErrorDialog(reason);
+        }
         break;
         
       case 'PENDENTE':
@@ -1110,6 +1118,10 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           'refueling_code': _refuelingCode,
           'vehicle_data': _vehicleData,
           'station_data': _stationData,
+          'driver_estimate': {
+            'km': int.tryParse(_kmAtual) ?? 0,
+            'liters': _refuelingData?['quantity_liters'] ?? 0.0,
+          },
         };
         
         // Verificar se é autônomo para decidir o fluxo
@@ -1186,6 +1198,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
                             refuelingCode: (navigationData['refueling_code'] as String?) ?? '',
                             vehicleData: navigationData['vehicle_data'] as Map<String, dynamic>?,
                             stationData: navigationData['station_data'] as Map<String, dynamic>?,
+                            driverEstimate: navigationData['driver_estimate'] as Map<String, dynamic>?,
                           ),
                         ),
                       );

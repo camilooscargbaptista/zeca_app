@@ -436,7 +436,8 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             
           case 'CONTESTADO':
           case 'CANCELADO':
-            // Abastecimento contestado/cancelado
+          case 'RECUSED':
+            // Abastecimento contestado/cancelado/recusado pelo posto
             debugPrint('❌ Abastecimento $status');
             await PendingValidationStorage.clearPendingValidation();
             _showStatusMessageAndNavigateHome(status);
