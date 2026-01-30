@@ -816,16 +816,18 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
   /// Mostrar dialog de erro
   void _showErrorDialog(String message) {
     if (!mounted) return;
+    final navigatorContext = context; // Captura contexto do widget
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Erro'),
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Aviso'),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/home');
+              Navigator.of(dialogContext).pop();
+              navigatorContext.go('/home'); // Usa contexto do widget
             },
             child: const Text('OK'),
           ),
