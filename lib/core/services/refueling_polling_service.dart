@@ -146,9 +146,11 @@ class RefuelingPollingService {
               }
               
               // Chamar callback com dados
+              // NOTA: O callback é responsável por chamar stopPolling() se necessário
+              // Isso permite que status como VALIDADO (código pendente) continue polling
               if (_onStatusWithData != null) {
                 _onStatusWithData?.call(status, idOrCode, refuelingData);
-                stopPolling();
+                // NÃO chamar stopPolling() aqui! O callback decide se deve parar
                 return;
               } else if (_onStatusChanged != null && status == 'AGUARDANDO_VALIDACAO_MOTORISTA') {
                 _onStatusChanged?.call(idOrCode);
