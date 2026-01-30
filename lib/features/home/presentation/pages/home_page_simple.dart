@@ -321,6 +321,11 @@ class _HomePageSimpleState extends State<HomePageSimple> {
           setState(() {
             _lastOdometer = double.tryParse(data['last_odometer'].toString());
             _lastOdometerDate = data['refueling_datetime']?.toString();
+            // Sincronizar com _vehicleData para exibição na UI
+            if (_vehicleData != null) {
+              _vehicleData!['ultimo_km'] = _lastOdometer?.toInt() ?? 0;
+              _vehicleData!['last_odometer'] = _lastOdometer?.toInt() ?? 0;
+            }
           });
           debugPrint('✅ [HomePage] Último KM carregado: $_lastOdometer em $_lastOdometerDate');
         } else {
@@ -786,7 +791,12 @@ class _HomePageSimpleState extends State<HomePageSimple> {
             'expires_at': codeResponse['data']['expires_at'],
             'status': codeResponse['data']['status'],
             'created_at': codeResponse['data']['created_at'],
-            'vehicle_data': _vehicleData,
+            // Mesclar vehicle_data com last_odometer
+            'vehicle_data': {
+              ...(_vehicleData ?? {}),
+              'last_odometer': _lastOdometer?.toInt() ?? 0,
+              'km': _lastOdometer?.toInt() ?? 0,
+            },
             'station_data': _stationData,
             'fuel_type': _selectedFuel,
             'km_atual': OdometerFormatter.parseFormattedValue(_kmController.text), // Converter valor formatado para número
