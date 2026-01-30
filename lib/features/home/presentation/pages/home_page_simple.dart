@@ -111,11 +111,8 @@ class _HomePageSimpleState extends State<HomePageSimple> {
           _vehicleConfirmed = true; // Auto-confirmar para habilitar o fluxo
         });
         
-        // Buscar último KM registrado para este veículo
-        _fetchLastOdometer(vehicleData['placa'] ?? '');
-        
-        // Buscar estatísticas de economia (consumo médio)
-        _fetchEconomyStats(vehicleData['placa'] ?? '');
+        // Buscar estatísticas do veículo (último KM e consumo médio)
+        _fetchVehicleStats(vehicleData['placa'] ?? '');
       } else {
         debugPrint('⚠️ [HomePage] Nenhuma jornada ativa encontrada no storage.');
         // Opcional: Redirecionar para seleção de jornada ou mostrar aviso
@@ -308,74 +305,43 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     }
   }
 
-  /// Busca o último KM registrado do veículo
-  Future<void> _fetchLastOdometer(String plate) async {
-    try {
-      final apiService = getIt<ApiService>();
-      final cleanPlate = plate.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
-      
-      debugPrint('🔍 [HomePage] Buscando último KM para placa: $cleanPlate');
-      final data = await apiService.get('/refuelings/last-odometer/$cleanPlate');
-      
-      debugPrint('📊 [HomePage] Resposta da API last-odometer: $data');
-      
-      if (mounted && data != null) {
-        if (data['last_odometer'] != null) {
-          setState(() {
-            _lastOdometer = double.tryParse(data['last_odometer'].toString());
-            _lastOdometerDate = data['refueling_datetime']?.toString();
-            // Sincronizar com _vehicleData para exibição na UI
-            if (_vehicleData != null) {
-              _vehicleData!['ultimo_km'] = _lastOdometer?.toInt() ?? 0;
-              _vehicleData!['last_odometer'] = _lastOdometer?.toInt() ?? 0;
-            }
-          });
-          debugPrint('✅ [HomePage] Último KM carregado: $_lastOdometer em $_lastOdometerDate');
-        } else {
-          setState(() {
-            _lastOdometer = null;
-            _lastOdometerDate = null;
-          });
-          debugPrint('⚠️ [HomePage] Nenhum KM anterior registrado para $cleanPlate');
-        }
-      } else {
-        debugPrint('⚠️ [HomePage] Resposta nula ou widget desmontado');
-      }
-    } catch (e) {
-      debugPrint('❌ [HomePage] Erro ao buscar último KM: $e');
-      // Não exibe erro ao usuário, apenas log
-    }
-  }
-
-  /// Busca estatísticas de economia do veículo (consumo médio, último km, etc)
-  Future<void> _fetchEconomyStats(String plate) async {
+  /// Busca estatísticas do veículo (consumo médio e último KM)
+  /// Chamada única para /drivers/dashboard-summary que retorna ambos os dados
+  Future<void> _fetchVehicleStats(String plate) async {
     if (plate.isEmpty) return;
     
     try {
-      final apiService = getIt<ApiService>();
+      // Usar ApiService() direto (padrão usado em journey_dashboard_page)
+      final apiService = ApiService();
       final cleanPlate = plate.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
       
-      debugPrint('🔍 [HomePage] Buscando estatísticas de economia para placa: $cleanPlate');
+      debugPrint('🔍 [HomePage] Buscando stats do veículo: $cleanPlate');
       final response = await apiService.get('/drivers/dashboard-summary?plate=$cleanPlate');
       
-      debugPrint('📊 [HomePage] Resposta da API dashboard-summary: $response');
+      debugPrint('📊 [HomePage] Resposta dashboard-summary: $response');
       
-      if (mounted && response != null) {
-        // Extrair dados da estrutura da resposta
+      if (mounted && response != null && response is Map<String, dynamic>) {
+        // Navegar estrutura (pode ter duplo wrapper: data.data)
         Map<String, dynamic>? data;
         
-        if (response is Map<String, dynamic>) {
-          if (response['success'] == true && response['data'] != null) {
-            data = response['data'] as Map<String, dynamic>?;
-          } else if (response['economy'] != null || response['vehicle'] != null) {
-            // Resposta é diretamente os dados
-            data = response;
+        if (response['success'] == true && response['data'] != null) {
+          final level1 = response['data'];
+          if (level1 is Map<String, dynamic>) {
+            // Verificar se tem segundo nível (duplo wrapper)
+            if (level1['success'] == true && level1['data'] != null) {
+              data = level1['data'] as Map<String, dynamic>;
+              debugPrint('📊 [HomePage] Duplo wrapper detectado, usando data.data');
+            } else if (level1['economy'] != null || level1['vehicle'] != null) {
+              data = level1;
+              debugPrint('📊 [HomePage] Single wrapper, usando data');
+            }
           }
+        } else if (response['economy'] != null || response['vehicle'] != null) {
+          data = response;
+          debugPrint('📊 [HomePage] Sem wrapper, usando response direto');
         }
         
         if (data != null) {
-          debugPrint('📊 [HomePage] Data extraído: $data');
-          
           // Extrair economy
           final economy = data['economy'] as Map<String, dynamic>?;
           final avgConsumption = economy?['avg_consumption'];
@@ -384,27 +350,30 @@ class _HomePageSimpleState extends State<HomePageSimple> {
           final vehicle = data['vehicle'] as Map<String, dynamic>?;
           final lastOdometer = vehicle?['last_odometer'];
           
-          debugPrint('✅ [HomePage] Consumo médio: $avgConsumption');
-          debugPrint('✅ [HomePage] Último odômetro (vehicle): $lastOdometer');
+          debugPrint('✅ [HomePage] avg_consumption: $avgConsumption');
+          debugPrint('✅ [HomePage] last_odometer: $lastOdometer');
           
           setState(() {
-            // Sincronizar com _vehicleData para exibição na UI
             if (_vehicleData != null) {
               // Consumo médio
               if (avgConsumption != null) {
-                _vehicleData!['consumo_medio'] = avgConsumption is num ? avgConsumption.toDouble() : double.tryParse(avgConsumption.toString()) ?? 0.0;
+                _vehicleData!['consumo_medio'] = avgConsumption is num 
+                    ? avgConsumption.toDouble() 
+                    : double.tryParse(avgConsumption.toString()) ?? 0.0;
                 _vehicleData!['avg_consumption'] = avgConsumption;
               }
               
-              // Último KM do vehicle
+              // Último KM
               if (lastOdometer != null) {
-                final lastOdometerValue = lastOdometer is num ? lastOdometer.toInt() : int.tryParse(lastOdometer.toString()) ?? 0;
+                final lastOdometerValue = lastOdometer is num 
+                    ? lastOdometer.toInt() 
+                    : int.tryParse(lastOdometer.toString()) ?? 0;
                 _vehicleData!['ultimo_km'] = lastOdometerValue;
                 _vehicleData!['last_odometer'] = lastOdometerValue;
-                // Também atualizar _lastOdometer para validação de KM
                 _lastOdometer = lastOdometerValue.toDouble();
-                debugPrint('✅ [HomePage] _vehicleData atualizado: ultimo_km=$lastOdometerValue, consumo_medio=${_vehicleData!['consumo_medio']}');
               }
+              
+              debugPrint('✅ [HomePage] _vehicleData atualizado: ultimo_km=${_vehicleData!['ultimo_km']}, consumo_medio=${_vehicleData!['consumo_medio']}');
             }
           });
         } else {
@@ -412,8 +381,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         }
       }
     } catch (e) {
-      debugPrint('❌ [HomePage] Erro ao buscar estatísticas de economia: $e');
-      // Não exibe erro ao usuário, apenas log
+      debugPrint('❌ [HomePage] Erro ao buscar stats: $e');
     }
   }
 
