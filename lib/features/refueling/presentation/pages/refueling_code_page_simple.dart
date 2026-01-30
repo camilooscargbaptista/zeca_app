@@ -689,6 +689,7 @@ class _RefuelingCodePageSimpleState extends State<RefuelingCodePageSimple> {
           'refueling_code': _refuelingCode,
           'vehicle_data': _vehicleData,
           'station_data': _stationData,
+          'km_digitado': _kmAtual, // KM digitado pelo motorista
         },
       );
       return;

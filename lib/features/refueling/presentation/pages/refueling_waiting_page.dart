@@ -2068,6 +2068,34 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
               ),
             ],
           ),
+          
+          // Código de Abastecimento
+          if (widget.refuelingCode.isNotEmpty) ...[
+            Divider(color: Colors.blue.shade200, height: 24),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'CÓDIGO',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SelectableText(
+                  widget.refuelingCode,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

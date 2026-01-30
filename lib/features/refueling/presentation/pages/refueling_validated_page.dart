@@ -15,6 +15,7 @@ class RefuelingValidatedPage extends StatefulWidget {
   final String refuelingCode;
   final Map<String, dynamic>? vehicleData;
   final Map<String, dynamic>? stationData;
+  final String? kmDigitado; // KM digitado pelo motorista
   
   const RefuelingValidatedPage({
     Key? key,
@@ -22,6 +23,7 @@ class RefuelingValidatedPage extends StatefulWidget {
     required this.refuelingCode,
     this.vehicleData,
     this.stationData,
+    this.kmDigitado,
   }) : super(key: key);
 
   @override
@@ -211,11 +213,13 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
           'refueling_code': widget.refuelingCode,
           'vehicle_data': widget.vehicleData,
           'station_data': widget.stationData,
+          'km_digitado': widget.kmDigitado, // Passar KM digitado
           // Dados digitados pelo motorista para mostrar na tela
           'driver_estimate': {
             'liters': litros,
             'price': preco,
             'total': total,
+            'km': widget.kmDigitado, // KM digitado
           },
         });
       }
