@@ -424,21 +424,12 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         
         debugPrint('🔍 [RefuelingWaitingPage] isPendingCode=$isPendingCode, hasRefuelingId=$hasRefuelingId');
         
-        // 1. Se for código pendente com VALIDADO → Navegar para RefuelingValidatedPage
-        // Isso significa que o posto escaneou o código, mas ainda não registrou os dados
+        // 1. Se for código pendente com VALIDADO → Aguardar posto registrar dados (NÃO navegar!)
+        // O usuário JÁ PASSOU pela RefuelingValidatedPage, então VALIDADO significa que
+        // ele está esperando o posto registrar os dados (litros, valor, etc)
         if (isPendingCode && status == 'VALIDADO') {
-          debugPrint('📋 [RefuelingWaitingPage] Código VALIDADO pelo posto! Navegando para tela de liberado...');
-          _pollingService.stopPolling();
-          await PendingValidationStorage.clearPendingValidation();
-          
-          if (mounted) {
-            context.go('/refueling-validated', extra: {
-              'refueling_id': refuelingId,
-              'refueling_code': widget.refuelingCode,
-              'vehicle_data': widget.vehicleData,
-              'station_data': widget.stationData,
-            });
-          }
+          debugPrint('⏳ [RefuelingWaitingPage] Código VALIDADO - aguardando posto registrar dados...');
+          // NÃO navegar de volta! Continuar polling até AGUARDANDO_VALIDACAO_MOTORISTA
           return;
         }
         
