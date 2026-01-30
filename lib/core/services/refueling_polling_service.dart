@@ -22,6 +22,18 @@ class RefuelingPollingService {
   int _notFoundCount = 0;
   static const int _maxNotFoundBeforeCancelled = 3;
 
+  /// Verifica se o status é relevante para disparar callback
+  bool _isRelevantStatus(String status) {
+    return [
+      'AGUARDANDO_VALIDACAO_MOTORISTA',
+      'VALIDADO',
+      'CONCLUIDO',
+      'CONTESTADO',
+      'CANCELADO',
+      'RECUSED',
+    ].contains(status);
+  }
+
   /// Iniciar polling para um refueling_id ou código de abastecimento
   /// 
   /// [refuelingId] - ID do abastecimento para monitorar (opcional)
@@ -117,30 +129,40 @@ class RefuelingPollingService {
           
           if (codeResponse['success'] == true && codeResponse['data'] != null) {
             final refuelingData = codeResponse['data'] as Map<String, dynamic>;
-            refuelingIdToCheck = refuelingData['id'] as String?;
-            final status = refuelingData['status'] as String?;
+            final status = (refuelingData['status'] as String?)?.toUpperCase() ?? '';
+            // Usar id se disponível, senão usar código como identificador
+            final idOrCode = refuelingData['id']?.toString() ?? _currentRefuelingCode ?? '';
             
-            debugPrint('📊 [POLLING] Dados encontrados: id=$refuelingIdToCheck, status=$status');
+            debugPrint('📊 [POLLING] Dados encontrados: id=${refuelingData['id']}, status=$status');
             
-            if (refuelingIdToCheck != null) {
-              debugPrint('✅ [POLLING] Refueling encontrado pelo código. ID: $refuelingIdToCheck, Status: $status');
-              _currentRefuelingId = refuelingIdToCheck; // Atualizar para próximas verificações
+            // CORREÇÃO: Verificar status PRIMEIRO (independente do id)
+            if (_isRelevantStatus(status)) {
+              debugPrint('🎯 [POLLING] Status relevante detectado: $status! Chamando callback...');
+              _notFoundCount = 0; // Reset contador
               
-              // Verificar status diretamente dos dados retornados
-              if (status != null && 
-                  (status == 'AGUARDANDO_VALIDACAO_MOTORISTA' || 
-                   status == 'aguardando_validacao_motorista' ||
-                   status.toUpperCase() == 'AGUARDANDO_VALIDACAO_MOTORISTA')) {
-                debugPrint('🎯 [POLLING] Status mudou para AGUARDANDO_VALIDACAO_MOTORISTA! Chamando callback...');
-                _onStatusChanged?.call(refuelingIdToCheck);
-                return; // Já encontrou, não precisa verificar novamente
-              } else {
-                debugPrint('⏳ [POLLING] Status ainda não é AGUARDANDO_VALIDACAO_MOTORISTA (atual: $status), continuando polling...');
-                _notFoundCount = 0; // Reset contador quando encontra o registro
+              // Atualizar refuelingId se disponível
+              if (refuelingData['id'] != null) {
+                _currentRefuelingId = refuelingData['id'].toString();
+              }
+              
+              // Chamar callback com dados
+              if (_onStatusWithData != null) {
+                _onStatusWithData?.call(status, idOrCode, refuelingData);
+                stopPolling();
+                return;
+              } else if (_onStatusChanged != null && status == 'AGUARDANDO_VALIDACAO_MOTORISTA') {
+                _onStatusChanged?.call(idOrCode);
+                return;
               }
             } else {
-              debugPrint('⚠️ [POLLING] Refueling não encontrado pelo código (ainda não foi registrado pelo posto)');
-              // Continuar tentando - não retornar aqui, deixar continuar
+              debugPrint('⏳ [POLLING] Status não é final (atual: $status), continuando polling...');
+              _notFoundCount = 0; // Reset contador quando encontra o registro
+              
+              // Atualizar refuelingId se disponível
+              if (refuelingData['id'] != null) {
+                _currentRefuelingId = refuelingData['id'].toString();
+                refuelingIdToCheck = _currentRefuelingId;
+              }
             }
           } else {
             // Se não encontrou, pode ser que ainda não foi registrado - ou foi cancelado

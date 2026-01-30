@@ -428,8 +428,9 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             break;
             
           case 'CONCLUIDO':
-            // Aprovado diretamente pelo posto (bypass validação motorista)
-            debugPrint('✅ Abastecimento concluído (aprovado pelo posto)');
+          case 'VALIDADO':
+            // Abastecimento validado/concluído
+            debugPrint('✅ Abastecimento $status');
             await PendingValidationStorage.clearPendingValidation();
             _navigateToSuccessFromPolling(data);
             break;
