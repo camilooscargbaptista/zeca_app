@@ -113,6 +113,9 @@ class _HomePageSimpleState extends State<HomePageSimple> {
         
         // Buscar último KM registrado para este veículo
         _fetchLastOdometer(vehicleData['placa'] ?? '');
+        
+        // Buscar estatísticas de economia (consumo médio)
+        _fetchEconomyStats(vehicleData['placa'] ?? '');
       } else {
         debugPrint('⚠️ [HomePage] Nenhuma jornada ativa encontrada no storage.');
         // Opcional: Redirecionar para seleção de jornada ou mostrar aviso
@@ -340,6 +343,55 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       }
     } catch (e) {
       debugPrint('❌ [HomePage] Erro ao buscar último KM: $e');
+      // Não exibe erro ao usuário, apenas log
+    }
+  }
+
+  /// Busca estatísticas de economia do veículo (consumo médio, etc)
+  Future<void> _fetchEconomyStats(String plate) async {
+    if (plate.isEmpty) return;
+    
+    try {
+      final apiService = getIt<ApiService>();
+      final cleanPlate = plate.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+      
+      debugPrint('🔍 [HomePage] Buscando estatísticas de economia para placa: $cleanPlate');
+      final response = await apiService.get('/drivers/dashboard-summary?plate=$cleanPlate');
+      
+      debugPrint('📊 [HomePage] Resposta da API dashboard-summary: $response');
+      
+      if (mounted && response != null) {
+        // Extrair dados de economy da estrutura da resposta
+        Map<String, dynamic>? economy;
+        
+        if (response is Map<String, dynamic>) {
+          if (response['success'] == true && response['data'] != null) {
+            final data = response['data'];
+            if (data is Map<String, dynamic>) {
+              economy = data['economy'] as Map<String, dynamic>?;
+            }
+          } else if (response['economy'] != null) {
+            economy = response['economy'] as Map<String, dynamic>?;
+          }
+        }
+        
+        if (economy != null) {
+          final avgConsumption = economy['avg_consumption'];
+          debugPrint('✅ [HomePage] Consumo médio carregado: $avgConsumption');
+          
+          setState(() {
+            // Sincronizar com _vehicleData para exibição na UI
+            if (_vehicleData != null) {
+              _vehicleData!['consumo_medio'] = avgConsumption is num ? avgConsumption.toDouble() : 0.0;
+              _vehicleData!['avg_consumption'] = avgConsumption;
+            }
+          });
+        } else {
+          debugPrint('⚠️ [HomePage] economy não encontrado na resposta');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [HomePage] Erro ao buscar estatísticas de economia: $e');
       // Não exibe erro ao usuário, apenas log
     }
   }
