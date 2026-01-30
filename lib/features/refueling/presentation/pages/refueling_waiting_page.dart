@@ -1229,7 +1229,7 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(hasData ? 'Dados Recebidos' : 'Aguardando Confirmação'),
+        title: Text(hasData ? 'Dados Recebidos' : 'Aguardando Registro'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => _onBackPressed(),
@@ -1238,261 +1238,14 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       body: SafeArea(
         child: Column(
           children: [
+            // Corpo principal
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    
-                    // Ícone - muda conforme estado
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: hasData 
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        hasData ? Icons.check_circle : Icons.access_time,
-                        size: 60,
-                        color: hasData ? Colors.green : Colors.blue,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Título - muda conforme estado
-                    Text(
-                      hasData 
-                          ? 'Dados do Abastecimento Recebidos'
-                          : 'Aguardando Registro',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Mensagem - muda conforme estado
-                    Text(
-                      hasData
-                          ? 'Revise os dados registrados pelo posto e confirme ou rejeite as informações.'
-                          : 'Aguarde enquanto o posto registra os dados do abastecimento.\n\nVocê será notificado quando os dados estiverem prontos para validação.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // NOVO: Card com dados digitados pelo motorista (para informar ao posto)
-                    if (widget.driverEstimate != null) ...[
-                      _buildDriverEstimateCard(),
-                      const SizedBox(height: 16),
-                      _buildCnpjCard(),
-                      const SizedBox(height: 16),
-                    ],
-                    
-                    const SizedBox(height: 16),
-                    
-                    // PRIMEIRO: Card com dados registrados pelo posto (DESTAQUE VERDE)
-                    if (hasData) ...[
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.green.shade500, Colors.green.shade700],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Título
-                            Row(
-                              children: [
-                                const Icon(Icons.checklist, color: Colors.white),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Dados Registrados pelo Posto',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
-                              margin: const EdgeInsets.symmetric(vertical: 12),
-                              height: 1,
-                              color: Colors.white.withOpacity(0.2),
-                            ),
-                            // Grid 2x2 para dados principais
-                            Row(
-                              children: [
-                                // Quantidade
-                                Expanded(
-                                  child: _buildPostoGridItem(
-                                    'Quantidade',
-                                    _refuelingData!['quantity_liters'] != null
-                                        ? '${double.parse(_refuelingData!['quantity_liters'].toString()).toStringAsFixed(2)} L'
-                                        : 'N/A',
-                                    isBig: true,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Valor Total
-                                Expanded(
-                                  child: _buildPostoGridItem(
-                                    'Valor Total',
-                                    _refuelingData!['total_amount'] != null
-                                        ? 'R\$ ${double.parse(_refuelingData!['total_amount'].toString()).toStringAsFixed(2)}'
-                                        : 'N/A',
-                                    isBig: true,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                // Preço/Litro
-                                Expanded(
-                                  child: _buildPostoGridItem(
-                                    'Preço/Litro',
-                                    _refuelingData!['unit_price'] != null
-                                        ? 'R\$ ${double.parse(_refuelingData!['unit_price'].toString()).toStringAsFixed(2)}'
-                                        : 'N/A',
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Quilometragem
-                                Expanded(
-                                  child: _buildPostoGridItem(
-                                    'Quilometragem',
-                                    _refuelingData!['odometer_reading'] != null
-                                        ? '${_formatKm(_refuelingData!['odometer_reading'])} km'
-                                        : 'N/A',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // Atendente (se disponível)
-                            if (_refuelingData!['attendant_name'] != null) ...[
-                              Container(
-                                margin: const EdgeInsets.only(top: 12),
-                                padding: const EdgeInsets.only(top: 8),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: BorderSide(color: Colors.white.withOpacity(0.2)),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Atendente: ${_refuelingData!['attendant_name']}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.white.withOpacity(0.85),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    
-                    // SEGUNDO: Card com informações básicas (branco)
-                    Card(
-                      elevation: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.info_outline, color: Colors.blue.shade700, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Informações do Abastecimento',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            if (widget.vehicleData != null)
-                              _buildInfoRow(
-                                'Veículo',
-                                widget.vehicleData!['placa'] ?? 'N/A',
-                                Icons.directions_car,
-                              ),
-                            if (widget.stationData != null) ...[
-                              const SizedBox(height: 12),
-                              _buildInfoRow(
-                                'Posto',
-                                widget.stationData!['nome'] ?? 'N/A',
-                                Icons.local_gas_station,
-                              ),
-                            ],
-                            const SizedBox(height: 12),
-                            _buildInfoRow(
-                              'Código',
-                              widget.refuelingCode,
-                              Icons.qr_code,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Indicador de loading ou polling
-                    if (_isLoading)
-                      const CircularProgressIndicator()
-                    else if (_isPolling && !hasData)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.blue,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Verificando status...',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
+              child: hasData 
+                ? _buildDataReceivedBody()
+                : _buildWaitingStateBody(),
             ),
             
-            // Footer com botões - muda conforme estado
+            // Footer com botões
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -1563,6 +1316,245 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// UI para estado "Dados Recebidos" (posto já registrou)
+  Widget _buildDataReceivedBody() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Ícone checkmark verde
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle,
+              size: 56,
+              color: Colors.green.shade600,
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Título
+          Text(
+            'Dados do Abastecimento Recebidos',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.green.shade700,
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Subtítulo
+          Text(
+            'Revise os dados registrados pelo posto\ne confirme ou rejeite as informações.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Card com dados registrados pelo posto (DESTAQUE VERDE)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade500, Colors.green.shade700],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Título
+                Row(
+                  children: [
+                    const Icon(Icons.checklist, color: Colors.white),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Dados Registrados pelo Posto',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  height: 1,
+                  color: Colors.white.withOpacity(0.2),
+                ),
+                // Grid 2x2 para dados principais
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPostoGridItem(
+                        'Quantidade',
+                        _refuelingData!['quantity_liters'] != null
+                            ? '${double.parse(_refuelingData!['quantity_liters'].toString()).toStringAsFixed(2)} L'
+                            : 'N/A',
+                        isBig: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildPostoGridItem(
+                        'Valor Total',
+                        _refuelingData!['total_amount'] != null
+                            ? 'R\$ ${double.parse(_refuelingData!['total_amount'].toString()).toStringAsFixed(2)}'
+                            : 'N/A',
+                        isBig: true,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPostoGridItem(
+                        'Preço/Litro',
+                        _refuelingData!['unit_price'] != null
+                            ? 'R\$ ${double.parse(_refuelingData!['unit_price'].toString()).toStringAsFixed(2)}'
+                            : 'N/A',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildPostoGridItem(
+                        'Quilometragem',
+                        _refuelingData!['odometer_reading'] != null
+                            ? '${_formatKm(_refuelingData!['odometer_reading'])} km'
+                            : 'N/A',
+                      ),
+                    ),
+                  ],
+                ),
+                // Atendente (se disponível)
+                if (_refuelingData!['attendant_name'] != null) ...[
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.2)),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Atendente: ${_refuelingData!['attendant_name']}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Card com dados do motorista para comparação
+          if (widget.driverEstimate != null) _buildDriverEstimateCard(),
+
+          const SizedBox(height: 16),
+                    
+          // SEGUNDO: Card com informações básicas (branco)
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Informações do Abastecimento',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (widget.vehicleData != null)
+                    _buildInfoRow(
+                      'Veículo',
+                      widget.vehicleData!['placa'] ?? 'N/A',
+                      Icons.directions_car,
+                    ),
+                  if (widget.stationData != null) ...[
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Posto',
+                      widget.stationData!['nome'] ?? 'N/A',
+                      Icons.local_gas_station,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    'Código',
+                    widget.refuelingCode,
+                    Icons.qr_code,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Indicador de loading ou polling
+          if (_isLoading)
+            const CircularProgressIndicator()
+          else if (_isPolling && _refuelingData == null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.blue,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Verificando status...',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -1662,6 +1654,277 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// UI para estado "Aguardando Registro" (sem dados do posto ainda)
+  /// Segue mockup: MOCK-aguardando-registro.html
+  Widget _buildWaitingStateBody() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Ícone animado (relógio)
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.access_time,
+              size: 56,
+              color: Colors.blue.shade600,
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Título
+          Text(
+            'Registro em Andamento',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.blue.shade700,
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Subtítulo
+          Text(
+            'Informe os dados abaixo ao frentista\npara registro no sistema do posto.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Card principal (Volume e KM)
+          if (widget.driverEstimate != null) _buildDriverEstimateCard(),
+          
+          const SizedBox(height: 16),
+          
+          // Instruction box (verde)
+          _buildInstructionBox(),
+          
+          const SizedBox(height: 16),
+          
+          // CNPJ Card (amarelo)
+          _buildCnpjCard(),
+          
+          const SizedBox(height: 16),
+          
+          // Info Card (Veículo, Posto, Código)
+          _buildInfoCard(),
+          
+          const SizedBox(height: 12),
+          
+          // Polling indicator
+          _buildPollingIndicator(),
+        ],
+      ),
+    );
+  }
+
+  /// Caixa de instrução verde
+  Widget _buildInstructionBox() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.green.shade300),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: Colors.green.shade700, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Importante',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Informe estes dados ao caixa/frentista para que ele registre o abastecimento no sistema do posto.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.green.shade800,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Info card com Veículo, Posto, Código
+  Widget _buildInfoCard() {
+    final plate = widget.vehicleData?['placa'] ?? widget.vehicleData?['plate'] ?? '---';
+    final stationName = widget.stationData?['nome'] ?? widget.stationData?['name'] ?? 'Posto';
+    final code = widget.refuelingCode.isNotEmpty ? widget.refuelingCode : '---';
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue.shade600, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Informações do Abastecimento',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          
+          // Veículo
+          _buildInfoCardRow('Veículo', plate, isPlate: true),
+          const SizedBox(height: 10),
+          
+          // Posto
+          _buildInfoCardRow('Posto', stationName),
+          const SizedBox(height: 10),
+          
+          // Código
+          _buildInfoCardRow('Código', code, isCode: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCardRow(String label, String value, {bool isPlate = false, bool isCode = false}) {
+    Widget valueWidget;
+    
+    if (isPlate) {
+      valueWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade700,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: 'monospace',
+          ),
+        ),
+      );
+    } else if (isCode) {
+      valueWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontFamily: 'monospace',
+            color: Colors.grey[800],
+          ),
+        ),
+      );
+    } else {
+      valueWidget = Text(
+        value,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[800],
+        ),
+      );
+    }
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+        valueWidget,
+      ],
+    );
+  }
+
+  /// Polling indicator (roxo)
+  Widget _buildPollingIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 8,
+            height: 8,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.purple.shade600,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Aguardando confirmação do posto...',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.purple.shade700,
             ),
           ),
         ],
