@@ -52,7 +52,9 @@ class _RefuelingValidatedPageState extends State<RefuelingValidatedPage> {
 
   @override
   void dispose() {
-    _pollingService.stopPolling();
+    // NOTA: NÃO chamar _pollingService.stopPolling() aqui!
+    // O polling é gerenciado por _finalizarEIrAoCaixa() e a próxima tela
+    // Se pararmos aqui, vamos interferir no polling da RefuelingWaitingPage
     _litrosController.dispose();
     _precoLitroController.dispose();
     _valorTotalController.dispose();
