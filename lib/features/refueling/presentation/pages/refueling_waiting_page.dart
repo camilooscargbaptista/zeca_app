@@ -418,6 +418,47 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
         
         if (!mounted) return;
         
+        // ⚠️ IMPORTANTE: Verificar se é código pendente (RefuelingCode) ou Refueling
+        final isPendingCode = data['is_pending_code'] == true;
+        final hasRefuelingId = data['id'] != null && data['id'].toString().isNotEmpty;
+        
+        debugPrint('🔍 [RefuelingWaitingPage] isPendingCode=$isPendingCode, hasRefuelingId=$hasRefuelingId');
+        
+        // 1. Se for código pendente com VALIDADO → Navegar para RefuelingValidatedPage
+        // Isso significa que o posto escaneou o código, mas ainda não registrou os dados
+        if (isPendingCode && status == 'VALIDADO') {
+          debugPrint('📋 [RefuelingWaitingPage] Código VALIDADO pelo posto! Navegando para tela de liberado...');
+          _pollingService.stopPolling();
+          await PendingValidationStorage.clearPendingValidation();
+          
+          if (mounted) {
+            context.go('/refueling-validated', extra: {
+              'refueling_id': refuelingId,
+              'refueling_code': widget.refuelingCode,
+              'vehicle_data': widget.vehicleData,
+              'station_data': widget.stationData,
+            });
+          }
+          return;
+        }
+        
+        // 2. Se for código pendente sem status final → Continuar polling
+        if (isPendingCode && !hasRefuelingId) {
+          if (status == 'ACTIVE') {
+            debugPrint('⏳ [RefuelingWaitingPage] Código ACTIVE - aguardando posto escanear...');
+            // Não para o polling, continua
+            return;
+          }
+          if (status == 'EXPIRED' || status == 'RECUSED' || status == 'FRAUD_ATTEMPT') {
+            debugPrint('❌ [RefuelingWaitingPage] Código $status - erro');
+            _pollingService.stopPolling();
+            await PendingValidationStorage.clearPendingValidation();
+            _showStatusMessageAndNavigateHome(status);
+            return;
+          }
+        }
+        
+        // 3. Se tem RefuelingId → É um Refueling real, processar status
         _pollingService.stopPolling();
         
         switch (status) {
@@ -428,9 +469,16 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             break;
             
           case 'CONCLUIDO':
+            // Abastecimento concluído
+            debugPrint('✅ Abastecimento CONCLUIDO');
+            await PendingValidationStorage.clearPendingValidation();
+            _navigateToSuccessFromPolling(data);
+            break;
+            
           case 'VALIDADO':
-            // Abastecimento validado/concluído
-            debugPrint('✅ Abastecimento $status');
+            // VALIDADO de Refueling (motorista já validou, aguardando NF-e)
+            // Isso é diferente de VALIDADO do código!
+            debugPrint('✅ Abastecimento VALIDADO pelo motorista');
             await PendingValidationStorage.clearPendingValidation();
             _navigateToSuccessFromPolling(data);
             break;
