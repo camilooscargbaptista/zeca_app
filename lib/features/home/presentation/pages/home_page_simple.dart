@@ -347,7 +347,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
     }
   }
 
-  /// Busca estatísticas de economia do veículo (consumo médio, etc)
+  /// Busca estatísticas de economia do veículo (consumo médio, último km, etc)
   Future<void> _fetchEconomyStats(String plate) async {
     if (plate.isEmpty) return;
     
@@ -361,33 +361,54 @@ class _HomePageSimpleState extends State<HomePageSimple> {
       debugPrint('📊 [HomePage] Resposta da API dashboard-summary: $response');
       
       if (mounted && response != null) {
-        // Extrair dados de economy da estrutura da resposta
-        Map<String, dynamic>? economy;
+        // Extrair dados da estrutura da resposta
+        Map<String, dynamic>? data;
         
         if (response is Map<String, dynamic>) {
           if (response['success'] == true && response['data'] != null) {
-            final data = response['data'];
-            if (data is Map<String, dynamic>) {
-              economy = data['economy'] as Map<String, dynamic>?;
-            }
-          } else if (response['economy'] != null) {
-            economy = response['economy'] as Map<String, dynamic>?;
+            data = response['data'] as Map<String, dynamic>?;
+          } else if (response['economy'] != null || response['vehicle'] != null) {
+            // Resposta é diretamente os dados
+            data = response;
           }
         }
         
-        if (economy != null) {
-          final avgConsumption = economy['avg_consumption'];
-          debugPrint('✅ [HomePage] Consumo médio carregado: $avgConsumption');
+        if (data != null) {
+          debugPrint('📊 [HomePage] Data extraído: $data');
+          
+          // Extrair economy
+          final economy = data['economy'] as Map<String, dynamic>?;
+          final avgConsumption = economy?['avg_consumption'];
+          
+          // Extrair vehicle
+          final vehicle = data['vehicle'] as Map<String, dynamic>?;
+          final lastOdometer = vehicle?['last_odometer'];
+          
+          debugPrint('✅ [HomePage] Consumo médio: $avgConsumption');
+          debugPrint('✅ [HomePage] Último odômetro (vehicle): $lastOdometer');
           
           setState(() {
             // Sincronizar com _vehicleData para exibição na UI
             if (_vehicleData != null) {
-              _vehicleData!['consumo_medio'] = avgConsumption is num ? avgConsumption.toDouble() : 0.0;
-              _vehicleData!['avg_consumption'] = avgConsumption;
+              // Consumo médio
+              if (avgConsumption != null) {
+                _vehicleData!['consumo_medio'] = avgConsumption is num ? avgConsumption.toDouble() : double.tryParse(avgConsumption.toString()) ?? 0.0;
+                _vehicleData!['avg_consumption'] = avgConsumption;
+              }
+              
+              // Último KM do vehicle
+              if (lastOdometer != null) {
+                final lastOdometerValue = lastOdometer is num ? lastOdometer.toInt() : int.tryParse(lastOdometer.toString()) ?? 0;
+                _vehicleData!['ultimo_km'] = lastOdometerValue;
+                _vehicleData!['last_odometer'] = lastOdometerValue;
+                // Também atualizar _lastOdometer para validação de KM
+                _lastOdometer = lastOdometerValue.toDouble();
+                debugPrint('✅ [HomePage] _vehicleData atualizado: ultimo_km=$lastOdometerValue, consumo_medio=${_vehicleData!['consumo_medio']}');
+              }
             }
           });
         } else {
-          debugPrint('⚠️ [HomePage] economy não encontrado na resposta');
+          debugPrint('⚠️ [HomePage] Dados não encontrados na resposta');
         }
       }
     } catch (e) {
