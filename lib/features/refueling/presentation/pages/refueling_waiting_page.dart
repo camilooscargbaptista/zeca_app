@@ -14,6 +14,7 @@ import '../../../../core/services/websocket_service.dart';
 import '../../data/models/payment_confirmed_model.dart';
 import '../widgets/refueling_notification_dialogs.dart';
 import 'autonomous_payment_success_page.dart';
+import '../../../../core/utils/odometer_formatter.dart';
 
 class RefuelingWaitingPage extends StatefulWidget {
   final String refuelingId;
@@ -1662,15 +1663,22 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
   }
 
   /// Formata quilometragem: converte para inteiro (sem decimais)
+  /// Formata KM com separadores de milhares (ex: 123.456)
   String _formatKm(dynamic value) {
     if (value == null) return '0';
-    if (value is int) return value.toString();
-    if (value is double) return value.toInt().toString();
-    if (value is String) {
-      final parsed = double.tryParse(value);
-      return parsed?.toInt().toString() ?? value;
+    
+    int kmValue = 0;
+    if (value is int) {
+      kmValue = value;
+    } else if (value is double) {
+      kmValue = value.toInt();
+    } else if (value is String) {
+      // Se já está formatado (ex: "123.456"), fazer parse
+      final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
+      kmValue = int.tryParse(digitsOnly) ?? 0;
     }
-    return value.toString();
+    
+    return OdometerFormatter.formatValue(kmValue);
   }
 
   Widget _buildDataRow(String label, String value) {
