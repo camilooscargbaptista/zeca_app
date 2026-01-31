@@ -1,3 +1,10 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto GLOSSARY.md"
+---
+
 # 📖 Glossário - ZECA App
 
 > **Definições de termos do domínio ZECA para consistência na comunicação.**

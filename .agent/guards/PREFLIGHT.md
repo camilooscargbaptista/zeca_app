@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Checklist pré-tarefa - OBRIGATÓRIO antes de qualquer desenvolvimento"
+---
+
+
 # 🚀 PREFLIGHT Checklist - ZECA App
 
 > **OBRIGATÓRIO antes de QUALQUER tarefa de desenvolvimento.**

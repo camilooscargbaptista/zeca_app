@@ -1,6 +1,9 @@
 ---
-description: Criar mockup ASCII art para aprovação antes de implementar UI Flutter
+antigravity:
+  trigger: "manual"
+  description: "Criar mockup ASCII art para aprovação antes de implementar UI"
 ---
+
 
 # /create-mock - Criar Mockup ASCII para Flutter
 

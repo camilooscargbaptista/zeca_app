@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto LESSONS-LEARNED.md"
+---
+
+
 # ZECA App - Lessons Learned
 
 > **LEIA ESTE ARQUIVO ANTES DE QUALQUER TAREFA**

@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto API-CONTRACTS.md"
+---
+
+
 # ZECA App - API Contracts
 
 > **IMPORTANTE:** Consulte este arquivo ANTES de criar chamadas HTTP.

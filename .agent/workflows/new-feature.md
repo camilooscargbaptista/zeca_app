@@ -1,6 +1,9 @@
 ---
-description: Criar nova funcionalidade completa seguindo Clean Architecture + BLoC
+antigravity:
+  trigger: "manual"
+  description: "Criar nova funcionalidade completa seguindo Clean Architecture + BLoC"
 ---
+
 
 # /new-feature - Nova Funcionalidade Flutter
 

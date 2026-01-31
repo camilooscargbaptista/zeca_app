@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["lib/**/*.dart", "**/injection.dart", "**/di/**"]
+  description: "Padrões de Dependency Injection obrigatórios"
+---
+
+
 # 💉 Dependency Injection Patterns - ZECA App
 
 > **"Inversão de dependência para código testável e manutenível."**
