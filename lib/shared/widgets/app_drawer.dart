@@ -146,21 +146,16 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
                 
-                // Meus Veículos
-                _buildMenuItem(
-                  icon: Icons.directions_car,
-                  title: 'Meus Veículos',
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (_isAutonomous) {
+                // Meus Veículos - RN-MENU-008: Apenas para motoristas autônomos
+                if (_isAutonomous)
+                  _buildMenuItem(
+                    icon: Icons.directions_car,
+                    title: 'Meus Veículos',
+                    onTap: () {
+                      Navigator.pop(context);
                       context.push('/autonomous/vehicles');
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Veículos gerenciados pela frota')),
-                      );
-                    }
-                  },
-                ),
+                    },
+                  ),
                 
                 // Histórico (RN-MENU-002: sempre visível)
                 _buildMenuItem(
