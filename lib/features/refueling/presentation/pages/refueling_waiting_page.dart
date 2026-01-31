@@ -1513,12 +1513,9 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
             ),
           ),
           
-          const SizedBox(height: 16),
           
-          // Card com dados do motorista para comparação
-          if (widget.driverEstimate != null) _buildDriverEstimateCard(),
-
-          const SizedBox(height: 16),
+          // NOTA: Card azul "Informe ao Posto" removido pois os dados do posto já estão acima
+          // O motorista precisa apenas validar os dados reais registrados pelo posto
                     
           // SEGUNDO: Card com informações básicas (branco)
           Card(
@@ -1676,6 +1673,13 @@ class _RefuelingWaitingPageState extends State<RefuelingWaitingPage> {
       // Se já está formatado (ex: "123.456"), fazer parse
       final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
       kmValue = int.tryParse(digitsOnly) ?? 0;
+    }
+    
+    // Correção: se o valor for absurdamente grande (> 1.000.000 km),
+    // provavelmente está em metros ou com zeros extras - dividir por 1000
+    if (kmValue > 1000000) {
+      debugPrint('⚠️ [KM] Valor muito grande detectado: $kmValue - dividindo por 1000');
+      kmValue = kmValue ~/ 1000;
     }
     
     return OdometerFormatter.formatValue(kmValue);
