@@ -23,6 +23,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
   Map<String, dynamic>? _dashboardData;
   bool _isLoading = true;
   String? _error;
+  bool _isAutonomous = false; // RN-VEIC-001: Veículos só para autônomos
 
   // Colors from design
   static const Color _zecaBlue = Color(0xFF1565C0);
@@ -51,8 +52,16 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
         return;
       }
       
+      // Verificar se usuário é autônomo
+      final userData = storageService.getUserData();
+      final companyType = userData?['company']?['type'] as String?;
+      final isAuto = userData?['is_autonomous'] == true ||
+                     userData?['isAutonomous'] == true ||
+                     companyType == 'AUTONOMO';
+      
       setState(() {
         _vehicleData = vehicleData;
+        _isAutonomous = isAuto;
       });
 
       // Fetch dashboard summary from API
@@ -565,6 +574,8 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     );
   }
 
+  /// Ação rápida: cards de acesso na home
+  /// RN-VEIC-001: Card "Veículos" exibido apenas para motoristas autônomos
   Widget _buildQuickActions() {
     return Row(
       children: [
@@ -573,8 +584,11 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
         Expanded(child: _buildActionItem(Icons.receipt_long, 'Histórico', _zecaPurple, onTap: () => context.push('/history'))),
         const SizedBox(width: 10),
         Expanded(child: _buildActionItem(Icons.location_on, 'Postos', _zecaGreen, onTap: () => context.push('/nearby-stations'))),
-        const SizedBox(width: 10),
-        Expanded(child: _buildActionItem(Icons.directions_car, 'Veículos', _zecaBlue, onTap: () => context.push('/autonomous/vehicles'))),
+        // Veículos - Apenas para motoristas autônomos
+        if (_isAutonomous) ...[
+          const SizedBox(width: 10),
+          Expanded(child: _buildActionItem(Icons.directions_car, 'Veículos', _zecaBlue, onTap: () => context.push('/autonomous/vehicles'))),
+        ],
       ],
     );
   }
