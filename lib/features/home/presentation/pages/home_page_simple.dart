@@ -1041,42 +1041,6 @@ class _HomePageSimpleState extends State<HomePageSimple> {
               ),
             ],
             
-            // ===== CARD: EFICIÊNCIA DE COMBUSTÍVEL =====
-            BlocProvider(
-              create: (context) => EfficiencyBloc(
-                repository: EfficiencyRepository(),
-              )..add(const LoadEfficiencySummary()),
-              child: BlocBuilder<EfficiencyBloc, EfficiencyState>(
-                builder: (context, state) {
-                  if (state is EfficiencyLoading) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: EfficiencyDashboardCard(
-                        isLoading: true,
-                      ),
-                    );
-                  }
-                  if (state is EfficiencySummaryLoaded) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: EfficiencyDashboardCard(
-                        summary: state.summary,
-                        useL100km: state.useL100km,
-                        onTap: () => context.push('/efficiency'),
-                      ),
-                    );
-                  }
-                  // Estado inicial ou erro - mostrar empty state
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: EfficiencyDashboardCard(
-                      onTap: () => context.push('/efficiency'),
-                    ),
-                  );
-                },
-              ),
-            ),
-            
             // ===== CARD: VEÍCULO (Sem header - Design Mockup) =====
             Card(
               elevation: 2,
