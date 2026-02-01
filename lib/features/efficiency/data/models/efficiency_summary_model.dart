@@ -8,7 +8,6 @@ class EfficiencySummaryModel {
   final String personalTrend; // IMPROVING | STABLE | WORSENING
   final int? rankInFleet;
   final int totalDriversInFleet;
-  final bool hasData;
 
   EfficiencySummaryModel({
     this.lastVehicleConsumptionKmL,
@@ -18,7 +17,6 @@ class EfficiencySummaryModel {
     this.personalTrend = 'STABLE',
     this.rankInFleet,
     this.totalDriversInFleet = 0,
-    this.hasData = false,
   });
 
   factory EfficiencySummaryModel.fromJson(Map<String, dynamic> json) {
@@ -38,19 +36,19 @@ class EfficiencySummaryModel {
       personalTrend: json['personalTrend'] ?? 'STABLE',
       rankInFleet: json['rankInFleet'],
       totalDriversInFleet: json['totalDriversInFleet'] ?? 0,
-      hasData: json['hasData'] ?? false,
     );
   }
 
   /// Empty state factory
   factory EfficiencySummaryModel.empty() {
-    return EfficiencySummaryModel(
-      hasData: false,
-    );
+    return EfficiencySummaryModel();
   }
 
+  /// Check if data is available - calculated based on personalAvgKmL
+  bool get hasData => personalAvgKmL != null && personalAvgKmL! > 0;
+
   /// Check if data is available for display
-  bool get canDisplay => hasData && personalAvgKmL != null;
+  bool get canDisplay => hasData;
 
   /// Get trend icon based on personalTrend
   String get trendIcon {
