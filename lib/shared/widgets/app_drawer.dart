@@ -167,6 +167,53 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
                 
+                // Eficiência de Combustível
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.zecaBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.show_chart,
+                      color: AppColors.zecaBlue,
+                    ),
+                  ),
+                  title: Row(
+                    children: [
+                      const Text(
+                        'Eficiência',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.zecaBlue,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'NOVO',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/efficiency');
+                  },
+                ),
+                
                 // Alterar Senha
                 _buildMenuItem(
                   icon: Icons.lock_reset,

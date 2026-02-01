@@ -45,6 +45,9 @@ import '../features/change_password/presentation/bloc/change_password_bloc.dart'
 import '../features/change_password/data/repositories/change_password_repository.dart';
 import '../features/change_password/domain/usecases/change_password_usecase.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
+// Efficiency imports
+import '../features/efficiency/presentation/pages/efficiency_page.dart';
+import '../features/efficiency/presentation/pages/efficiency_history_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -290,6 +293,17 @@ class AppRouter {
             child: const ChangePasswordPage(),
           );
         },
+      ),
+      // Efficiency routes
+      GoRoute(
+        path: '/efficiency',
+        name: 'efficiency',
+        builder: (context, state) => const EfficiencyPage(),
+      ),
+      GoRoute(
+        path: '/efficiency/history',
+        name: 'efficiency-history',
+        builder: (context, state) => const EfficiencyHistoryPage(),
       ),
     ],
     errorBuilder: (context, state) {
