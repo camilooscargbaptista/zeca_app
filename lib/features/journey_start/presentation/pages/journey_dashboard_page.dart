@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../core/di/injection.dart';
+// Efficiency imports
+import '../../../efficiency/presentation/bloc/efficiency_bloc.dart';
+import '../../../efficiency/presentation/bloc/efficiency_event.dart';
+import '../../../efficiency/presentation/bloc/efficiency_state.dart';
+import '../../../efficiency/presentation/widgets/efficiency_dashboard_card.dart';
+import '../../../efficiency/data/repositories/efficiency_repository.dart';
 
 
 class JourneyDashboardPage extends StatefulWidget {
@@ -260,6 +267,34 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                       
                       // ZECA Club
                       _buildZecaClubCard(),
+                      const SizedBox(height: 14),
+                      
+                      // Efficiency Card
+                      BlocProvider(
+                        create: (context) => EfficiencyBloc(
+                          repository: EfficiencyRepository(),
+                        )..add(const LoadEfficiencySummary()),
+                        child: BlocBuilder<EfficiencyBloc, EfficiencyState>(
+                          builder: (context, state) {
+                            if (state is EfficiencyLoading) {
+                              return EfficiencyDashboardCard(
+                                isLoading: true,
+                              );
+                            }
+                            if (state is EfficiencySummaryLoaded) {
+                              return EfficiencyDashboardCard(
+                                summary: state.summary,
+                                useL100km: state.useL100km,
+                                onTap: () => context.push('/efficiency'),
+                              );
+                            }
+                            // Estado inicial ou erro - mostrar empty state
+                            return EfficiencyDashboardCard(
+                              onTap: () => context.push('/efficiency'),
+                            );
+                          },
+                        ),
+                      ),
                       const SizedBox(height: 14),
                       
                       // Last Refueling
