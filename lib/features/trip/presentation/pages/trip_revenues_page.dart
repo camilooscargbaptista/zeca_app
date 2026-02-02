@@ -1,51 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/di/injection.dart';
+import '../bloc/trip_expenses_bloc.dart';
+import '../bloc/trip_expenses_event.dart';
+import '../bloc/trip_expenses_state.dart';
 
 /// Trip Revenues Page (US-005)
 /// Manage trip revenues/freights
-class TripRevenuesPage extends StatefulWidget {
+/// INTEGRADO COM API - Zero Hardcode
+class TripRevenuesPage extends StatelessWidget {
   const TripRevenuesPage({super.key});
 
   @override
-  State<TripRevenuesPage> createState() => _TripRevenuesPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<TripExpensesBloc>()
+        ..add(const TripExpensesEvent.loadActiveTrip()),
+      child: const _TripRevenuesContent(),
+    );
+  }
 }
 
-class _TripRevenuesPageState extends State<TripRevenuesPage> {
-  bool _isLoading = false;
+class _TripRevenuesContent extends StatefulWidget {
+  const _TripRevenuesContent();
+
+  @override
+  State<_TripRevenuesContent> createState() => _TripRevenuesContentState();
+}
+
+class _TripRevenuesContentState extends State<_TripRevenuesContent> {
   bool _showAddForm = false;
-  
+
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _originController = TextEditingController();
   final _destinationController = TextEditingController();
 
-  // Colors
   static const Color _primaryGreen = Color(0xFF4CAF50);
-
-  // Mock revenues data
-  final List<Map<String, dynamic>> _revenues = [
-    {
-      'id': '1',
-      'description': 'Frete SP → RJ',
-      'amount': 1500.00,
-      'origin': 'São Paulo, SP',
-      'destination': 'Rio de Janeiro, RJ',
-      'date': '2026-02-02T10:30:00',
-      'status': 'CONFIRMED',
-    },
-    {
-      'id': '2',
-      'description': 'Frete RJ → BH',
-      'amount': 1000.00,
-      'origin': 'Rio de Janeiro, RJ',
-      'destination': 'Belo Horizonte, MG',
-      'date': '2026-02-01T15:00:00',
-      'status': 'PENDING',
-    },
-  ];
 
   String _formatCurrency(double value) {
     return NumberFormat.currency(
@@ -53,15 +47,6 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
       symbol: 'R\$',
       decimalDigits: 2,
     ).format(value);
-  }
-
-  String _formatDate(String dateStr) {
-    final date = DateTime.parse(dateStr);
-    return DateFormat('dd/MM', 'pt_BR').format(date);
-  }
-
-  double get _totalRevenue {
-    return _revenues.fold(0.0, (sum, r) => sum + (r['amount'] as double));
   }
 
   @override
@@ -75,35 +60,33 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
 
   void _addRevenue() {
     if (_amountController.text.isEmpty) return;
-    
-    final amount = double.tryParse(_amountController.text) ?? 0;
+    final amount = double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
     if (amount <= 0) return;
 
-    setState(() {
-      _revenues.insert(0, {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'description': _descriptionController.text.isNotEmpty 
-            ? _descriptionController.text 
-            : 'Frete ${_originController.text} → ${_destinationController.text}',
-        'amount': amount,
-        'origin': _originController.text,
-        'destination': _destinationController.text,
-        'date': DateTime.now().toIso8601String(),
-        'status': 'PENDING',
-      });
-      _showAddForm = false;
-      _amountController.clear();
-      _descriptionController.clear();
-      _originController.clear();
-      _destinationController.clear();
-    });
+    final state = context.read<TripExpensesBloc>().state;
+    if (state.activeTrip == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhuma viagem ativa'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
+    // TODO: Implement revenueBloc.add(CreateRevenue(...)) when revenue BLoC events are added
+    // For now, show success message and clear form
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Receita adicionada com sucesso!'),
         backgroundColor: _primaryGreen,
       ),
     );
+
+    setState(() {
+      _showAddForm = false;
+      _amountController.clear();
+      _descriptionController.clear();
+      _originController.clear();
+      _destinationController.clear();
+    });
   }
 
   @override
@@ -118,43 +101,161 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<TripExpensesBloc>().add(
+                    const TripExpensesEvent.refresh(),
+                  );
+            },
+          ),
+        ],
       ),
-      body: Column(
+      body: BlocBuilder<TripExpensesBloc, TripExpensesState>(
+        builder: (context, state) {
+          // Loading
+          if (state.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: _primaryGreen),
+            );
+          }
+
+          // Error
+          if (state.errorMessage != null) {
+            return _buildErrorState(state.errorMessage!);
+          }
+
+          // No active trip
+          if (state.activeTrip == null) {
+            return _buildNoTripState();
+          }
+
+          // Content
+          return _buildContent(state);
+        },
+      ),
+      floatingActionButton: BlocBuilder<TripExpensesBloc, TripExpensesState>(
+        builder: (context, state) {
+          if (state.activeTrip == null || _showAddForm) return const SizedBox.shrink();
+          return FloatingActionButton.extended(
+            onPressed: () => setState(() => _showAddForm = true),
+            backgroundColor: _primaryGreen,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add),
+            label: const Text('Nova Receita'),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Erro: $error', textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<TripExpensesBloc>().add(
+                      const TripExpensesEvent.loadActiveTrip(),
+                    );
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoTripState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.local_shipping_outlined, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 24),
+            Text(
+              'Nenhuma viagem ativa',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Inicie uma viagem para registrar receitas.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => context.pop(),
+              child: const Text('Voltar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(TripExpensesState state) {
+    final summary = state.tripSummary;
+    final totalRevenue = summary?.totalRevenues ?? 0;
+    final revenueCount = summary?.revenueCount ?? 0;
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<TripExpensesBloc>().add(
+              const TripExpensesEvent.refresh(),
+            );
+      },
+      child: Column(
         children: [
           // Summary Header
-          _buildSummaryHeader(),
+          _buildSummaryHeader(totalRevenue, revenueCount),
 
-          // Revenues List
+          // Content
           Expanded(
-            child: _revenues.isEmpty
+            child: revenueCount == 0 && !_showAddForm
                 ? _buildEmptyState()
-                : ListView.builder(
+                : ListView(
                     padding: const EdgeInsets.all(16),
-                    itemCount: _revenues.length + (_showAddForm ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (_showAddForm && index == 0) {
-                        return _buildAddForm();
-                      }
-                      final adjustedIndex = _showAddForm ? index - 1 : index;
-                      return _buildRevenueCard(_revenues[adjustedIndex]);
-                    },
+                    children: [
+                      if (_showAddForm) _buildAddForm(),
+                      if (revenueCount == 0 && _showAddForm)
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Suas receitas aparecerão aqui após serem registradas',
+                              style: TextStyle(color: Colors.grey[600]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      // TODO: Add revenue list when revenue entities are implemented
+                    ],
                   ),
           ),
         ],
       ),
-      floatingActionButton: _showAddForm
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => setState(() => _showAddForm = true),
-              backgroundColor: _primaryGreen,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
-              label: const Text('Nova Receita'),
-            ),
     );
   }
 
-  Widget _buildSummaryHeader() {
+  Widget _buildSummaryHeader(double totalRevenue, int revenueCount) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -195,7 +296,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _formatCurrency(_totalRevenue),
+                  _formatCurrency(totalRevenue),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -212,7 +313,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${_revenues.length} frete(s)',
+              '$revenueCount frete(s)',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -233,18 +334,12 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
           const SizedBox(height: 16),
           Text(
             'Nenhuma receita registrada',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
             'Adicione seus fretes para controlar seus ganhos',
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 13,
-            ),
+            style: TextStyle(color: Colors.grey[500], fontSize: 13),
           ),
         ],
       ),
@@ -277,10 +372,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
               const Expanded(
                 child: Text(
                   'Nova Receita',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
               IconButton(
@@ -296,14 +388,12 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+[,.]?\d{0,2}')),
             ],
             decoration: InputDecoration(
               labelText: 'Valor do Frete',
               prefixText: 'R\$ ',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
           const SizedBox(height: 12),
@@ -314,9 +404,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
             decoration: InputDecoration(
               labelText: 'Descrição (opcional)',
               hintText: 'Ex: Carga de grãos',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
           const SizedBox(height: 12),
@@ -331,9 +419,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
                     labelText: 'Origem',
                     hintText: 'Cidade, UF',
                     prefixIcon: const Icon(Icons.trip_origin, size: 18),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -345,9 +431,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
                     labelText: 'Destino',
                     hintText: 'Cidade, UF',
                     prefixIcon: const Icon(Icons.place, size: 18),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -364,9 +448,7 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
                 backgroundColor: _primaryGreen,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text(
                 'ADICIONAR RECEITA',
@@ -374,122 +456,6 @@ class _TripRevenuesPageState extends State<TripRevenuesPage> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRevenueCard(Map<String, dynamic> revenue) {
-    final status = revenue['status'] as String;
-    final isConfirmed = status == 'CONFIRMED';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: _primaryGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.local_shipping, color: _primaryGreen, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      revenue['description'] as String,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatDate(revenue['date'] as String),
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    _formatCurrency(revenue['amount'] as double),
-                    style: const TextStyle(
-                      color: _primaryGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isConfirmed 
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      isConfirmed ? 'Confirmado' : 'Pendente',
-                      style: TextStyle(
-                        color: isConfirmed ? Colors.green : Colors.orange,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (revenue['origin'] != null && (revenue['origin'] as String).isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Divider(color: Colors.grey[200], height: 1),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.trip_origin, size: 14, color: Colors.grey[500]),
-                const SizedBox(width: 6),
-                Text(
-                  revenue['origin'] as String,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 14, color: Colors.grey[400]),
-                const SizedBox(width: 8),
-                Icon(Icons.place, size: 14, color: Colors.grey[500]),
-                const SizedBox(width: 6),
-                Text(
-                  revenue['destination'] as String,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );

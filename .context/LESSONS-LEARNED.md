@@ -46,6 +46,7 @@ antigravity:
 | LESSON-023 | DESEJÁVEL | Imports organizados por tipo |
 | LESSON-024 | DESEJÁVEL | Commits convencionais |
 | LESSON-025 | DESEJÁVEL | Feature flags para código experimental |
+| **LESSON-046** | **CRÍTICO** | **Verificar core dependencies ANTES de criar arquivos** |
 
 ---
 

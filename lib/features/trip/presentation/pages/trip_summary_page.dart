@@ -1,44 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/di/injection.dart';
+import '../../domain/entities/trip_summary.dart';
+import '../bloc/trip_expenses_bloc.dart';
+import '../bloc/trip_expenses_event.dart';
+import '../bloc/trip_expenses_state.dart';
 
 /// Trip Summary Page (US-006)
 /// Complete financial summary of the current/selected trip
-class TripSummaryPage extends StatefulWidget {
+/// INTEGRADO COM API - Zero Hardcode
+class TripSummaryPage extends StatelessWidget {
   final String? tripId;
-  
+
   const TripSummaryPage({super.key, this.tripId});
 
   @override
-  State<TripSummaryPage> createState() => _TripSummaryPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<TripExpensesBloc>()
+        ..add(const TripExpensesEvent.loadActiveTrip()),
+      child: const _TripSummaryContent(),
+    );
+  }
 }
 
-class _TripSummaryPageState extends State<TripSummaryPage> {
-  bool _isLoading = false;
-
-  // Mock summary data
-  final Map<String, dynamic> _summary = {
-    'trip_id': '1',
-    'trip_origin': 'São Paulo, SP',
-    'trip_destination': 'Porto Alegre, RS',
-    'start_date': '2026-02-01T08:00:00',
-    'end_date': null,
-    'distance_km': 1109.0,
-    'total_expenses': 1256.00,
-    'total_revenues': 2500.00,
-    'net_profit': 1244.00,
-    'profit_margin': 49.76,
-    'cost_per_km': 1.13,
-    'expenses_by_category': {
-      'FUEL': 856.00,
-      'TOLL': 245.00,
-      'FOOD': 95.00,
-      'OTHER': 60.00,
-    },
-    'expense_count': 8,
-    'revenue_count': 2,
-  };
+class _TripSummaryContent extends StatelessWidget {
+  const _TripSummaryContent();
 
   String _formatCurrency(double value) {
     return NumberFormat.currency(
@@ -48,9 +37,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
     ).format(value);
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null) return 'Em andamento';
-    final date = DateTime.parse(dateStr);
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Em andamento';
     return DateFormat('dd/MM/yyyy', 'pt_BR').format(date);
   }
 
@@ -68,56 +56,147 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.refresh),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Em breve: Compartilhar resumo')),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Em breve: Exportar PDF')),
-              );
+              context.read<TripExpensesBloc>().add(
+                    const TripExpensesEvent.refresh(),
+                  );
             },
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Trip Route Header
-                  _buildRouteHeader(),
-                  const SizedBox(height: 16),
+      body: BlocBuilder<TripExpensesBloc, TripExpensesState>(
+        builder: (context, state) {
+          // Loading
+          if (state.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF1976D2)),
+            );
+          }
 
-                  // Main KPIs
-                  _buildMainKPIs(),
-                  const SizedBox(height: 16),
+          // Error
+          if (state.errorMessage != null) {
+            return _buildErrorState(context, state.errorMessage!);
+          }
 
-                  // Financial Breakdown
-                  _buildFinancialBreakdown(),
-                  const SizedBox(height: 16),
+          // No active trip
+          if (state.activeTrip == null) {
+            return _buildNoTripState(context);
+          }
 
-                  // Expenses by Category
-                  _buildCategoryBreakdown(),
-                  const SizedBox(height: 16),
-
-                  // Quick Actions
-                  _buildQuickActions(),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
+          // Show summary
+          final summary =
+              state.tripSummary ?? TripSummary.empty(state.activeTrip!.id);
+          return _buildContent(context, state, summary);
+        },
+      ),
     );
   }
 
-  Widget _buildRouteHeader() {
+  Widget _buildErrorState(BuildContext context, String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Erro: $error', textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<TripExpensesBloc>().add(
+                      const TripExpensesEvent.loadActiveTrip(),
+                    );
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoTripState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.summarize_outlined, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 24),
+            Text(
+              'Nenhuma viagem ativa',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Inicie uma viagem para ver o resumo financeiro.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => context.pop(),
+              child: const Text('Voltar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(
+      BuildContext context, TripExpensesState state, TripSummary summary) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<TripExpensesBloc>().add(
+              const TripExpensesEvent.refresh(),
+            );
+      },
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Trip Route Header
+            _buildRouteHeader(summary, state),
+            const SizedBox(height: 16),
+
+            // Main KPIs
+            _buildMainKPIs(summary),
+            const SizedBox(height: 16),
+
+            // Financial Breakdown
+            _buildFinancialBreakdown(summary),
+            const SizedBox(height: 16),
+
+            // Expenses by Category
+            _buildCategoryBreakdown(summary),
+            const SizedBox(height: 16),
+
+            // Quick Actions
+            _buildQuickActions(context),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRouteHeader(TripSummary summary, TripExpensesState state) {
+    final origin = summary.origin ?? state.activeTrip?.origin ?? 'Origem';
+    final destination =
+        summary.destination ?? state.activeTrip?.destination ?? 'Destino';
+    final distance = summary.totalDistanceKm;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -153,7 +232,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_summary['trip_origin']} → ${_summary['trip_destination']}',
+                      '$origin → $destination',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -162,7 +241,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${(_summary['distance_km'] as double).toStringAsFixed(0)} km',
+                      '${distance.toStringAsFixed(0)} km',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 12,
@@ -183,9 +262,9 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildDateInfo('Início', _formatDate(_summary['start_date'])),
+                _buildDateInfo('Início', _formatDate(summary.startedAt)),
                 Container(width: 1, height: 30, color: Colors.white24),
-                _buildDateInfo('Fim', _formatDate(_summary['end_date'])),
+                _buildDateInfo('Fim', _formatDate(summary.endedAt)),
               ],
             ),
           ),
@@ -217,11 +296,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
     );
   }
 
-  Widget _buildMainKPIs() {
-    final profit = _summary['net_profit'] as double;
-    final margin = _summary['profit_margin'] as double;
-    final costPerKm = _summary['cost_per_km'] as double;
-    final isProfit = profit >= 0;
+  Widget _buildMainKPIs(TripSummary summary) {
+    final isProfit = summary.netProfit >= 0;
 
     return Row(
       children: [
@@ -239,13 +315,6 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +338,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _formatCurrency(profit.abs()),
+                  _formatCurrency(summary.netProfit.abs()),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -278,13 +347,14 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Margem: ${margin.toStringAsFixed(1)}%',
+                    'Margem: ${summary.profitMargin.toStringAsFixed(1)}%',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -324,7 +394,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'R\$ ${costPerKm.toStringAsFixed(2)}',
+                  'R\$ ${summary.costPerKm.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Color(0xFF1976D2),
                     fontSize: 18,
@@ -339,10 +409,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
     );
   }
 
-  Widget _buildFinancialBreakdown() {
-    final revenues = _summary['total_revenues'] as double;
-    final expenses = _summary['total_expenses'] as double;
-
+  Widget _buildFinancialBreakdown(TripSummary summary) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -361,18 +428,15 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
         children: [
           const Text(
             'Balanço Financeiro',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 16),
           _buildFinancialRow(
             icon: Icons.arrow_downward,
             iconColor: const Color(0xFF4CAF50),
             label: 'Total Receitas',
-            sublabel: '${_summary['revenue_count']} frete(s)',
-            value: revenues,
+            sublabel: '${summary.revenueCount} frete(s)',
+            value: summary.totalRevenues,
             valueColor: const Color(0xFF4CAF50),
           ),
           const SizedBox(height: 12),
@@ -380,8 +444,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
             icon: Icons.arrow_upward,
             iconColor: const Color(0xFFE53935),
             label: 'Total Despesas',
-            sublabel: '${_summary['expense_count']} registro(s)',
-            value: expenses,
+            sublabel: '${summary.expenseCount} registro(s)',
+            value: summary.totalExpenses,
             valueColor: const Color(0xFFE53935),
             isNegative: true,
           ),
@@ -393,15 +457,12 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
             children: [
               const Text(
                 'Resultado',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               Text(
-                _formatCurrency(revenues - expenses),
+                _formatCurrency(summary.netProfit),
                 style: TextStyle(
-                  color: (revenues - expenses) >= 0 
+                  color: summary.netProfit >= 0
                       ? const Color(0xFF4CAF50)
                       : const Color(0xFFE53935),
                   fontWeight: FontWeight.bold,
@@ -441,17 +502,11 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               Text(
                 sublabel,
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: Colors.grey[500], fontSize: 11),
               ),
             ],
           ),
@@ -468,47 +523,65 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
     );
   }
 
-  Widget _buildCategoryBreakdown() {
-    final categories = _summary['expenses_by_category'] as Map<String, dynamic>;
-    final total = _summary['total_expenses'] as double;
+  Widget _buildCategoryBreakdown(TripSummary summary) {
+    if (summary.expensesByCategory.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.pie_chart_outline, size: 40, color: Colors.grey[400]),
+              const SizedBox(height: 8),
+              Text(
+                'Nenhum gasto registrado',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final categoryInfo = {
       'FUEL': {'name': 'Combustível', 'color': const Color(0xFFE53935)},
+      'COMBUSTIVEL': {'name': 'Combustível', 'color': const Color(0xFFE53935)},
       'TOLL': {'name': 'Pedágio', 'color': const Color(0xFF1976D2)},
+      'PEDAGIO': {'name': 'Pedágio', 'color': const Color(0xFF1976D2)},
       'FOOD': {'name': 'Alimentação', 'color': const Color(0xFFFFA000)},
+      'ALIMENTACAO': {'name': 'Alimentação', 'color': const Color(0xFFFFA000)},
       'LODGING': {'name': 'Hospedagem', 'color': const Color(0xFF7B1FA2)},
+      'HOSPEDAGEM': {'name': 'Hospedagem', 'color': const Color(0xFF7B1FA2)},
       'MAINTENANCE': {'name': 'Manutenção', 'color': const Color(0xFF455A64)},
+      'MANUTENCAO': {'name': 'Manutenção', 'color': const Color(0xFF455A64)},
       'OTHER': {'name': 'Outros', 'color': const Color(0xFF757575)},
+      'OUTROS': {'name': 'Outros', 'color': const Color(0xFF757575)},
     };
+
+    final total = summary.totalExpenses;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Despesas por Categoria',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 16),
-          ...categories.entries.map((entry) {
-            final info = categoryInfo[entry.key]!;
-            final value = (entry.value as num).toDouble();
-            final percentage = (value / total * 100).toStringAsFixed(1);
+          ...summary.expensesByCategory.entries.map((entry) {
+            final code = entry.key.toUpperCase();
+            final info = categoryInfo[code] ?? {'name': entry.key, 'color': Colors.grey};
+            final value = entry.value;
+            final percentage = total > 0 ? (value / total * 100) : 0;
             final color = info['color'] as Color;
 
             return Padding(
@@ -533,11 +606,8 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                         ),
                       ),
                       Text(
-                        '$percentage%',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 12,
-                        ),
+                        '${percentage.toStringAsFixed(1)}%',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -553,7 +623,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: value / total,
+                      value: total > 0 ? value / total : 0,
                       backgroundColor: Colors.grey[200],
                       valueColor: AlwaysStoppedAnimation(color),
                       minHeight: 6,
@@ -568,11 +638,12 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: _buildActionButton(
+            context: context,
             icon: Icons.add_circle_outline,
             label: 'Add Gasto',
             color: const Color(0xFFFF9800),
@@ -582,6 +653,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildActionButton(
+            context: context,
             icon: Icons.attach_money,
             label: 'Add Receita',
             color: const Color(0xFF4CAF50),
@@ -591,8 +663,9 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
         const SizedBox(width: 12),
         Expanded(
           child: _buildActionButton(
+            context: context,
             icon: Icons.list_alt,
-            label: 'Ver Todos',
+            label: 'Ver Gastos',
             color: const Color(0xFF1976D2),
             onTap: () => context.push('/trip-expenses'),
           ),
@@ -602,6 +675,7 @@ class _TripSummaryPageState extends State<TripSummaryPage> {
   }
 
   Widget _buildActionButton({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required Color color,

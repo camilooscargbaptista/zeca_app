@@ -1,40 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/di/injection.dart';
+import '../../domain/entities/expense_category.dart';
+import '../bloc/trip_expenses_bloc.dart';
+import '../bloc/trip_expenses_event.dart';
+import '../bloc/trip_expenses_state.dart';
 
 /// Add Expense Page (US-004)
 /// Form to register a new trip expense
-class AddExpensePage extends StatefulWidget {
+/// INTEGRADO COM API - Zero Hardcode
+class AddExpensePage extends StatelessWidget {
   const AddExpensePage({super.key});
 
   @override
-  State<AddExpensePage> createState() => _AddExpensePageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<TripExpensesBloc>()
+        ..add(const TripExpensesEvent.loadActiveTrip())
+        ..add(const TripExpensesEvent.loadCategories()),
+      child: const _AddExpenseContent(),
+    );
+  }
 }
 
-class _AddExpensePageState extends State<AddExpensePage> {
+class _AddExpenseContent extends StatefulWidget {
+  const _AddExpenseContent();
+
+  @override
+  State<_AddExpenseContent> createState() => _AddExpenseContentState();
+}
+
+class _AddExpenseContentState extends State<_AddExpenseContent> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
 
   String? _selectedCategoryId;
-  bool _isLoading = false;
-  bool _showSuccess = false;
 
-  // Colors
   static const Color _primaryOrange = Color(0xFFFF9800);
 
-  // Mock categories - will be loaded from API
-  final List<Map<String, dynamic>> _categories = [
-    {'id': '1', 'code': 'FUEL', 'name': 'Combustível', 'icon': Icons.local_gas_station, 'color': const Color(0xFFE53935)},
-    {'id': '2', 'code': 'TOLL', 'name': 'Pedágio', 'icon': Icons.toll, 'color': const Color(0xFF1976D2)},
-    {'id': '3', 'code': 'FOOD', 'name': 'Alimentação', 'icon': Icons.restaurant, 'color': const Color(0xFFFFA000)},
-    {'id': '4', 'code': 'LODGING', 'name': 'Hospedagem', 'icon': Icons.hotel, 'color': const Color(0xFF7B1FA2)},
-    {'id': '5', 'code': 'MAINTENANCE', 'name': 'Manutenção', 'icon': Icons.build, 'color': const Color(0xFF455A64)},
-    {'id': '6', 'code': 'OTHER', 'name': 'Outros', 'icon': Icons.more_horiz, 'color': const Color(0xFF757575)},
-  ];
+  // Icon/color maps for category display
+  IconData _getCategoryIcon(String? code) {
+    final icons = {
+      'FUEL': Icons.local_gas_station,
+      'COMBUSTIVEL': Icons.local_gas_station,
+      'TOLL': Icons.toll,
+      'PEDAGIO': Icons.toll,
+      'FOOD': Icons.restaurant,
+      'ALIMENTACAO': Icons.restaurant,
+      'LODGING': Icons.hotel,
+      'HOSPEDAGEM': Icons.hotel,
+      'MAINTENANCE': Icons.build,
+      'MANUTENCAO': Icons.build,
+      'OTHER': Icons.more_horiz,
+      'OUTROS': Icons.more_horiz,
+    };
+    return icons[code?.toUpperCase()] ?? Icons.receipt;
+  }
+
+  Color _getCategoryColor(String? code) {
+    final colors = {
+      'FUEL': const Color(0xFFE53935),
+      'COMBUSTIVEL': const Color(0xFFE53935),
+      'TOLL': const Color(0xFF1976D2),
+      'PEDAGIO': const Color(0xFF1976D2),
+      'FOOD': const Color(0xFFFFA000),
+      'ALIMENTACAO': const Color(0xFFFFA000),
+      'LODGING': const Color(0xFF7B1FA2),
+      'HOSPEDAGEM': const Color(0xFF7B1FA2),
+      'MAINTENANCE': const Color(0xFF455A64),
+      'MANUTENCAO': const Color(0xFF455A64),
+      'OTHER': const Color(0xFF757575),
+      'OUTROS': const Color(0xFF757575),
+    };
+    return colors[code?.toUpperCase()] ?? Colors.grey;
+  }
 
   @override
   void dispose() {
@@ -44,7 +87,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
     super.dispose();
   }
 
-  Future<void> _saveExpense() async {
+  void _saveExpense() {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -56,29 +99,160 @@ class _AddExpensePageState extends State<AddExpensePage> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-
-    setState(() {
-      _isLoading = false;
-      _showSuccess = true;
-    });
-
-    // Show success and navigate back after delay
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      context.pop();
+    final state = context.read<TripExpensesBloc>().state;
+    if (state.activeTrip == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nenhuma viagem ativa'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    final amount = double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+
+    context.read<TripExpensesBloc>().add(
+          TripExpensesEvent.createExpense(
+            tripId: state.activeTrip!.id,
+            categoryId: _selectedCategoryId!,
+            amount: amount,
+            description: _descriptionController.text.isNotEmpty
+                ? _descriptionController.text
+                : null,
+            location: _locationController.text.isNotEmpty
+                ? _locationController.text
+                : null,
+          ),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showSuccess) {
-      return _buildSuccessScreen();
-    }
+    return BlocConsumer<TripExpensesBloc, TripExpensesState>(
+      listener: (context, state) {
+        // Success - show success screen then pop
+        if (state.expenseCreatedSuccess) {
+          _showSuccessAndPop();
+        }
 
+        // Error - show snackbar
+        if (state.errorMessage != null && !state.isCreatingExpense) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        // Loading categories
+        if (state.isLoadingCategories || (state.isLoading && state.categories.isEmpty)) {
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: _primaryOrange,
+              foregroundColor: Colors.white,
+              title: const Text('Novo Gasto'),
+            ),
+            body: const Center(
+              child: CircularProgressIndicator(color: _primaryOrange),
+            ),
+          );
+        }
+
+        // No active trip
+        if (!state.isLoading && state.activeTrip == null) {
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: _primaryOrange,
+              foregroundColor: Colors.white,
+              title: const Text('Novo Gasto'),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.directions_car_outlined,
+                      size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  const Text('Nenhuma viagem ativa'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Inicie uma viagem para registrar gastos',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Voltar'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return _buildForm(context, state);
+      },
+    );
+  }
+
+  Future<void> _showSuccessAndPop() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: Dialog(
+          backgroundColor: const Color(0xFF4CAF50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 48),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Gasto Registrado!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'R\$ ${_amountController.text}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      Navigator.of(context).pop(); // Close dialog
+      context.pop(); // Go back to dashboard
+    }
+  }
+
+  Widget _buildForm(BuildContext context, TripExpensesState state) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -107,7 +281,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildCategoryGrid(),
+              _buildCategoryGrid(state.categories),
               const SizedBox(height: 24),
 
               // Amount Input
@@ -154,7 +328,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
               const SizedBox(height: 32),
 
               // Submit Button
-              _buildSubmitButton(),
+              _buildSubmitButton(state.isCreatingExpense),
             ],
           ),
         ),
@@ -162,7 +336,30 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  Widget _buildCategoryGrid() {
+  Widget _buildCategoryGrid(List<ExpenseCategoryEntity> categories) {
+    if (categories.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.category_outlined, size: 40, color: Colors.grey[400]),
+              const SizedBox(height: 8),
+              Text(
+                'Nenhuma categoria disponível',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -172,15 +369,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
         mainAxisSpacing: 10,
         childAspectRatio: 1.1,
       ),
-      itemCount: _categories.length,
+      itemCount: categories.length,
       itemBuilder: (context, index) {
-        final category = _categories[index];
-        final isSelected = _selectedCategoryId == category['id'];
-        final color = category['color'] as Color;
+        final category = categories[index];
+        final isSelected = _selectedCategoryId == category.id;
+        final icon = _getCategoryIcon(category.code);
+        final color = _getCategoryColor(category.code);
 
         return GestureDetector(
           onTap: () {
-            setState(() => _selectedCategoryId = category['id']);
+            setState(() => _selectedCategoryId = category.id);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -195,19 +393,21 @@ class _AddExpensePageState extends State<AddExpensePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  category['icon'] as IconData,
+                  icon,
                   color: isSelected ? color : Colors.grey[600],
                   size: 28,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  category['name'] as String,
+                  category.name,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     color: isSelected ? color : Colors.grey[700],
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -222,7 +422,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
       controller: _amountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+[,.]?\d{0,2}')),
       ],
       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
@@ -248,7 +448,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         if (value == null || value.isEmpty) {
           return 'Informe o valor';
         }
-        final amount = double.tryParse(value);
+        final amount = double.tryParse(value.replaceAll(',', '.'));
         if (amount == null || amount <= 0) {
           return 'Valor deve ser maior que zero';
         }
@@ -347,7 +547,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
           ),
           TextButton(
             onPressed: () {
-              // TODO: Implement camera/gallery picker
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Em breve: Captura de comprovante')),
               );
@@ -362,12 +561,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(bool isLoading) {
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _saveExpense,
+        onPressed: isLoading ? null : _saveExpense,
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryOrange,
           foregroundColor: Colors.white,
@@ -376,7 +575,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
           ),
           elevation: 2,
         ),
-        child: _isLoading
+        child: isLoading
             ? const SizedBox(
                 width: 24,
                 height: 24,
@@ -392,54 +591,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-      ),
-    );
-  }
-
-  Widget _buildSuccessScreen() {
-    return Scaffold(
-      backgroundColor: const Color(0xFF4CAF50),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.white,
-                size: 64,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Gasto Registrado!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'R\$ ${_amountController.text}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 2,
-            ),
-          ],
-        ),
       ),
     );
   }

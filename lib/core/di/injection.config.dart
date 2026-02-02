@@ -11,6 +11,7 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:zeca_app/core/network/dio_client.dart' as _i241;
+import 'package:zeca_app/core/services/api_service.dart' as _i844;
 import 'package:zeca_app/core/services/geocoding_service.dart' as _i579;
 import 'package:zeca_app/core/services/storage_service.dart' as _i852;
 import 'package:zeca_app/features/auth/data/datasources/auth_local_datasource.dart'
@@ -39,6 +40,12 @@ import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_regist
     as _i545;
 import 'package:zeca_app/features/autonomous/presentation/bloc/autonomous_vehicles_bloc.dart'
     as _i56;
+import 'package:zeca_app/features/change_password/data/repositories/change_password_repository.dart'
+    as _i654;
+import 'package:zeca_app/features/change_password/domain/usecases/change_password_usecase.dart'
+    as _i28;
+import 'package:zeca_app/features/change_password/presentation/bloc/change_password_bloc.dart'
+    as _i400;
 import 'package:zeca_app/features/history/data/datasources/history_remote_datasource.dart'
     as _i753;
 import 'package:zeca_app/features/history/data/repositories/history_repository_impl.dart'
@@ -115,6 +122,30 @@ import 'package:zeca_app/features/refueling/presentation/bloc/document_bloc.dart
     as _i698;
 import 'package:zeca_app/features/refueling/presentation/bloc/refueling_code_bloc.dart'
     as _i651;
+import 'package:zeca_app/features/trip/data/datasources/expense_remote_datasource.dart'
+    as _i41;
+import 'package:zeca_app/features/trip/data/datasources/trip_remote_datasource.dart'
+    as _i105;
+import 'package:zeca_app/features/trip/data/repositories/expense_repository_impl.dart'
+    as _i68;
+import 'package:zeca_app/features/trip/data/repositories/trip_repository_impl.dart'
+    as _i725;
+import 'package:zeca_app/features/trip/domain/repositories/expense_repository.dart'
+    as _i589;
+import 'package:zeca_app/features/trip/domain/repositories/trip_repository.dart'
+    as _i139;
+import 'package:zeca_app/features/trip/domain/usecases/create_expense.dart'
+    as _i427;
+import 'package:zeca_app/features/trip/domain/usecases/get_active_trip.dart'
+    as _i948;
+import 'package:zeca_app/features/trip/domain/usecases/get_expense_categories.dart'
+    as _i632;
+import 'package:zeca_app/features/trip/domain/usecases/get_expenses_by_trip.dart'
+    as _i1051;
+import 'package:zeca_app/features/trip/domain/usecases/get_trip_summary.dart'
+    as _i780;
+import 'package:zeca_app/features/trip/presentation/bloc/trip_expenses_bloc.dart'
+    as _i501;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -155,6 +186,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i653.GetHistoryUseCase(gh<_i799.HistoryRepository>()));
     gh.factory<_i653.GetRefuelingDetailsUseCase>(
         () => _i653.GetRefuelingDetailsUseCase(gh<_i799.HistoryRepository>()));
+    gh.lazySingleton<_i105.TripRemoteDataSource>(
+        () => _i105.TripRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.lazySingleton<_i41.ExpenseRemoteDataSource>(
+        () => _i41.ExpenseRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.factory<_i649.AutonomousRepository>(() =>
@@ -167,6 +202,17 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i404.VehicleRepositoryImpl(gh<_i921.VehicleRemoteDataSource>()));
     gh.factory<_i639.HistoryBloc>(
         () => _i639.HistoryBloc(gh<_i653.GetHistoryUseCase>()));
+    gh.factory<_i654.ChangePasswordRepository>(
+        () => _i654.ChangePasswordRepository(gh<_i844.ApiService>()));
+    gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
+          getActiveTrip: gh<_i948.GetActiveTrip>(),
+          getTripSummary: gh<_i780.GetTripSummary>(),
+          getExpenseCategories: gh<_i632.GetExpenseCategories>(),
+          getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
+          createExpense: gh<_i427.CreateExpense>(),
+        ));
+    gh.lazySingleton<_i589.ExpenseRepository>(
+        () => _i68.ExpenseRepositoryImpl(gh<_i41.ExpenseRemoteDataSource>()));
     gh.factory<_i222.FuelStationRepository>(() =>
         _i317.FuelStationRepositoryImpl(
             gh<_i787.FuelStationRemoteDataSource>()));
@@ -192,12 +238,16 @@ extension GetItInjectableX on _i174.GetIt {
         _i117.GenerateRefuelingCodeUseCase(gh<_i724.RefuelingRepository>()));
     gh.factory<_i698.DocumentBloc>(() => _i698.DocumentBloc(
         uploadDocumentUseCase: gh<_i514.UploadDocumentUseCase>()));
+    gh.lazySingleton<_i139.TripRepository>(
+        () => _i725.TripRepositoryImpl(gh<_i105.TripRemoteDataSource>()));
     gh.factory<_i978.RefreshTokenUseCase>(
         () => _i978.RefreshTokenUseCase(gh<_i464.AuthRepository>()));
     gh.factory<_i678.LoginUseCase>(
         () => _i678.LoginUseCase(gh<_i464.AuthRepository>()));
     gh.factory<_i1041.LogoutUseCase>(
         () => _i1041.LogoutUseCase(gh<_i464.AuthRepository>()));
+    gh.factory<_i28.ChangePasswordUseCase>(
+        () => _i28.ChangePasswordUseCase(gh<_i654.ChangePasswordRepository>()));
     gh.factory<_i32.ValidateStationUseCase>(
         () => _i32.ValidateStationUseCase(gh<_i222.FuelStationRepository>()));
     gh.factory<_i85.GetNearbyStationsUseCase>(
@@ -212,6 +262,10 @@ extension GetItInjectableX on _i174.GetIt {
           loginUseCase: gh<_i678.LoginUseCase>(),
           logoutUseCase: gh<_i1041.LogoutUseCase>(),
           authRepository: gh<_i464.AuthRepository>(),
+        ));
+    gh.factory<_i400.ChangePasswordBloc>(() => _i400.ChangePasswordBloc(
+          gh<_i28.ChangePasswordUseCase>(),
+          gh<_i589.AuthBloc>(),
         ));
     gh.factory<_i175.UpdateNotificationSettingsUseCase>(() =>
         _i175.UpdateNotificationSettingsUseCase(

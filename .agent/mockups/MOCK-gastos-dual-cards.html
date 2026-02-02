@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA - Opção 4: Cards Duplos (Economia + Gastos)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #1565C0;
+            --zeca-blue-dark: #0D47A1;
+            --zeca-green: #43A047;
+            --zeca-orange: #FF9800;
+            --zeca-purple: #7E57C2;
+            --bg-gray: #F5F5F5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .comparison {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-label {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .comparison-label.current {
+            background: var(--zeca-blue);
+        }
+
+        .comparison-label.new {
+            background: var(--zeca-green);
+        }
+
+        .mobile-frame {
+            width: 320px;
+            height: 640px;
+            background: var(--bg-gray);
+            border-radius: 36px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .header {
+            background: var(--zeca-blue);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .header-icon {
+            color: white;
+            font-size: 18px;
+        }
+
+        .content {
+            padding: 12px;
+        }
+
+        /* Vehicle Card */
+        .vehicle-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            border-radius: 14px;
+            padding: 12px;
+            margin: -48px 12px 12px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vehicle-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .vehicle-info {
+            flex: 1;
+            color: white;
+        }
+
+        .vehicle-plate {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .vehicle-model {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .badge-ativa {
+            background: var(--zeca-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 8px;
+            font-weight: 600;
+        }
+
+        /* CTA Card */
+        .cta-card {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .cta-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .cta-text h3 {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .cta-arrow {
+            width: 26px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* Card Grande (Atual) */
+        .economy-card-large {
+            background: linear-gradient(135deg, var(--zeca-green), #2E7D32);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .economy-icon-large {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .economy-info-large {
+            flex: 1;
+        }
+
+        .economy-label-large {
+            font-size: 10px;
+            opacity: 0.9;
+        }
+
+        .economy-value-large {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .economy-stats-large {
+            display: flex;
+            gap: 16px;
+        }
+
+        .economy-stat-large {
+            text-align: center;
+        }
+
+        .economy-stat-value-large {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .economy-stat-label-large {
+            font-size: 9px;
+            opacity: 0.8;
+        }
+
+        /* Cards Duplos (Novo) */
+        .dual-cards {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .mini-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 10px;
+            color: white;
+        }
+
+        .mini-card.green {
+            background: linear-gradient(135deg, var(--zeca-green), #2E7D32);
+        }
+
+        .mini-card.orange {
+            background: linear-gradient(135deg, var(--zeca-orange), #E67E00);
+        }
+
+        .mini-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .mini-icon {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .mini-title {
+            font-size: 8px;
+            opacity: 0.9;
+        }
+
+        .mini-value {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .mini-stats {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mini-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .mini-stat-value {
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .mini-stat-label {
+            font-size: 6px;
+            opacity: 0.8;
+        }
+
+        .mini-arrow {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        /* Section */
+        .section-title {
+            font-size: 10px;
+            color: #757575;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 10px 0 8px 0;
+            text-transform: uppercase;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .action-item {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .action-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6px;
+            font-size: 15px;
+        }
+
+        .action-label {
+            font-size: 9px;
+            font-weight: 500;
+            color: #212121;
+        }
+
+        .action-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: red;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .club-card {
+            background: white;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .club-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .club-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--zeca-purple), #9C27B0);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .club-title {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .club-badge {
+            background: #F3E5F5;
+            color: var(--zeca-purple);
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .club-cta {
+            background: #F3E5F5;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            color: var(--zeca-purple);
+            font-size: 11px;
+        }
+
+        .efficiency-card {
+            background: white;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .efficiency-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .efficiency-icon {
+            width: 24px;
+            height: 24px;
+            background: #E3F2FD;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+            font-size: 12px;
+        }
+
+        .efficiency-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .efficiency-stats {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .efficiency-stat {
+            text-align: center;
+        }
+
+        .efficiency-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--zeca-blue);
+        }
+
+        .efficiency-label {
+            font-size: 8px;
+            color: #757575;
+        }
+
+        /* Highlight */
+        .highlight-box {
+            border: 3px solid var(--zeca-orange);
+            border-radius: 18px;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 15px 5px rgba(255, 152, 0, 0.3);
+            }
+        }
+
+        .arrow-label {
+            color: var(--zeca-orange);
+            font-size: 12px;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .benefits {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .benefits h3 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .benefit {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .benefit i {
+            color: var(--zeca-green);
+            font-size: 16px;
+        }
+
+        .benefit span {
+            color: #ddd;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚛 Opção 4: Cards Duplos (Economia + Gastos)</h1>
+    <p class="subtitle">Comparação: Layout atual vs Layout proposto com 2 cards lado a lado</p>
+
+    <div class="comparison">
+        <!-- ANTES: Layout Atual -->
+        <div class="comparison-item">
+            <div class="comparison-label current">📱 ANTES (Atual)</div>
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                            class="fas fa-battery-full"></i></span>
+                </div>
+                <div class="header">
+                    <i class="fas fa-bars header-icon"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off header-icon"></i>
+                </div>
+                <div style="background: var(--zeca-blue); height: 50px;"></div>
+                <div class="vehicle-card">
+                    <div class="vehicle-icon"><i class="fas fa-truck"></i></div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-plate">ABC-1234</div>
+                        <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                    </div>
+                    <span class="badge-ativa"><i class="fas fa-check-circle"></i> ATIVA</span>
+                </div>
+                <div class="content" style="margin-top: -36px;">
+                    <div class="cta-card">
+                        <div class="cta-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="cta-text" style="flex:1;">
+                            <h3>Abastecer Agora</h3>
+                        </div>
+                        <div class="cta-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <!-- Card Grande (Atual) -->
+                    <div class="economy-card-large">
+                        <div class="economy-icon-large"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="economy-info-large">
+                            <div class="economy-label-large">Sua Economia • Jan</div>
+                            <div class="economy-value-large">R$ 0,00</div>
+                        </div>
+                        <div class="economy-stats-large">
+                            <div class="economy-stat-large">
+                                <div class="economy-stat-value-large">0</div>
+                                <div class="economy-stat-label-large">Abast.</div>
+                            </div>
+                            <div class="economy-stat-large">
+                                <div class="economy-stat-value-large">-</div>
+                                <div class="economy-stat-label-large">Km/L</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#FFF3E0;color:var(--zeca-orange);"><i
+                                    class="fas fa-clipboard-check"></i></div>
+                            <div class="action-label">Checklist</div>
+                            <div class="action-badge">3</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#F3E5F5;color:var(--zeca-purple);"><i
+                                    class="fas fa-receipt"></i></div>
+                            <div class="action-label">Histórico</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#E8F5E9;color:var(--zeca-green);"><i
+                                    class="fas fa-map-marker-alt"></i></div>
+                            <div class="action-label">Postos</div>
+                        </div>
+                    </div>
+
+                    <div class="club-card">
+                        <div class="club-header">
+                            <div class="club-icon"><i class="fas fa-crown"></i></div>
+                            <span class="club-title">ZECA Club</span>
+                            <span class="club-badge">EM BREVE</span>
+                        </div>
+                        <div class="club-cta"><i class="fas fa-star"></i> Acumule pontos!</div>
+                    </div>
+
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-icon"><i class="fas fa-chart-line"></i></div>
+                            <span class="efficiency-title">Eficiência de Combustível</span>
+                        </div>
+                        <div class="efficiency-stats">
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">2.9</div>
+                                <div class="efficiency-label">km/L último</div>
+                            </div>
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">1.7</div>
+                                <div class="efficiency-label">km/L média</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEPOIS: Layout Novo -->
+        <div class="comparison-item">
+            <div class="comparison-label new">✨ DEPOIS (Proposto)</div>
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                            class="fas fa-battery-full"></i></span>
+                </div>
+                <div class="header">
+                    <i class="fas fa-bars header-icon"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off header-icon"></i>
+                </div>
+                <div style="background: var(--zeca-blue); height: 50px;"></div>
+                <div class="vehicle-card">
+                    <div class="vehicle-icon"><i class="fas fa-truck"></i></div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-plate">ABC-1234</div>
+                        <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                    </div>
+                    <span class="badge-ativa"><i class="fas fa-check-circle"></i> ATIVA</span>
+                </div>
+                <div class="content" style="margin-top: -36px;">
+                    <div class="cta-card">
+                        <div class="cta-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="cta-text" style="flex:1;">
+                            <h3>Abastecer Agora</h3>
+                        </div>
+                        <div class="cta-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <!-- NOVO: Dois Cards Lado a Lado -->
+                    <div class="dual-cards highlight-box">
+                        <div class="mini-card green" style="position:relative;">
+                            <div class="mini-header">
+                                <div class="mini-icon"><i class="fas fa-piggy-bank"></i></div>
+                                <span class="mini-title">Economia • Jan</span>
+                            </div>
+                            <div class="mini-value">R$ 0,00</div>
+                            <div class="mini-stats">
+                                <div class="mini-stat">
+                                    <div class="mini-stat-value">0</div>
+                                    <div class="mini-stat-label">Abast.</div>
+                                </div>
+                                <div class="mini-stat">
+                                    <div class="mini-stat-value">-</div>
+                                    <div class="mini-stat-label">Km/L</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right mini-arrow"></i>
+                        </div>
+
+                        <div class="mini-card orange" style="position:relative;">
+                            <div class="mini-header">
+                                <div class="mini-icon"><i class="fas fa-wallet"></i></div>
+                                <span class="mini-title">Gastos Viagem</span>
+                            </div>
+                            <div class="mini-value">R$ 156</div>
+                            <div class="mini-stats">
+                                <div class="mini-stat">
+                                    <div class="mini-stat-value">R$ 800</div>
+                                    <div class="mini-stat-label">Receita</div>
+                                </div>
+                                <div class="mini-stat">
+                                    <div class="mini-stat-value" style="color:#81C784;">+644</div>
+                                    <div class="mini-stat-label">Lucro</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right mini-arrow"></i>
+                        </div>
+                    </div>
+
+                    <div class="quick-actions">
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#FFF3E0;color:var(--zeca-orange);"><i
+                                    class="fas fa-clipboard-check"></i></div>
+                            <div class="action-label">Checklist</div>
+                            <div class="action-badge">3</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#F3E5F5;color:var(--zeca-purple);"><i
+                                    class="fas fa-receipt"></i></div>
+                            <div class="action-label">Histórico</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#E8F5E9;color:var(--zeca-green);"><i
+                                    class="fas fa-map-marker-alt"></i></div>
+                            <div class="action-label">Postos</div>
+                        </div>
+                    </div>
+
+                    <div class="club-card">
+                        <div class="club-header">
+                            <div class="club-icon"><i class="fas fa-crown"></i></div>
+                            <span class="club-title">ZECA Club</span>
+                            <span class="club-badge">EM BREVE</span>
+                        </div>
+                        <div class="club-cta"><i class="fas fa-star"></i> Acumule pontos!</div>
+                    </div>
+
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-icon"><i class="fas fa-chart-line"></i></div>
+                            <span class="efficiency-title">Eficiência de Combustível</span>
+                        </div>
+                        <div class="efficiency-stats">
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">2.9</div>
+                                <div class="efficiency-label">km/L último</div>
+                            </div>
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">1.7</div>
+                                <div class="efficiency-label">km/L média</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAWER: Menu Lateral -->
+    <div class="comparison-item">
+        <div class="comparison-label new">📋 + MENU LATERAL</div>
+        <div class="mobile-frame">
+            <div class="status-bar">
+                <span>9:41</span>
+                <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                        class="fas fa-battery-full"></i></span>
+            </div>
+            <div style="position:absolute;top:44px;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);">
+                <div style="width:220px;height:100%;background:white;border-radius:0 20px 20px 0;">
+                    <div
+                        style="background:linear-gradient(135deg,var(--zeca-blue),var(--zeca-blue-dark));padding:50px 16px 20px;color:white;">
+                        <div
+                            style="width:52px;height:52px;background:rgba(255,255,255,0.2);border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;margin-bottom:12px;">
+                            JM</div>
+                        <div style="font-size:15px;font-weight:600;">João Motorista</div>
+                        <div
+                            style="display:inline-block;background:var(--zeca-green);padding:4px 12px;border-radius:12px;font-size:10px;margin-top:8px;">
+                            Frotista</div>
+                    </div>
+                    <div style="padding:12px 0;">
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:#212121;">
+                            <i class="fas fa-user" style="width:20px;color:var(--zeca-blue);"></i> Meu Perfil
+                        </div>
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:#212121;">
+                            <i class="fas fa-receipt" style="width:20px;color:var(--zeca-blue);"></i> Histórico
+                        </div>
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:#212121;">
+                            <i class="fas fa-chart-line" style="width:20px;color:var(--zeca-blue);"></i> Eficiência
+                            <span
+                                style="background:var(--zeca-blue);color:white;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;margin-left:auto;">NOVO</span>
+                        </div>
+                        <!-- NOVO: Gestão de Gastos -->
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:#212121;background:#FFF3E0;border-radius:10px;margin:4px 10px;border:2px solid var(--zeca-orange);">
+                            <i class="fas fa-wallet" style="width:20px;color:var(--zeca-orange);"></i> Gestão de Gastos
+                            <span
+                                style="background:var(--zeca-orange);color:white;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700;margin-left:auto;">NOVO</span>
+                        </div>
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:#212121;">
+                            <i class="fas fa-lock" style="width:20px;color:var(--zeca-blue);"></i> Alterar Senha
+                        </div>
+                        <div style="height:1px;background:#eee;margin:10px 0;"></div>
+                        <div
+                            style="display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:13px;color:var(--zeca-red);">
+                            <i class="fas fa-sign-out-alt" style="width:20px;"></i> Sair
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="arrow-label" style="margin-top:12px;">Acesso completo ao módulo</div>
+    </div>
+    </div>
+
+    <div class="benefits">
+        <h3>✅ Benefícios desta abordagem</h3>
+        <div class="benefits-grid">
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Mesmo espaço vertical ocupado</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Informação financeira completa na Home</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Acesso direto com 1 toque</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Resumo de lucro visível sempre</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Harmonia visual (verde + laranja)</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Não altera outros elementos</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
