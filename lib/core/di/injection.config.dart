@@ -204,6 +204,22 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i639.HistoryBloc(gh<_i653.GetHistoryUseCase>()));
     gh.factory<_i654.ChangePasswordRepository>(
         () => _i654.ChangePasswordRepository(gh<_i844.ApiService>()));
+    // Trip/Expense Repositories - must be registered before use cases
+    gh.lazySingleton<_i139.TripRepository>(
+        () => _i725.TripRepositoryImpl(gh<_i105.TripRemoteDataSource>()));
+    gh.lazySingleton<_i589.ExpenseRepository>(
+        () => _i68.ExpenseRepositoryImpl(gh<_i41.ExpenseRemoteDataSource>()));
+    // Trip Use Cases - must be registered before TripExpensesBloc
+    gh.factory<_i948.GetActiveTrip>(
+        () => _i948.GetActiveTrip(gh<_i139.TripRepository>()));
+    gh.factory<_i780.GetTripSummary>(
+        () => _i780.GetTripSummary(gh<_i139.TripRepository>()));
+    gh.factory<_i632.GetExpenseCategories>(
+        () => _i632.GetExpenseCategories(gh<_i589.ExpenseRepository>()));
+    gh.factory<_i1051.GetExpensesByTrip>(
+        () => _i1051.GetExpensesByTrip(gh<_i589.ExpenseRepository>()));
+    gh.factory<_i427.CreateExpense>(
+        () => _i427.CreateExpense(gh<_i589.ExpenseRepository>()));
     gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
           getActiveTrip: gh<_i948.GetActiveTrip>(),
           getTripSummary: gh<_i780.GetTripSummary>(),
@@ -211,8 +227,6 @@ extension GetItInjectableX on _i174.GetIt {
           getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
           createExpense: gh<_i427.CreateExpense>(),
         ));
-    gh.lazySingleton<_i589.ExpenseRepository>(
-        () => _i68.ExpenseRepositoryImpl(gh<_i41.ExpenseRemoteDataSource>()));
     gh.factory<_i222.FuelStationRepository>(() =>
         _i317.FuelStationRepositoryImpl(
             gh<_i787.FuelStationRemoteDataSource>()));
@@ -238,8 +252,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i117.GenerateRefuelingCodeUseCase(gh<_i724.RefuelingRepository>()));
     gh.factory<_i698.DocumentBloc>(() => _i698.DocumentBloc(
         uploadDocumentUseCase: gh<_i514.UploadDocumentUseCase>()));
-    gh.lazySingleton<_i139.TripRepository>(
-        () => _i725.TripRepositoryImpl(gh<_i105.TripRemoteDataSource>()));
     gh.factory<_i978.RefreshTokenUseCase>(
         () => _i978.RefreshTokenUseCase(gh<_i464.AuthRepository>()));
     gh.factory<_i678.LoginUseCase>(
