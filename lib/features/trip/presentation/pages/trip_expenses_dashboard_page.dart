@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../domain/entities/trip_summary.dart';
 import '../bloc/trip_expenses_bloc.dart';
@@ -30,18 +31,77 @@ class TripExpensesDashboardPage extends StatelessWidget {
   }
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends StatefulWidget {
   const _DashboardContent();
 
+  @override
+  State<_DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<_DashboardContent> {
   static const Color _primaryOrange = Color(0xFFFF9800);
   static const Color _bgGray = Color(0xFFF5F5F5);
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isStartingTrip = false;
+
+  /// Obtém o vehicleId do veículo ativo e inicia a viagem
+  Future<void> _handleStartTrip(BuildContext context) async {
+    setState(() => _isStartingTrip = true);
+
+    try {
+      // Obter dados do veículo ativo do StorageService
+      final storageService = getIt<StorageService>();
+      final vehicleData = await storageService.getJourneyVehicleData();
+
+      if (vehicleData == null || vehicleData.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nenhum veículo ativo encontrado. Faça login novamente.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Obter o vehicleId - pode estar em 'id' ou 'vehicleId'
+      final vehicleId = vehicleData['id']?.toString() ??
+          vehicleData['vehicleId']?.toString() ??
+          vehicleData['vehicle_id']?.toString();
+
+      if (vehicleId == null || vehicleId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ID do veículo não encontrado.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Iniciar a viagem via BLoC
+      if (mounted) {
+        context.read<TripExpensesBloc>().add(
+              TripExpensesEvent.startTrip(
+                vehicleId: vehicleId,
+                origin: '', // Pode ser preenchido posteriormente
+              ),
+            );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isStartingTrip = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final scaffoldKey = GlobalKey<ScaffoldState>();
-
     return Scaffold(
-      key: scaffoldKey,
+      key: _scaffoldKey,
       backgroundColor: _bgGray,
       drawer: const AppDrawer(),
       appBar: AppBar(
@@ -50,7 +110,7 @@ class _DashboardContent extends StatelessWidget {
         title: const Text('Gestão de Gastos'),
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: () => scaffoldKey.currentState?.openDrawer(),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         actions: [
           IconButton(
@@ -166,20 +226,19 @@ class _DashboardContent extends StatelessWidget {
               style: TextStyle(color: Colors.grey[600], fontSize: 15),
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Navigate to start trip
-                context.pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryOrange,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-              ),
-              icon: const Icon(Icons.add_road),
-              label: const Text('Iniciar Viagem'),
-            ),
+            _isStartingTrip
+                ? const CircularProgressIndicator(color: _primaryOrange)
+                : ElevatedButton.icon(
+                    onPressed: () => _handleStartTrip(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primaryOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                    ),
+                    icon: const Icon(Icons.add_road),
+                    label: const Text('Iniciar Viagem'),
+                  ),
           ],
         ),
       ),

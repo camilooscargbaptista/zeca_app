@@ -27,6 +27,13 @@ class TripExpensesEvent with _$TripExpensesEvent {
     String? receiptPath,
   }) = CreateExpenseEvent;
 
+  /// Start a new trip
+  const factory TripExpensesEvent.startTrip({
+    required String origin,
+    String? destination,
+    required String vehicleId,
+  }) = StartTripEvent;
+
   /// Refresh all data
   const factory TripExpensesEvent.refresh() = RefreshTripExpenses;
 }

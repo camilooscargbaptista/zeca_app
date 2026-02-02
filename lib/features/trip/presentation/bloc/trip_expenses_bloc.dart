@@ -6,6 +6,7 @@ import '../../domain/usecases/get_trip_summary.dart';
 import '../../domain/usecases/get_expense_categories.dart';
 import '../../domain/usecases/get_expenses_by_trip.dart';
 import '../../domain/usecases/create_expense.dart' as usecase;
+import '../../domain/usecases/start_trip.dart';
 import 'trip_expenses_event.dart';
 import 'trip_expenses_state.dart';
 
@@ -18,6 +19,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   final GetExpenseCategories getExpenseCategories;
   final GetExpensesByTrip getExpensesByTrip;
   final usecase.CreateExpense createExpense;
+  final StartTrip startTrip;
 
   TripExpensesBloc({
     required this.getActiveTrip,
@@ -25,12 +27,14 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     required this.getExpenseCategories,
     required this.getExpensesByTrip,
     required this.createExpense,
+    required this.startTrip,
   }) : super(TripExpensesState.initial()) {
     on<LoadActiveTrip>(_onLoadActiveTrip);
     on<LoadTripSummary>(_onLoadTripSummary);
     on<LoadCategories>(_onLoadCategories);
     on<LoadExpenses>(_onLoadExpenses);
     on<CreateExpenseEvent>(_onCreateExpense);
+    on<StartTripEvent>(_onStartTrip);
     on<RefreshTripExpenses>(_onRefresh);
   }
 
@@ -154,6 +158,35 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
           totalExpenses: newTotal,
           netProfit: state.totalRevenues - newTotal,
         ));
+      },
+    );
+  }
+
+  Future<void> _onStartTrip(
+    StartTripEvent event,
+    Emitter<TripExpensesState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+
+    final result = await startTrip(StartTripParams(
+      vehicleId: event.vehicleId,
+      origin: event.origin,
+      destination: event.destination,
+    ));
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        isLoading: false,
+        errorMessage: failure.message,
+      )),
+      (trip) {
+        emit(state.copyWith(
+          isLoading: false,
+          activeTrip: trip,
+        ));
+        // Auto-load summary and expenses for new trip
+        add(LoadTripSummary(trip.id));
+        add(LoadExpenses(trip.id));
       },
     );
   }
