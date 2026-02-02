@@ -49,8 +49,8 @@ class TripRemoteDataSourceImpl implements TripRemoteDataSource {
   }) async {
     final response = await _dioClient.post('/trips', data: {
       'vehicle_id': vehicleId,
-      if (origin != null) 'origin': origin,
-      if (destination != null) 'destination': destination,
+      if (origin != null && origin.isNotEmpty) 'origin_description': origin,
+      if (destination != null && destination.isNotEmpty) 'destination_description': destination,
     });
     return TripModel.fromJson(response.data);
   }
