@@ -257,8 +257,6 @@ extension GetItInjectableX on _i174.GetIt {
         _i117.GenerateRefuelingCodeUseCase(gh<_i724.RefuelingRepository>()));
     gh.factory<_i698.DocumentBloc>(() => _i698.DocumentBloc(
         uploadDocumentUseCase: gh<_i514.UploadDocumentUseCase>()));
-    gh.lazySingleton<_i139.TripRepository>(
-        () => _i725.TripRepositoryImpl(gh<_i105.TripRemoteDataSource>()));
     gh.factory<_i978.RefreshTokenUseCase>(
         () => _i978.RefreshTokenUseCase(gh<_i464.AuthRepository>()));
     gh.factory<_i678.LoginUseCase>(
