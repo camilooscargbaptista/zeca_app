@@ -48,6 +48,8 @@ import '../features/auth/presentation/bloc/auth_bloc.dart';
 // Efficiency imports
 import '../features/efficiency/presentation/pages/efficiency_page.dart';
 import '../features/efficiency/presentation/pages/efficiency_history_page.dart';
+// Trip Expenses imports
+import '../features/trip/presentation/pages/trip_expenses_dashboard_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -304,6 +306,12 @@ class AppRouter {
         path: '/efficiency/history',
         name: 'efficiency-history',
         builder: (context, state) => const EfficiencyHistoryPage(),
+      ),
+      // Trip Expenses routes (US-003)
+      GoRoute(
+        path: '/trip-expenses',
+        name: 'trip-expenses',
+        builder: (context, state) => const TripExpensesDashboardPage(),
       ),
     ],
     errorBuilder: (context, state) {
