@@ -50,6 +50,9 @@ import '../features/efficiency/presentation/pages/efficiency_page.dart';
 import '../features/efficiency/presentation/pages/efficiency_history_page.dart';
 // Trip Expenses imports
 import '../features/trip/presentation/pages/trip_expenses_dashboard_page.dart';
+import '../features/trip/presentation/pages/add_expense_page.dart';
+import '../features/trip/presentation/pages/trip_revenues_page.dart';
+import '../features/trip/presentation/pages/trip_summary_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -312,6 +315,24 @@ class AppRouter {
         path: '/trip-expenses',
         name: 'trip-expenses',
         builder: (context, state) => const TripExpensesDashboardPage(),
+      ),
+      GoRoute(
+        path: '/trip-expenses/add',
+        name: 'trip-expenses-add',
+        builder: (context, state) => const AddExpensePage(),
+      ),
+      GoRoute(
+        path: '/trip-revenues',
+        name: 'trip-revenues',
+        builder: (context, state) => const TripRevenuesPage(),
+      ),
+      GoRoute(
+        path: '/trip-summary',
+        name: 'trip-summary',
+        builder: (context, state) {
+          final tripId = state.uri.queryParameters['tripId'];
+          return TripSummaryPage(tripId: tripId);
+        },
       ),
     ],
     errorBuilder: (context, state) {
