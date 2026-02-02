@@ -14,6 +14,8 @@ import '../../../efficiency/presentation/bloc/efficiency_event.dart';
 import '../../../efficiency/presentation/bloc/efficiency_state.dart';
 import '../../../efficiency/presentation/widgets/efficiency_dashboard_card.dart';
 import '../../../efficiency/data/repositories/efficiency_repository.dart';
+// Trip Expenses imports
+import '../../../trip/presentation/widgets/dual_summary_cards.dart';
 
 
 class JourneyDashboardPage extends StatefulWidget {
@@ -253,9 +255,8 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                       // CTA Abastecer
                       _buildRefuelCTA(),
                       const SizedBox(height: 14),
-                      
-                      // Economy Card
-                      _buildEconomyCard(),
+                      // Dual Cards: Economy + Trip Expenses
+                      _buildDualSummaryCards(),
                       const SizedBox(height: 14),
                       
                       // Quick Actions
@@ -499,6 +500,31 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Dual Cards: Economy + Trip Expenses (US-001)
+  Widget _buildDualSummaryCards() {
+    final economy = _dashboardData?['economy'];
+    final savings = (economy?['savings_this_month'] ?? 0).toDouble();
+    final totalRefuelings = economy?['total_refuelings'] ?? 0;
+    final avgConsumption = economy?['avg_consumption']?.toDouble();
+    
+    // TODO: Integrate with TripBloc to get active trip expenses
+    final tripExpensesTotal = 0.0; // Will be fetched from API
+    
+    return DualSummaryCards(
+      economySavings: savings,
+      totalRefuelings: totalRefuelings,
+      avgConsumption: avgConsumption,
+      monthName: _getMonthName(),
+      tripExpensesTotal: tripExpensesTotal,
+      onEconomyTap: () {
+        // Show economy details
+      },
+      onExpensesTap: () {
+        context.push('/trip-expenses');
+      },
     );
   }
 
