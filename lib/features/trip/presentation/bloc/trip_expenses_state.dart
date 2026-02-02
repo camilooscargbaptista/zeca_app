@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../domain/entities/trip.dart';
-import '../../../domain/entities/expense.dart';
-import '../../../domain/entities/expense_category.dart';
-import '../../../domain/entities/trip_summary.dart';
+import '../../domain/entities/trip.dart';
+import '../../domain/entities/expense.dart';
+import '../../domain/entities/expense_category.dart';
+import '../../domain/entities/trip_summary.dart';
 
 part 'trip_expenses_state.freezed.dart';
 
@@ -34,3 +34,4 @@ class TripExpensesState with _$TripExpensesState {
   /// Initial state
   factory TripExpensesState.initial() => const TripExpensesState();
 }
+

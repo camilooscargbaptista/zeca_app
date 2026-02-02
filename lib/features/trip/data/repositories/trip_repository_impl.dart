@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/trip.dart';
 import '../../domain/entities/trip_summary.dart';
 import '../../domain/repositories/trip_repository.dart';
@@ -18,7 +18,7 @@ class TripRepositoryImpl implements TripRepository {
       final result = await _remoteDataSource.getActiveTrip();
       return Right(result?.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -28,7 +28,7 @@ class TripRepositoryImpl implements TripRepository {
       final result = await _remoteDataSource.getTripById(tripId);
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -46,7 +46,7 @@ class TripRepositoryImpl implements TripRepository {
       );
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -56,7 +56,7 @@ class TripRepositoryImpl implements TripRepository {
       final result = await _remoteDataSource.finishTrip(tripId);
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -66,7 +66,7 @@ class TripRepositoryImpl implements TripRepository {
       final result = await _remoteDataSource.getTripSummary(tripId);
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 }

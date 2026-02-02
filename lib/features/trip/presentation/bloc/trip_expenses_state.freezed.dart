@@ -322,10 +322,10 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
                 other.isLoadingCategories == isLoadingCategories) &&
             (identical(other.isCreatingExpense, isCreatingExpense) ||
                 other.isCreatingExpense == isCreatingExpense) &&
-            const DeepCollectionEquality()
-                .equals(other.activeTrip, activeTrip) &&
-            const DeepCollectionEquality()
-                .equals(other.tripSummary, tripSummary) &&
+            (identical(other.activeTrip, activeTrip) ||
+                other.activeTrip == activeTrip) &&
+            (identical(other.tripSummary, tripSummary) ||
+                other.tripSummary == tripSummary) &&
             const DeepCollectionEquality()
                 .equals(other._categories, _categories) &&
             const DeepCollectionEquality().equals(other._expenses, _expenses) &&
@@ -347,8 +347,8 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
       isLoading,
       isLoadingCategories,
       isCreatingExpense,
-      const DeepCollectionEquality().hash(activeTrip),
-      const DeepCollectionEquality().hash(tripSummary),
+      activeTrip,
+      tripSummary,
       const DeepCollectionEquality().hash(_categories),
       const DeepCollectionEquality().hash(_expenses),
       errorMessage,

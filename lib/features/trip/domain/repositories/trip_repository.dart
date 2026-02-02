@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../entities/trip.dart';
 import '../entities/trip_summary.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 
 /// Abstract repository for Trip operations
 abstract class TripRepository {

@@ -1,8 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../domain/entities/trip.dart';
-import '../../../domain/entities/expense.dart';
-import '../../../domain/entities/expense_category.dart';
-import '../../../domain/entities/trip_summary.dart';
 
 part 'trip_expenses_event.freezed.dart';
 
@@ -29,8 +25,9 @@ class TripExpensesEvent with _$TripExpensesEvent {
     String? description,
     String? location,
     String? receiptPath,
-  }) = CreateExpense;
+  }) = CreateExpenseEvent;
 
   /// Refresh all data
   const factory TripExpensesEvent.refresh() = RefreshTripExpenses;
 }
+

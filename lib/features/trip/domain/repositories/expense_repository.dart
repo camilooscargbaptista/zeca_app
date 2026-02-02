@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../entities/expense.dart';
 import '../entities/expense_category.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 
 /// Abstract repository for Expense operations
 abstract class ExpenseRepository {

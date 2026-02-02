@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/expense.dart';
 import '../../domain/entities/expense_category.dart';
 import '../../domain/repositories/expense_repository.dart';
@@ -18,7 +18,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final result = await _remoteDataSource.getCategories();
       return Right(result.map((m) => m.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -30,7 +30,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final result = await _remoteDataSource.getExpensesByTrip(tripId);
       return Right(result.map((m) => m.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -54,7 +54,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -67,7 +67,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           await _remoteDataSource.getExpensesSummaryByCategory(tripId);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -77,7 +77,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       await _remoteDataSource.deleteExpense(expenseId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 }

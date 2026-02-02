@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../entities/trip_revenue.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 
 /// Abstract repository for Revenue operations
 abstract class RevenueRepository {

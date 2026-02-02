@@ -1,10 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../../domain/usecases/get_active_trip.dart';
 import '../../domain/usecases/get_trip_summary.dart';
 import '../../domain/usecases/get_expense_categories.dart';
 import '../../domain/usecases/get_expenses_by_trip.dart';
-import '../../domain/usecases/create_expense.dart';
+import '../../domain/usecases/create_expense.dart' as usecase;
 import 'trip_expenses_event.dart';
 import 'trip_expenses_state.dart';
 
@@ -16,7 +17,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   final GetTripSummary getTripSummary;
   final GetExpenseCategories getExpenseCategories;
   final GetExpensesByTrip getExpensesByTrip;
-  final CreateExpense createExpense;
+  final usecase.CreateExpense createExpense;
 
   TripExpensesBloc({
     required this.getActiveTrip,
@@ -29,7 +30,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     on<LoadTripSummary>(_onLoadTripSummary);
     on<LoadCategories>(_onLoadCategories);
     on<LoadExpenses>(_onLoadExpenses);
-    on<CreateExpense>(_onCreateExpense);
+    on<CreateExpenseEvent>(_onCreateExpense);
     on<RefreshTripExpenses>(_onRefresh);
   }
 
@@ -39,7 +40,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   ) async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
 
-    final result = await getActiveTrip();
+    final result = await getActiveTrip(const NoParams());
     result.fold(
       (failure) => emit(state.copyWith(
         isLoading: false,
@@ -87,7 +88,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   ) async {
     emit(state.copyWith(isLoadingCategories: true));
 
-    final result = await getExpenseCategories();
+    final result = await getExpenseCategories(const NoParams());
     result.fold(
       (failure) => emit(state.copyWith(
         isLoadingCategories: false,
@@ -122,12 +123,12 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   }
 
   Future<void> _onCreateExpense(
-    CreateExpense event,
+    CreateExpenseEvent event,
     Emitter<TripExpensesState> emit,
   ) async {
     emit(state.copyWith(isCreatingExpense: true, errorMessage: null));
 
-    final result = await createExpense(CreateExpenseParams(
+    final result = await createExpense(usecase.CreateExpenseParams(
       tripId: event.tripId,
       categoryId: event.categoryId,
       amount: event.amount,
@@ -153,12 +154,6 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
           totalExpenses: newTotal,
           netProfit: state.totalRevenues - newTotal,
         ));
-
-        // Reset success flag after delay
-        Future.delayed(const Duration(seconds: 2), () {
-          // ignore: invalid_use_of_visible_for_testing_member
-          emit(state.copyWith(expenseCreatedSuccess: false));
-        });
       },
     );
   }
