@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:injectable/injectable.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/expense_model.dart';
@@ -13,10 +16,14 @@ abstract class ExpenseRemoteDataSource {
     required double amount,
     String? description,
     String? location,
-    String? receiptPath,
+    String? receiptUrl,
   });
   Future<Map<String, double>> getExpensesSummaryByCategory(String tripId);
   Future<void> deleteExpense(String expenseId);
+  Future<String?> uploadReceiptBase64({
+    required String expenseId,
+    required String imagePath,
+  });
 }
 
 @LazySingleton(as: ExpenseRemoteDataSource)
@@ -49,7 +56,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
     required double amount,
     String? description,
     String? location,
-    String? receiptPath,
+    String? receiptUrl,
   }) async {
     final response = await _dioClient.post('/expenses', data: {
       'trip_id': tripId,
@@ -58,7 +65,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       'expense_date': DateTime.now().toUtc().toIso8601String(),
       if (description != null) 'description': description,
       if (location != null) 'location_name': location,
-      if (receiptPath != null) 'receipt_path': receiptPath,
+      if (receiptUrl != null) 'receipt_url': receiptUrl,
     });
     return ExpenseModel.fromJson(response.data);
   }
@@ -75,5 +82,53 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   @override
   Future<void> deleteExpense(String expenseId) async {
     await _dioClient.delete('/expenses/$expenseId');
+  }
+
+  @override
+  Future<String?> uploadReceiptBase64({
+    required String expenseId,
+    required String imagePath,
+  }) async {
+    try {
+      // Ler arquivo e converter para base64
+      final file = File(imagePath);
+      final bytes = await file.readAsBytes();
+      final base64String = base64Encode(bytes);
+
+      // Detectar extensão e MIME type
+      final extension = imagePath.split('.').last.toLowerCase();
+      final mimeType = _getMimeType(extension);
+      final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.$extension';
+
+      // Enviar para API /uploads/base64
+      final response = await _dioClient.post('/uploads/base64', data: {
+        'entity_type': 'expense',
+        'entity_id': expenseId,
+        'file_type': 'expense_receipt',
+        'base64': 'data:$mimeType;base64,$base64String',
+        'file_name': fileName,
+        'mime_type': mimeType,
+      });
+
+      // Retornar URL do arquivo
+      return response.data['s3_key'] as String?;
+    } catch (e) {
+      // Em caso de erro, retornar null (upload falhou, mas gasto foi salvo)
+      return null;
+    }
+  }
+
+  String _getMimeType(String extension) {
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
   }
 }
