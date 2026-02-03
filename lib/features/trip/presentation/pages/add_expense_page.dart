@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/currency_input_formatter.dart';
 import '../../domain/entities/expense_category.dart';
 import '../bloc/trip_expenses_bloc.dart';
 import '../bloc/trip_expenses_event.dart';
@@ -38,6 +39,7 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
 
+  String? _selectedParentId;
   String? _selectedCategoryId;
 
   static const Color _primaryOrange = Color(0xFFFF9800);
@@ -110,7 +112,7 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
       return;
     }
 
-    final amount = double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0;
+    final amount = _amountController.text.toCurrencyDouble();
 
     context.read<TripExpensesBloc>().add(
           TripExpensesEvent.createExpense(
@@ -271,17 +273,20 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category Selection
+              // Category Selection - Dois Dropdowns
               const Text(
-                'Tipo de Gasto',
+                'Categoria',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 12),
-              _buildCategoryGrid(state.categories),
+              const SizedBox(height: 8),
+              _buildCategoryDropdown(state.categories),
+              const SizedBox(height: 16),
+              // Subcategoria (só aparece se tiver filhos)
+              _buildSubcategoryDropdown(state.categories),
               const SizedBox(height: 24),
 
               // Amount Input
@@ -336,208 +341,156 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
     );
   }
 
-  Widget _buildCategoryGrid(List<ExpenseCategoryEntity> categories) {
-    if (categories.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
+  /// Dropdown para selecionar categoria pai
+  Widget _buildCategoryDropdown(List<ExpenseCategoryEntity> categories) {
+    // Categorias pai são aquelas sem parentId
+    final parentCategories = categories.where((c) => c.isParent).toList();
+
+    return DropdownButtonFormField<String>(
+      value: _selectedParentId,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
-        child: Center(
-          child: Column(
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _primaryOrange, width: 2),
+        ),
+      ),
+      hint: const Text('Selecione a categoria'),
+      isExpanded: true,
+      items: parentCategories.map((category) {
+        final icon = _getCategoryIcon(category.code);
+        final color = _getCategoryColor(category.code);
+        
+        return DropdownMenuItem<String>(
+          value: category.id,
+          child: Row(
             children: [
-              Icon(Icons.category_outlined, size: 40, color: Colors.grey[400]),
-              const SizedBox(height: 8),
-              Text(
-                'Nenhuma categoria disponível',
-                style: TextStyle(color: Colors.grey[600]),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
+              const SizedBox(width: 12),
+              Text(category.name, style: const TextStyle(fontSize: 15)),
             ],
           ),
-        ),
-      );
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedParentId = value;
+          // Verifica se a categoria pai tem filhos
+          final children = categories.where((c) => c.parentId == value).toList();
+          if (children.isEmpty) {
+            // Se não tem filhos, usa a própria categoria pai
+            _selectedCategoryId = value;
+          } else {
+            // Se tem filhos, limpa a seleção (usuário precisa escolher subcategoria)
+            _selectedCategoryId = null;
+          }
+        });
+      },
+    );
+  }
+
+  /// Dropdown para selecionar subcategoria (só aparece se a categoria pai tiver filhos)
+  Widget _buildSubcategoryDropdown(List<ExpenseCategoryEntity> categories) {
+    // Se nenhuma categoria pai foi selecionada, não mostra nada
+    if (_selectedParentId == null) {
+      return const SizedBox.shrink();
     }
 
-    // Separar categorias pai (sem parentId) e filhos (com parentId)
-    final parentCategories = categories.where((c) => c.isParent).toList();
-    final childCategories = categories.where((c) => c.isChild).toList();
+    // Filtra as subcategorias do pai selecionado
+    final subcategories = categories
+        .where((c) => c.parentId == _selectedParentId)
+        .toList();
 
-    // Agrupar filhos por parentId
-    final Map<String, List<ExpenseCategoryEntity>> childrenByParent = {};
-    for (var child in childCategories) {
-      childrenByParent.putIfAbsent(child.parentId!, () => []).add(child);
+    // Se não há subcategorias, não mostra nada
+    if (subcategories.isEmpty) {
+      return const SizedBox.shrink();
     }
+
+    // Encontra a categoria pai para usar sua cor
+    final parent = categories.firstWhere(
+      (c) => c.id == _selectedParentId,
+      orElse: () => categories.first,
+    );
+    final parentColor = _getCategoryColor(parent.code);
 
     return Column(
-      children: parentCategories.map((parent) {
-        final children = childrenByParent[parent.id] ?? [];
-        
-        // Se não tem filhos, mostra como card simples
-        if (children.isEmpty) {
-          return _buildCategoryCard(parent);
-        }
-        
-        // Se tem filhos, mostra como seção expansível
-        return _buildExpandableCategory(parent, children);
-      }).toList(),
-    );
-  }
-
-  Widget _buildCategoryCard(ExpenseCategoryEntity category) {
-    final isSelected = _selectedCategoryId == category.id;
-    final icon = _getCategoryIcon(category.code);
-    final color = _getCategoryColor(category.code);
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategoryId = category.id),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tipo específico',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _selectedCategoryId,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: parentColor.withOpacity(0.05),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: parentColor.withOpacity(0.3)),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                category.name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? color : Colors.black87,
-                ),
-              ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: parentColor.withOpacity(0.3)),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandableCategory(
-    ExpenseCategoryEntity parent,
-    List<ExpenseCategoryEntity> children,
-  ) {
-    final parentIcon = _getCategoryIcon(parent.code);
-    final parentColor = _getCategoryColor(parent.code);
-    final hasChildSelected = children.any((c) => c.id == _selectedCategoryId);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: hasChildSelected ? parentColor : Colors.grey[300]!,
-          width: hasChildSelected ? 2 : 1,
-        ),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: hasChildSelected,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: parentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(parentIcon, color: parentColor, size: 24),
-          ),
-          title: Text(
-            parent.name,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: hasChildSelected ? parentColor : Colors.black87,
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: parentColor, width: 2),
             ),
           ),
-          subtitle: Text(
-            '${children.length} opções',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: children.map((child) {
-                  final isSelected = _selectedCategoryId == child.id;
-                  final color = _getCategoryColor(parent.code);
-                  
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedCategoryId = child.id),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withOpacity(0.15)
-                            : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? color : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            child.name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isSelected ? color : Colors.black87,
-                            ),
-                          ),
-                          if (isSelected) ...[
-                            const SizedBox(width: 6),
-                            Icon(Icons.check, color: color, size: 16),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+          hint: const Text('Selecione o tipo'),
+          isExpanded: true,
+          items: subcategories.map((category) {
+            return DropdownMenuItem<String>(
+              value: category.id,
+              child: Text(category.name, style: const TextStyle(fontSize: 15)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCategoryId = value;
+            });
+          },
+          validator: (value) {
+            if (value == null && subcategories.isNotEmpty) {
+              return 'Selecione o tipo específico';
+            }
+            return null;
+          },
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildAmountInput() {
     return TextFormField(
       controller: _amountController,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType: TextInputType.number,
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d+[,.]?\d{0,2}')),
+        CurrencyInputFormatter(),
       ],
       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
@@ -563,8 +516,8 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
         if (value == null || value.isEmpty) {
           return 'Informe o valor';
         }
-        final amount = double.tryParse(value.replaceAll(',', '.'));
-        if (amount == null || amount <= 0) {
+        final amount = value.toCurrencyDouble();
+        if (amount <= 0) {
           return 'Valor deve ser maior que zero';
         }
         return null;
