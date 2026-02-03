@@ -23,6 +23,8 @@ mixin _$ExpenseCategoryModel {
   String get id => throw _privateConstructorUsedError;
   String get code => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: 'parent_id')
+  String? get parentId => throw _privateConstructorUsedError;
   String? get icon => throw _privateConstructorUsedError;
   String? get color => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_active')
@@ -44,6 +46,7 @@ abstract class $ExpenseCategoryModelCopyWith<$Res> {
       {String id,
       String code,
       String name,
+      @JsonKey(name: 'parent_id') String? parentId,
       String? icon,
       String? color,
       @JsonKey(name: 'is_active') bool isActive});
@@ -66,6 +69,7 @@ class _$ExpenseCategoryModelCopyWithImpl<$Res,
     Object? id = null,
     Object? code = null,
     Object? name = null,
+    Object? parentId = freezed,
     Object? icon = freezed,
     Object? color = freezed,
     Object? isActive = null,
@@ -83,6 +87,10 @@ class _$ExpenseCategoryModelCopyWithImpl<$Res,
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      parentId: freezed == parentId
+          ? _value.parentId
+          : parentId // ignore: cast_nullable_to_non_nullable
+              as String?,
       icon: freezed == icon
           ? _value.icon
           : icon // ignore: cast_nullable_to_non_nullable
@@ -111,6 +119,7 @@ abstract class _$$ExpenseCategoryModelImplCopyWith<$Res>
       {String id,
       String code,
       String name,
+      @JsonKey(name: 'parent_id') String? parentId,
       String? icon,
       String? color,
       @JsonKey(name: 'is_active') bool isActive});
@@ -130,6 +139,7 @@ class __$$ExpenseCategoryModelImplCopyWithImpl<$Res>
     Object? id = null,
     Object? code = null,
     Object? name = null,
+    Object? parentId = freezed,
     Object? icon = freezed,
     Object? color = freezed,
     Object? isActive = null,
@@ -147,6 +157,10 @@ class __$$ExpenseCategoryModelImplCopyWithImpl<$Res>
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
               as String,
+      parentId: freezed == parentId
+          ? _value.parentId
+          : parentId // ignore: cast_nullable_to_non_nullable
+              as String?,
       icon: freezed == icon
           ? _value.icon
           : icon // ignore: cast_nullable_to_non_nullable
@@ -170,6 +184,7 @@ class _$ExpenseCategoryModelImpl extends _ExpenseCategoryModel {
       {required this.id,
       required this.code,
       required this.name,
+      @JsonKey(name: 'parent_id') this.parentId,
       this.icon,
       this.color,
       @JsonKey(name: 'is_active') this.isActive = true})
@@ -185,6 +200,9 @@ class _$ExpenseCategoryModelImpl extends _ExpenseCategoryModel {
   @override
   final String name;
   @override
+  @JsonKey(name: 'parent_id')
+  final String? parentId;
+  @override
   final String? icon;
   @override
   final String? color;
@@ -194,7 +212,7 @@ class _$ExpenseCategoryModelImpl extends _ExpenseCategoryModel {
 
   @override
   String toString() {
-    return 'ExpenseCategoryModel(id: $id, code: $code, name: $name, icon: $icon, color: $color, isActive: $isActive)';
+    return 'ExpenseCategoryModel(id: $id, code: $code, name: $name, parentId: $parentId, icon: $icon, color: $color, isActive: $isActive)';
   }
 
   @override
@@ -205,6 +223,8 @@ class _$ExpenseCategoryModelImpl extends _ExpenseCategoryModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.code, code) || other.code == code) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.parentId, parentId) ||
+                other.parentId == parentId) &&
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.color, color) || other.color == color) &&
             (identical(other.isActive, isActive) ||
@@ -214,7 +234,7 @@ class _$ExpenseCategoryModelImpl extends _ExpenseCategoryModel {
   @JsonKey(ignore: true)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, code, name, icon, color, isActive);
+      Object.hash(runtimeType, id, code, name, parentId, icon, color, isActive);
 
   @JsonKey(ignore: true)
   @override
@@ -237,6 +257,7 @@ abstract class _ExpenseCategoryModel extends ExpenseCategoryModel {
           {required final String id,
           required final String code,
           required final String name,
+          @JsonKey(name: 'parent_id') final String? parentId,
           final String? icon,
           final String? color,
           @JsonKey(name: 'is_active') final bool isActive}) =
@@ -252,6 +273,9 @@ abstract class _ExpenseCategoryModel extends ExpenseCategoryModel {
   String get code;
   @override
   String get name;
+  @override
+  @JsonKey(name: 'parent_id')
+  String? get parentId;
   @override
   String? get icon;
   @override
