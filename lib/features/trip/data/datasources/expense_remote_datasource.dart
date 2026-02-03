@@ -62,7 +62,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       'trip_id': tripId,
       'category_id': categoryId,
       'amount': amount,
-      'expense_date': DateTime.now().toUtc().toIso8601String(),
+      'expense_date': DateTime.now().toUtc().toIso8601String().split('T').first,
       if (description != null) 'description': description,
       if (location != null) 'location_name': location,
       if (receiptUrl != null) 'receipt_url': receiptUrl,
