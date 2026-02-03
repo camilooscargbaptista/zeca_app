@@ -57,7 +57,7 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       'amount': amount,
       'expense_date': DateTime.now().toUtc().toIso8601String(),
       if (description != null) 'description': description,
-      if (location != null) 'location': location,
+      if (location != null) 'location_name': location,
       if (receiptPath != null) 'receipt_path': receiptPath,
     });
     return ExpenseModel.fromJson(response.data);
