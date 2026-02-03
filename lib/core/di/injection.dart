@@ -5,6 +5,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/storage_service.dart';
 import '../network/dio_client.dart';
 import '../../routes/app_router.dart';
+import '../../features/trip/domain/repositories/trip_repository.dart';
+import '../../features/trip/domain/usecases/get_active_trip.dart';
+import '../../features/trip/domain/usecases/get_trip_summary.dart';
+import '../../features/trip/domain/usecases/get_expense_categories.dart';
+import '../../features/trip/domain/usecases/get_expenses_by_trip.dart';
+import '../../features/trip/domain/usecases/create_expense.dart';
+import '../../features/trip/domain/usecases/start_trip.dart';
+import '../../features/expense/domain/repositories/expense_repository.dart';
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -45,9 +53,42 @@ Future<void> configureDependencies() async {
   
   // GeocodingService é registrado automaticamente pelo @injectable
   
-  // Initialize injectable
+  // Initialize injectable (registers repositories and datasources)
   print('🔧 [DI] Inicializando injectable...');
   getIt.init();
+  
+  // Register Trip usecases manually AFTER init (they depend on TripRepository)
+  print('🔧 [DI] Registrando Trip usecases...');
+  if (!getIt.isRegistered<GetActiveTrip>()) {
+    getIt.registerFactory<GetActiveTrip>(
+      () => GetActiveTrip(getIt<TripRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<GetTripSummary>()) {
+    getIt.registerFactory<GetTripSummary>(
+      () => GetTripSummary(getIt<TripRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<GetExpenseCategories>()) {
+    getIt.registerFactory<GetExpenseCategories>(
+      () => GetExpenseCategories(getIt<ExpenseRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<GetExpensesByTrip>()) {
+    getIt.registerFactory<GetExpensesByTrip>(
+      () => GetExpensesByTrip(getIt<ExpenseRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<CreateExpense>()) {
+    getIt.registerFactory<CreateExpense>(
+      () => CreateExpense(getIt<ExpenseRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<StartTrip>()) {
+    getIt.registerFactory<StartTrip>(
+      () => StartTrip(getIt<TripRepository>()),
+    );
+  }
   
   print('✅ [DI] Configuração completa: ${stopwatch.elapsedMilliseconds}ms');
   stopwatch.stop();
