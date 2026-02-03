@@ -11,14 +11,18 @@ _$ExpenseModelImpl _$$ExpenseModelImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       tripId: json['trip_id'] as String,
       categoryId: json['category_id'] as String,
-      categoryCode: json['category_code'] as String,
-      categoryName: json['category_name'] as String,
+      categoryCode: json['category_code'] as String? ?? 'OTHER',
+      categoryName: json['category_name'] as String? ?? 'Outros',
       amount: (json['amount'] as num).toDouble(),
       description: json['description'] as String?,
       location: json['location'] as String?,
       receiptUrl: json['receipt_url'] as String?,
-      expenseDate: DateTime.parse(json['expense_date'] as String),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      expenseDate: json['expense_date'] == null
+          ? null
+          : DateTime.parse(json['expense_date'] as String),
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String),
     );
 
 Map<String, dynamic> _$$ExpenseModelImplToJson(_$ExpenseModelImpl instance) =>
@@ -32,6 +36,6 @@ Map<String, dynamic> _$$ExpenseModelImplToJson(_$ExpenseModelImpl instance) =>
       'description': instance.description,
       'location': instance.location,
       'receipt_url': instance.receiptUrl,
-      'expense_date': instance.expenseDate.toIso8601String(),
-      'created_at': instance.createdAt.toIso8601String(),
+      'expense_date': instance.expenseDate?.toIso8601String(),
+      'created_at': instance.createdAt?.toIso8601String(),
     };

@@ -224,4 +224,26 @@ class DioClient {
       throw NetworkException('Erro inesperado: $e');
     }
   }
+
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException('Erro inesperado: $e');
+    }
+  }
 }

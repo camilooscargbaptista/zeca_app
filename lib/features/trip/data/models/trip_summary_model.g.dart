@@ -6,48 +6,90 @@ part of 'trip_summary_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+_$ExpenseBreakdownModelImpl _$$ExpenseBreakdownModelImplFromJson(
+        Map<String, dynamic> json) =>
+    _$ExpenseBreakdownModelImpl(
+      categoryId: json['category_id'] as String,
+      categoryName: json['category_name'] as String? ?? 'Outros',
+      categoryIcon: json['category_icon'] as String?,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0,
+      count: (json['count'] as num?)?.toInt() ?? 0,
+      percentage: (json['percentage'] as num?)?.toDouble() ?? 0,
+    );
+
+Map<String, dynamic> _$$ExpenseBreakdownModelImplToJson(
+        _$ExpenseBreakdownModelImpl instance) =>
+    <String, dynamic>{
+      'category_id': instance.categoryId,
+      'category_name': instance.categoryName,
+      'category_icon': instance.categoryIcon,
+      'amount': instance.amount,
+      'count': instance.count,
+      'percentage': instance.percentage,
+    };
+
+_$RevenueBreakdownModelImpl _$$RevenueBreakdownModelImplFromJson(
+        Map<String, dynamic> json) =>
+    _$RevenueBreakdownModelImpl(
+      totalRevenue: (json['total_revenue'] as num?)?.toDouble() ?? 0,
+      revenueCount: (json['revenue_count'] as num?)?.toInt() ?? 0,
+      advanceReceived: (json['advance_received'] as num?)?.toDouble() ?? 0,
+      pendingAmount: (json['pending_amount'] as num?)?.toDouble() ?? 0,
+    );
+
+Map<String, dynamic> _$$RevenueBreakdownModelImplToJson(
+        _$RevenueBreakdownModelImpl instance) =>
+    <String, dynamic>{
+      'total_revenue': instance.totalRevenue,
+      'revenue_count': instance.revenueCount,
+      'advance_received': instance.advanceReceived,
+      'pending_amount': instance.pendingAmount,
+    };
+
 _$TripSummaryModelImpl _$$TripSummaryModelImplFromJson(
         Map<String, dynamic> json) =>
     _$TripSummaryModelImpl(
-      tripId: json['trip_id'] as String,
-      origin: json['origin'] as String?,
-      destination: json['destination'] as String?,
-      totalDistanceKm: (json['total_distance_km'] as num?)?.toDouble() ?? 0,
+      referenceId: json['reference_id'] as String,
+      referenceType: json['reference_type'] as String? ?? 'TRIP',
+      distanceKm: (json['distance_km'] as num?)?.toDouble() ?? 0,
+      variableExpenses: (json['variable_expenses'] as num?)?.toDouble() ?? 0,
+      fixedExpenses: (json['fixed_expenses'] as num?)?.toDouble() ?? 0,
       totalExpenses: (json['total_expenses'] as num?)?.toDouble() ?? 0,
-      totalRevenues: (json['total_revenues'] as num?)?.toDouble() ?? 0,
-      netProfit: (json['net_profit'] as num?)?.toDouble() ?? 0,
-      profitMargin: (json['profit_margin'] as num?)?.toDouble() ?? 0,
       costPerKm: (json['cost_per_km'] as num?)?.toDouble() ?? 0,
-      expenseCount: (json['expense_count'] as num?)?.toInt() ?? 0,
-      revenueCount: (json['revenue_count'] as num?)?.toInt() ?? 0,
-      expensesByCategory:
-          (json['expenses_by_category'] as Map<String, dynamic>?)?.map(
-                (k, e) => MapEntry(k, (e as num).toDouble()),
-              ) ??
-              const {},
-      startedAt: json['started_at'] == null
+      expensesByCategory: (json['expenses_by_category'] as List<dynamic>?)
+              ?.map((e) =>
+                  ExpenseBreakdownModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      totalRevenue: (json['total_revenue'] as num?)?.toDouble() ?? 0,
+      revenueBreakdown: json['revenue_breakdown'] == null
           ? null
-          : DateTime.parse(json['started_at'] as String),
-      endedAt: json['ended_at'] == null
-          ? null
-          : DateTime.parse(json['ended_at'] as String),
+          : RevenueBreakdownModel.fromJson(
+              json['revenue_breakdown'] as Map<String, dynamic>),
+      profit: (json['profit'] as num?)?.toDouble() ?? 0,
+      profitMargin: (json['profit_margin'] as num?)?.toDouble() ?? 0,
+      profitPerKm: (json['profit_per_km'] as num?)?.toDouble() ?? 0,
+      avgCostPerKm: (json['avg_cost_per_km'] as num?)?.toDouble(),
+      costVariationPercent:
+          (json['cost_variation_percent'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$$TripSummaryModelImplToJson(
         _$TripSummaryModelImpl instance) =>
     <String, dynamic>{
-      'trip_id': instance.tripId,
-      'origin': instance.origin,
-      'destination': instance.destination,
-      'total_distance_km': instance.totalDistanceKm,
+      'reference_id': instance.referenceId,
+      'reference_type': instance.referenceType,
+      'distance_km': instance.distanceKm,
+      'variable_expenses': instance.variableExpenses,
+      'fixed_expenses': instance.fixedExpenses,
       'total_expenses': instance.totalExpenses,
-      'total_revenues': instance.totalRevenues,
-      'net_profit': instance.netProfit,
-      'profit_margin': instance.profitMargin,
       'cost_per_km': instance.costPerKm,
-      'expense_count': instance.expenseCount,
-      'revenue_count': instance.revenueCount,
       'expenses_by_category': instance.expensesByCategory,
-      'started_at': instance.startedAt?.toIso8601String(),
-      'ended_at': instance.endedAt?.toIso8601String(),
+      'total_revenue': instance.totalRevenue,
+      'revenue_breakdown': instance.revenueBreakdown,
+      'profit': instance.profit,
+      'profit_margin': instance.profitMargin,
+      'profit_per_km': instance.profitPerKm,
+      'avg_cost_per_km': instance.avgCostPerKm,
+      'cost_variation_percent': instance.costVariationPercent,
     };

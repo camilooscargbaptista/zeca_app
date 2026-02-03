@@ -35,9 +35,9 @@ mixin _$ExpenseModel {
   @JsonKey(name: 'receipt_url')
   String? get receiptUrl => throw _privateConstructorUsedError;
   @JsonKey(name: 'expense_date')
-  DateTime get expenseDate => throw _privateConstructorUsedError;
+  DateTime? get expenseDate => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -61,8 +61,8 @@ abstract class $ExpenseModelCopyWith<$Res> {
       String? description,
       String? location,
       @JsonKey(name: 'receipt_url') String? receiptUrl,
-      @JsonKey(name: 'expense_date') DateTime expenseDate,
-      @JsonKey(name: 'created_at') DateTime createdAt});
+      @JsonKey(name: 'expense_date') DateTime? expenseDate,
+      @JsonKey(name: 'created_at') DateTime? createdAt});
 }
 
 /// @nodoc
@@ -87,8 +87,8 @@ class _$ExpenseModelCopyWithImpl<$Res, $Val extends ExpenseModel>
     Object? description = freezed,
     Object? location = freezed,
     Object? receiptUrl = freezed,
-    Object? expenseDate = null,
-    Object? createdAt = null,
+    Object? expenseDate = freezed,
+    Object? createdAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -127,14 +127,14 @@ class _$ExpenseModelCopyWithImpl<$Res, $Val extends ExpenseModel>
           ? _value.receiptUrl
           : receiptUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      expenseDate: null == expenseDate
+      expenseDate: freezed == expenseDate
           ? _value.expenseDate
           : expenseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      createdAt: null == createdAt
+              as DateTime?,
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -157,8 +157,8 @@ abstract class _$$ExpenseModelImplCopyWith<$Res>
       String? description,
       String? location,
       @JsonKey(name: 'receipt_url') String? receiptUrl,
-      @JsonKey(name: 'expense_date') DateTime expenseDate,
-      @JsonKey(name: 'created_at') DateTime createdAt});
+      @JsonKey(name: 'expense_date') DateTime? expenseDate,
+      @JsonKey(name: 'created_at') DateTime? createdAt});
 }
 
 /// @nodoc
@@ -181,8 +181,8 @@ class __$$ExpenseModelImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? location = freezed,
     Object? receiptUrl = freezed,
-    Object? expenseDate = null,
-    Object? createdAt = null,
+    Object? expenseDate = freezed,
+    Object? createdAt = freezed,
   }) {
     return _then(_$ExpenseModelImpl(
       id: null == id
@@ -221,14 +221,14 @@ class __$$ExpenseModelImplCopyWithImpl<$Res>
           ? _value.receiptUrl
           : receiptUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      expenseDate: null == expenseDate
+      expenseDate: freezed == expenseDate
           ? _value.expenseDate
           : expenseDate // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      createdAt: null == createdAt
+              as DateTime?,
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ));
   }
 }
@@ -240,14 +240,14 @@ class _$ExpenseModelImpl extends _ExpenseModel {
       {required this.id,
       @JsonKey(name: 'trip_id') required this.tripId,
       @JsonKey(name: 'category_id') required this.categoryId,
-      @JsonKey(name: 'category_code') required this.categoryCode,
-      @JsonKey(name: 'category_name') required this.categoryName,
+      @JsonKey(name: 'category_code') this.categoryCode = 'OTHER',
+      @JsonKey(name: 'category_name') this.categoryName = 'Outros',
       required this.amount,
       this.description,
       this.location,
       @JsonKey(name: 'receipt_url') this.receiptUrl,
-      @JsonKey(name: 'expense_date') required this.expenseDate,
-      @JsonKey(name: 'created_at') required this.createdAt})
+      @JsonKey(name: 'expense_date') this.expenseDate,
+      @JsonKey(name: 'created_at') this.createdAt})
       : super._();
 
   factory _$ExpenseModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -278,10 +278,10 @@ class _$ExpenseModelImpl extends _ExpenseModel {
   final String? receiptUrl;
   @override
   @JsonKey(name: 'expense_date')
-  final DateTime expenseDate;
+  final DateTime? expenseDate;
   @override
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   @override
   String toString() {
@@ -349,14 +349,14 @@ abstract class _ExpenseModel extends ExpenseModel {
           {required final String id,
           @JsonKey(name: 'trip_id') required final String tripId,
           @JsonKey(name: 'category_id') required final String categoryId,
-          @JsonKey(name: 'category_code') required final String categoryCode,
-          @JsonKey(name: 'category_name') required final String categoryName,
+          @JsonKey(name: 'category_code') final String categoryCode,
+          @JsonKey(name: 'category_name') final String categoryName,
           required final double amount,
           final String? description,
           final String? location,
           @JsonKey(name: 'receipt_url') final String? receiptUrl,
-          @JsonKey(name: 'expense_date') required final DateTime expenseDate,
-          @JsonKey(name: 'created_at') required final DateTime createdAt}) =
+          @JsonKey(name: 'expense_date') final DateTime? expenseDate,
+          @JsonKey(name: 'created_at') final DateTime? createdAt}) =
       _$ExpenseModelImpl;
   const _ExpenseModel._() : super._();
 
@@ -388,10 +388,10 @@ abstract class _ExpenseModel extends ExpenseModel {
   String? get receiptUrl;
   @override
   @JsonKey(name: 'expense_date')
-  DateTime get expenseDate;
+  DateTime? get expenseDate;
   @override
   @JsonKey(name: 'created_at')
-  DateTime get createdAt;
+  DateTime? get createdAt;
   @override
   @JsonKey(ignore: true)
   _$$ExpenseModelImplCopyWith<_$ExpenseModelImpl> get copyWith =>

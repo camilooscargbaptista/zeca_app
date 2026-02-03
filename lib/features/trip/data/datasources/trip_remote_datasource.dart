@@ -57,7 +57,7 @@ class TripRemoteDataSourceImpl implements TripRemoteDataSource {
 
   @override
   Future<TripModel> finishTrip(String tripId) async {
-    final response = await _dioClient.put('/trips/$tripId/finish');
+    final response = await _dioClient.patch('/trips/$tripId/finish');
     return TripModel.fromJson(response.data);
   }
 
