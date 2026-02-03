@@ -29,6 +29,7 @@ mixin _$ExpenseModel {
   String get categoryCode => throw _privateConstructorUsedError;
   @JsonKey(name: 'category_name')
   String get categoryName => throw _privateConstructorUsedError;
+  @AmountConverter()
   double get amount => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get location => throw _privateConstructorUsedError;
@@ -57,7 +58,7 @@ abstract class $ExpenseModelCopyWith<$Res> {
       @JsonKey(name: 'category_id') String categoryId,
       @JsonKey(name: 'category_code') String categoryCode,
       @JsonKey(name: 'category_name') String categoryName,
-      double amount,
+      @AmountConverter() double amount,
       String? description,
       String? location,
       @JsonKey(name: 'receipt_url') String? receiptUrl,
@@ -153,7 +154,7 @@ abstract class _$$ExpenseModelImplCopyWith<$Res>
       @JsonKey(name: 'category_id') String categoryId,
       @JsonKey(name: 'category_code') String categoryCode,
       @JsonKey(name: 'category_name') String categoryName,
-      double amount,
+      @AmountConverter() double amount,
       String? description,
       String? location,
       @JsonKey(name: 'receipt_url') String? receiptUrl,
@@ -242,7 +243,7 @@ class _$ExpenseModelImpl extends _ExpenseModel {
       @JsonKey(name: 'category_id') required this.categoryId,
       @JsonKey(name: 'category_code') this.categoryCode = 'OTHER',
       @JsonKey(name: 'category_name') this.categoryName = 'Outros',
-      required this.amount,
+      @AmountConverter() required this.amount,
       this.description,
       this.location,
       @JsonKey(name: 'receipt_url') this.receiptUrl,
@@ -268,6 +269,7 @@ class _$ExpenseModelImpl extends _ExpenseModel {
   @JsonKey(name: 'category_name')
   final String categoryName;
   @override
+  @AmountConverter()
   final double amount;
   @override
   final String? description;
@@ -351,7 +353,7 @@ abstract class _ExpenseModel extends ExpenseModel {
           @JsonKey(name: 'category_id') required final String categoryId,
           @JsonKey(name: 'category_code') final String categoryCode,
           @JsonKey(name: 'category_name') final String categoryName,
-          required final double amount,
+          @AmountConverter() required final double amount,
           final String? description,
           final String? location,
           @JsonKey(name: 'receipt_url') final String? receiptUrl,
@@ -378,6 +380,7 @@ abstract class _ExpenseModel extends ExpenseModel {
   @JsonKey(name: 'category_name')
   String get categoryName;
   @override
+  @AmountConverter()
   double get amount;
   @override
   String? get description;
