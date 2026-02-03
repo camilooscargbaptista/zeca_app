@@ -44,14 +44,26 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? receiptPath,
   }) async {
     try {
+      // 1. Criar expense na API (sem receiptUrl inicialmente)
       final result = await _remoteDataSource.createExpense(
         tripId: tripId,
         categoryId: categoryId,
         amount: amount,
         description: description,
         location: location,
-        receiptPath: receiptPath,
+        receiptUrl: null, // Será atualizado após upload
       );
+
+      // 2. Se tiver receiptPath, fazer upload para S3
+      if (receiptPath != null && receiptPath.isNotEmpty) {
+        await _remoteDataSource.uploadReceiptBase64(
+          expenseId: result.id,
+          imagePath: receiptPath,
+        );
+        // Nota: O upload cria registro na tabela expense_receipts automaticamente
+        // via entidade ExpenseReceipt no backend
+      }
+
       return Right(result.toEntity());
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));

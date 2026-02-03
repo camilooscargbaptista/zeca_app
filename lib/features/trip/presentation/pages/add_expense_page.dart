@@ -130,6 +130,7 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
             location: _locationController.text.isNotEmpty
                 ? _locationController.text
                 : null,
+            receiptPath: _receiptImage?.path,
           ),
         );
   }
