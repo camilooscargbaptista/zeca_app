@@ -9,6 +9,7 @@ import '../../domain/entities/trip_summary.dart';
 import '../bloc/trip_expenses_bloc.dart';
 import '../bloc/trip_expenses_event.dart';
 import '../bloc/trip_expenses_state.dart';
+import '../widgets/trip_start_modal.dart';
 
 /// Trip Expenses Dashboard Page (US-003)
 /// Displays summary of trip expenses with categories breakdown
@@ -44,57 +45,72 @@ class _DashboardContentState extends State<_DashboardContent> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isStartingTrip = false;
 
-  /// Obtém o vehicleId do veículo ativo e inicia a viagem
+  /// Obtém o vehicleId do veículo ativo e abre modal para origem/destino
   Future<void> _handleStartTrip(BuildContext context) async {
-    setState(() => _isStartingTrip = true);
+    // Obter dados do veículo ativo do StorageService
+    final storageService = getIt<StorageService>();
+    final vehicleData = await storageService.getJourneyVehicleData();
 
-    try {
-      // Obter dados do veículo ativo do StorageService
-      final storageService = getIt<StorageService>();
-      final vehicleData = await storageService.getJourneyVehicleData();
-
-      if (vehicleData == null || vehicleData.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Nenhum veículo ativo encontrado. Faça login novamente.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Obter o vehicleId - pode estar em 'id' ou 'vehicleId'
-      final vehicleId = vehicleData['id']?.toString() ??
-          vehicleData['vehicleId']?.toString() ??
-          vehicleData['vehicle_id']?.toString();
-
-      if (vehicleId == null || vehicleId.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ID do veículo não encontrado.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Iniciar a viagem via BLoC
+    if (vehicleData == null || vehicleData.isEmpty) {
       if (mounted) {
-        context.read<TripExpensesBloc>().add(
-              TripExpensesEvent.startTrip(
-                vehicleId: vehicleId,
-                origin: '', // Pode ser preenchido posteriormente
-              ),
-            );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nenhum veículo ativo encontrado. Faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    } finally {
+      return;
+    }
+
+    // Obter o vehicleId - pode estar em 'id' ou 'vehicleId'
+    final vehicleId = vehicleData['id']?.toString() ??
+        vehicleData['vehicleId']?.toString() ??
+        vehicleData['vehicle_id']?.toString();
+    final vehiclePlate = vehicleData['placa']?.toString() ??
+        vehicleData['plate']?.toString();
+
+    // DEBUG: Log para diagnóstico
+    debugPrint('🚗 Vehicle Data: $vehicleData');
+    debugPrint('🆔 Vehicle ID: $vehicleId');
+
+    if (vehicleId == null || vehicleId.isEmpty) {
       if (mounted) {
-        setState(() => _isStartingTrip = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ID do veículo não encontrado.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+      return;
+    }
+
+    // Abrir modal para coletar origem/destino
+    if (mounted) {
+      await TripStartModal.show(
+        context,
+        vehiclePlate: vehiclePlate,
+        onConfirm: (origin, destination) {
+          setState(() => _isStartingTrip = true);
+          
+          // Iniciar a viagem via BLoC com origem/destino
+          context.read<TripExpensesBloc>().add(
+                TripExpensesEvent.startTrip(
+                  vehicleId: vehicleId,
+                  origin: origin,
+                  destination: destination,
+                ),
+              );
+              
+          // O estado será atualizado pelo BLoC listener
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              setState(() => _isStartingTrip = false);
+            }
+          });
+        },
+      );
     }
   }
 
