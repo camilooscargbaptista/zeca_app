@@ -35,7 +35,10 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
   @override
   Future<List<ExpenseModel>> getExpensesByTrip(String tripId) async {
     final response = await _dioClient.get('/expenses/trip/$tripId');
-    final List<dynamic> data = response.data['data'] ?? response.data;
+    // API pode retornar lista direta [] ou {data: []}
+    final List<dynamic> data = response.data is List
+        ? response.data
+        : (response.data['data'] ?? []);
     return data.map((json) => ExpenseModel.fromJson(json)).toList();
   }
 
