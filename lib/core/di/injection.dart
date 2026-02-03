@@ -12,6 +12,7 @@ import '../../features/trip/domain/usecases/get_expense_categories.dart';
 import '../../features/trip/domain/usecases/get_expenses_by_trip.dart';
 import '../../features/trip/domain/usecases/create_expense.dart';
 import '../../features/trip/domain/usecases/start_trip.dart';
+import '../../features/trip/domain/usecases/finish_trip.dart';
 import '../../features/trip/domain/repositories/expense_repository.dart';
 import 'injection.config.dart';
 
@@ -87,6 +88,11 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<StartTrip>()) {
     getIt.registerFactory<StartTrip>(
       () => StartTrip(getIt<TripRepository>()),
+    );
+  }
+  if (!getIt.isRegistered<FinishTrip>()) {
+    getIt.registerFactory<FinishTrip>(
+      () => FinishTrip(getIt<TripRepository>()),
     );
   }
   

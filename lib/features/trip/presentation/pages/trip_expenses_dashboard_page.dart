@@ -45,6 +45,46 @@ class _DashboardContentState extends State<_DashboardContent> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isStartingTrip = false;
 
+  /// Mostra dialog de confirmação para encerrar viagem
+  Future<void> _showFinishTripDialog(BuildContext context, String tripId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.stop_circle, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('Encerrar Viagem'),
+          ],
+        ),
+        content: const Text(
+          'Deseja realmente encerrar esta viagem?\n\n'
+          'Todos os gastos registrados serão contabilizados no resumo final.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryOrange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Encerrar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<TripExpensesBloc>().add(
+            TripExpensesEvent.finishTrip(tripId),
+          );
+    }
+  }
+
   /// Obtém o vehicleId do veículo ativo e abre modal para origem/destino
   Future<void> _handleStartTrip(BuildContext context) async {
     // Obter dados do veículo ativo do StorageService
@@ -125,10 +165,22 @@ class _DashboardContentState extends State<_DashboardContent> {
         foregroundColor: Colors.white,
         title: const Text('Gestão de Gastos'),
         leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
         actions: [
+          BlocBuilder<TripExpensesBloc, TripExpensesState>(
+            builder: (context, state) {
+              if (state.activeTrip != null) {
+                return IconButton(
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  tooltip: 'Encerrar Viagem',
+                  onPressed: () => _showFinishTripDialog(context, state.activeTrip!.id),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {

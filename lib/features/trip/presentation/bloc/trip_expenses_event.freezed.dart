@@ -28,6 +28,7 @@ mixin _$TripExpensesEvent {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) =>
       throw _privateConstructorUsedError;
@@ -42,6 +43,7 @@ mixin _$TripExpensesEvent {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) =>
       throw _privateConstructorUsedError;
@@ -56,6 +58,7 @@ mixin _$TripExpensesEvent {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) =>
@@ -68,6 +71,7 @@ mixin _$TripExpensesEvent {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) =>
       throw _privateConstructorUsedError;
@@ -79,6 +83,7 @@ mixin _$TripExpensesEvent {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) =>
       throw _privateConstructorUsedError;
@@ -90,6 +95,7 @@ mixin _$TripExpensesEvent {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) =>
@@ -162,6 +168,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return loadActiveTrip();
@@ -179,6 +186,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return loadActiveTrip?.call();
@@ -196,6 +204,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -214,6 +223,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return loadActiveTrip(this);
@@ -228,6 +238,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return loadActiveTrip?.call(this);
@@ -242,6 +253,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -331,6 +343,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return loadTripSummary(tripId);
@@ -348,6 +361,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return loadTripSummary?.call(tripId);
@@ -365,6 +379,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -383,6 +398,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return loadTripSummary(this);
@@ -397,6 +413,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return loadTripSummary?.call(this);
@@ -411,6 +428,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -478,6 +496,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return loadCategories();
@@ -495,6 +514,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return loadCategories?.call();
@@ -512,6 +532,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -530,6 +551,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return loadCategories(this);
@@ -544,6 +566,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return loadCategories?.call(this);
@@ -558,6 +581,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -646,6 +670,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return loadExpenses(tripId);
@@ -663,6 +688,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return loadExpenses?.call(tripId);
@@ -680,6 +706,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -698,6 +725,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return loadExpenses(this);
@@ -712,6 +740,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return loadExpenses?.call(this);
@@ -726,6 +755,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -877,6 +907,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return createExpense(
@@ -895,6 +926,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return createExpense?.call(
@@ -913,6 +945,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -932,6 +965,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return createExpense(this);
@@ -946,6 +980,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return createExpense?.call(this);
@@ -960,6 +995,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -1084,6 +1120,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return startTrip(origin, destination, vehicleId);
@@ -1101,6 +1138,7 @@ class _$StartTripEventImpl implements StartTripEvent {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return startTrip?.call(origin, destination, vehicleId);
@@ -1118,6 +1156,7 @@ class _$StartTripEventImpl implements StartTripEvent {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -1136,6 +1175,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return startTrip(this);
@@ -1150,6 +1190,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return startTrip?.call(this);
@@ -1164,6 +1205,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {
@@ -1185,6 +1227,186 @@ abstract class StartTripEvent implements TripExpensesEvent {
   String get vehicleId;
   @JsonKey(ignore: true)
   _$$StartTripEventImplCopyWith<_$StartTripEventImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$FinishTripEventImplCopyWith<$Res> {
+  factory _$$FinishTripEventImplCopyWith(_$FinishTripEventImpl value,
+          $Res Function(_$FinishTripEventImpl) then) =
+      __$$FinishTripEventImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String tripId});
+}
+
+/// @nodoc
+class __$$FinishTripEventImplCopyWithImpl<$Res>
+    extends _$TripExpensesEventCopyWithImpl<$Res, _$FinishTripEventImpl>
+    implements _$$FinishTripEventImplCopyWith<$Res> {
+  __$$FinishTripEventImplCopyWithImpl(
+      _$FinishTripEventImpl _value, $Res Function(_$FinishTripEventImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? tripId = null,
+  }) {
+    return _then(_$FinishTripEventImpl(
+      null == tripId
+          ? _value.tripId
+          : tripId // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$FinishTripEventImpl implements FinishTripEvent {
+  const _$FinishTripEventImpl(this.tripId);
+
+  @override
+  final String tripId;
+
+  @override
+  String toString() {
+    return 'TripExpensesEvent.finishTrip(tripId: $tripId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$FinishTripEventImpl &&
+            (identical(other.tripId, tripId) || other.tripId == tripId));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, tripId);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$FinishTripEventImplCopyWith<_$FinishTripEventImpl> get copyWith =>
+      __$$FinishTripEventImplCopyWithImpl<_$FinishTripEventImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() loadActiveTrip,
+    required TResult Function(String tripId) loadTripSummary,
+    required TResult Function() loadCategories,
+    required TResult Function(String tripId) loadExpenses,
+    required TResult Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)
+        createExpense,
+    required TResult Function(
+            String origin, String? destination, String vehicleId)
+        startTrip,
+    required TResult Function(String tripId) finishTrip,
+    required TResult Function() refresh,
+  }) {
+    return finishTrip(tripId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? loadActiveTrip,
+    TResult? Function(String tripId)? loadTripSummary,
+    TResult? Function()? loadCategories,
+    TResult? Function(String tripId)? loadExpenses,
+    TResult? Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)?
+        createExpense,
+    TResult? Function(String origin, String? destination, String vehicleId)?
+        startTrip,
+    TResult? Function(String tripId)? finishTrip,
+    TResult? Function()? refresh,
+  }) {
+    return finishTrip?.call(tripId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? loadActiveTrip,
+    TResult Function(String tripId)? loadTripSummary,
+    TResult Function()? loadCategories,
+    TResult Function(String tripId)? loadExpenses,
+    TResult Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)?
+        createExpense,
+    TResult Function(String origin, String? destination, String vehicleId)?
+        startTrip,
+    TResult Function(String tripId)? finishTrip,
+    TResult Function()? refresh,
+    required TResult orElse(),
+  }) {
+    if (finishTrip != null) {
+      return finishTrip(tripId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LoadActiveTrip value) loadActiveTrip,
+    required TResult Function(LoadTripSummary value) loadTripSummary,
+    required TResult Function(LoadCategories value) loadCategories,
+    required TResult Function(LoadExpenses value) loadExpenses,
+    required TResult Function(CreateExpenseEvent value) createExpense,
+    required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
+    required TResult Function(RefreshTripExpenses value) refresh,
+  }) {
+    return finishTrip(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LoadActiveTrip value)? loadActiveTrip,
+    TResult? Function(LoadTripSummary value)? loadTripSummary,
+    TResult? Function(LoadCategories value)? loadCategories,
+    TResult? Function(LoadExpenses value)? loadExpenses,
+    TResult? Function(CreateExpenseEvent value)? createExpense,
+    TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
+    TResult? Function(RefreshTripExpenses value)? refresh,
+  }) {
+    return finishTrip?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LoadActiveTrip value)? loadActiveTrip,
+    TResult Function(LoadTripSummary value)? loadTripSummary,
+    TResult Function(LoadCategories value)? loadCategories,
+    TResult Function(LoadExpenses value)? loadExpenses,
+    TResult Function(CreateExpenseEvent value)? createExpense,
+    TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
+    TResult Function(RefreshTripExpenses value)? refresh,
+    required TResult orElse(),
+  }) {
+    if (finishTrip != null) {
+      return finishTrip(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class FinishTripEvent implements TripExpensesEvent {
+  const factory FinishTripEvent(final String tripId) = _$FinishTripEventImpl;
+
+  String get tripId;
+  @JsonKey(ignore: true)
+  _$$FinishTripEventImplCopyWith<_$FinishTripEventImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -1237,6 +1459,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     required TResult Function(
             String origin, String? destination, String vehicleId)
         startTrip,
+    required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
   }) {
     return refresh();
@@ -1254,6 +1477,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
         createExpense,
     TResult? Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
   }) {
     return refresh?.call();
@@ -1271,6 +1495,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
         createExpense,
     TResult Function(String origin, String? destination, String vehicleId)?
         startTrip,
+    TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
     required TResult orElse(),
   }) {
@@ -1289,6 +1514,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     required TResult Function(LoadExpenses value) loadExpenses,
     required TResult Function(CreateExpenseEvent value) createExpense,
     required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
   }) {
     return refresh(this);
@@ -1303,6 +1529,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     TResult? Function(LoadExpenses value)? loadExpenses,
     TResult? Function(CreateExpenseEvent value)? createExpense,
     TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
   }) {
     return refresh?.call(this);
@@ -1317,6 +1544,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     TResult Function(LoadExpenses value)? loadExpenses,
     TResult Function(CreateExpenseEvent value)? createExpense,
     TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
     required TResult orElse(),
   }) {

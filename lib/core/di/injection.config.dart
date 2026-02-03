@@ -136,6 +136,8 @@ import 'package:zeca_app/features/trip/domain/repositories/trip_repository.dart'
     as _i139;
 import 'package:zeca_app/features/trip/domain/usecases/create_expense.dart'
     as _i427;
+import 'package:zeca_app/features/trip/domain/usecases/finish_trip.dart'
+    as _i123;
 import 'package:zeca_app/features/trip/domain/usecases/get_active_trip.dart'
     as _i948;
 import 'package:zeca_app/features/trip/domain/usecases/get_expense_categories.dart'
@@ -196,6 +198,15 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.factory<_i649.AutonomousRepository>(() =>
         _i649.AutonomousRepositoryImpl(gh<_i106.AutonomousRemoteDataSource>()));
+    gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
+          getActiveTrip: gh<_i948.GetActiveTrip>(),
+          getTripSummary: gh<_i780.GetTripSummary>(),
+          getExpenseCategories: gh<_i632.GetExpenseCategories>(),
+          getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
+          createExpense: gh<_i427.CreateExpense>(),
+          startTrip: gh<_i940.StartTrip>(),
+          finishTrip: gh<_i123.FinishTrip>(),
+        ));
     gh.factory<_i56.AutonomousVehiclesBloc>(
         () => _i56.AutonomousVehiclesBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i545.AutonomousRegistrationBloc>(() =>
@@ -213,14 +224,6 @@ extension GetItInjectableX on _i174.GetIt {
             gh<_i787.FuelStationRemoteDataSource>()));
     gh.factory<_i63.DocumentRepository>(() =>
         _i672.DocumentRepositoryImpl(gh<_i493.DocumentRemoteDataSource>()));
-    gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
-          getActiveTrip: gh<_i948.GetActiveTrip>(),
-          getTripSummary: gh<_i780.GetTripSummary>(),
-          getExpenseCategories: gh<_i632.GetExpenseCategories>(),
-          getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
-          createExpense: gh<_i427.CreateExpense>(),
-          startTrip: gh<_i940.StartTrip>(),
-        ));
     gh.factory<_i292.SearchVehicleUseCase>(
         () => _i292.SearchVehicleUseCase(gh<_i1001.VehicleRepository>()));
     gh.factory<_i514.UploadDocumentUseCase>(

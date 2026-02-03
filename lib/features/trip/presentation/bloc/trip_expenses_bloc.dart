@@ -7,6 +7,7 @@ import '../../domain/usecases/get_expense_categories.dart';
 import '../../domain/usecases/get_expenses_by_trip.dart';
 import '../../domain/usecases/create_expense.dart' as usecase;
 import '../../domain/usecases/start_trip.dart';
+import '../../domain/usecases/finish_trip.dart';
 import 'trip_expenses_event.dart';
 import 'trip_expenses_state.dart';
 
@@ -20,6 +21,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   final GetExpensesByTrip getExpensesByTrip;
   final usecase.CreateExpense createExpense;
   final StartTrip startTrip;
+  final FinishTrip finishTrip;
 
   TripExpensesBloc({
     required this.getActiveTrip,
@@ -28,6 +30,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     required this.getExpensesByTrip,
     required this.createExpense,
     required this.startTrip,
+    required this.finishTrip,
   }) : super(TripExpensesState.initial()) {
     on<LoadActiveTrip>(_onLoadActiveTrip);
     on<LoadTripSummary>(_onLoadTripSummary);
@@ -35,6 +38,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     on<LoadExpenses>(_onLoadExpenses);
     on<CreateExpenseEvent>(_onCreateExpense);
     on<StartTripEvent>(_onStartTrip);
+    on<FinishTripEvent>(_onFinishTrip);
     on<RefreshTripExpenses>(_onRefresh);
   }
 
@@ -202,5 +206,32 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
       add(const LoadActiveTrip());
     }
     add(const LoadCategories());
+  }
+
+  Future<void> _onFinishTrip(
+    FinishTripEvent event,
+    Emitter<TripExpensesState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+
+    final result = await finishTrip(FinishTripParams(tripId: event.tripId));
+    result.fold(
+      (failure) => emit(state.copyWith(
+        isLoading: false,
+        errorMessage: failure.message,
+      )),
+      (trip) {
+        // Limpa o estado da viagem ativa após encerrar
+        emit(state.copyWith(
+          isLoading: false,
+          activeTrip: null,
+          tripSummary: null,
+          expenses: [],
+          totalExpenses: 0,
+          totalRevenues: 0,
+          netProfit: 0,
+        ));
+      },
+    );
   }
 }

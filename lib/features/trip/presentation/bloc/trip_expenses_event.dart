@@ -34,7 +34,9 @@ class TripExpensesEvent with _$TripExpensesEvent {
     required String vehicleId,
   }) = StartTripEvent;
 
+  /// Finish current trip
+  const factory TripExpensesEvent.finishTrip(String tripId) = FinishTripEvent;
+
   /// Refresh all data
   const factory TripExpensesEvent.refresh() = RefreshTripExpenses;
 }
-
