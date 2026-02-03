@@ -11,9 +11,9 @@ class Trip extends Equatable {
   final String? destination;
   final double? totalDistanceKm;
   final String status;
-  final DateTime startedAt;
+  final DateTime? startedAt;
   final DateTime? endedAt;
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   const Trip({
     required this.id,
@@ -25,9 +25,9 @@ class Trip extends Equatable {
     this.destination,
     this.totalDistanceKm,
     required this.status,
-    required this.startedAt,
+    this.startedAt,
     this.endedAt,
-    required this.createdAt,
+    this.createdAt,
   });
 
   bool get isActive => status == 'ACTIVE';
