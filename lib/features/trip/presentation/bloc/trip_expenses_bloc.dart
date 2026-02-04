@@ -141,7 +141,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   ) async {
     emit(state.copyWith(isCreatingExpense: true, errorMessage: null));
 
-    final result = await createExpense(usecase.CreateExpenseParams(
+    final result = await createExpense(expense_usecase.CreateExpenseParams(
       tripId: event.tripId,
       categoryId: event.categoryId,
       amount: event.amount,

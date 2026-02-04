@@ -18,7 +18,7 @@ class RevenueRepositoryImpl implements RevenueRepository {
       final revenues = data.map((json) => _mapToEntity(json)).toList();
       return Right(revenues);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
@@ -34,7 +34,7 @@ class RevenueRepositoryImpl implements RevenueRepository {
   }) async {
     try {
       if (vehicleId == null) {
-        return const Left(ServerFailure('vehicleId é obrigatório'));
+        return const Left(ServerFailure(message: 'vehicleId é obrigatório'));
       }
       
       final data = await _datasource.createRevenue(
@@ -47,14 +47,14 @@ class RevenueRepositoryImpl implements RevenueRepository {
       );
       return Right(_mapToEntity(data));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, TripRevenue>> markAsPaid(String revenueId) async {
     // TODO: Implement when API supports
-    return const Left(ServerFailure('Not implemented'));
+    return const Left(ServerFailure(message: 'Not implemented'));
   }
 
   @override
@@ -69,7 +69,7 @@ class RevenueRepositoryImpl implements RevenueRepository {
         },
       );
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(message: e.toString()));
     }
   }
 
