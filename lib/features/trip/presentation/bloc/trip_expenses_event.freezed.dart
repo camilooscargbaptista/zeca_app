@@ -30,6 +30,7 @@ mixin _$TripExpensesEvent {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -45,6 +46,7 @@ mixin _$TripExpensesEvent {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -60,6 +62,7 @@ mixin _$TripExpensesEvent {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -73,6 +76,7 @@ mixin _$TripExpensesEvent {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -85,6 +89,7 @@ mixin _$TripExpensesEvent {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -97,6 +102,7 @@ mixin _$TripExpensesEvent {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -170,6 +176,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return loadActiveTrip();
   }
@@ -188,6 +195,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return loadActiveTrip?.call();
   }
@@ -206,6 +214,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadActiveTrip != null) {
@@ -225,6 +234,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return loadActiveTrip(this);
   }
@@ -240,6 +250,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return loadActiveTrip?.call(this);
   }
@@ -255,6 +266,7 @@ class _$LoadActiveTripImpl implements LoadActiveTrip {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadActiveTrip != null) {
@@ -345,6 +357,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return loadTripSummary(tripId);
   }
@@ -363,6 +376,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return loadTripSummary?.call(tripId);
   }
@@ -381,6 +395,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadTripSummary != null) {
@@ -400,6 +415,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return loadTripSummary(this);
   }
@@ -415,6 +431,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return loadTripSummary?.call(this);
   }
@@ -430,6 +447,7 @@ class _$LoadTripSummaryImpl implements LoadTripSummary {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadTripSummary != null) {
@@ -498,6 +516,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return loadCategories();
   }
@@ -516,6 +535,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return loadCategories?.call();
   }
@@ -534,6 +554,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadCategories != null) {
@@ -553,6 +574,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return loadCategories(this);
   }
@@ -568,6 +590,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return loadCategories?.call(this);
   }
@@ -583,6 +606,7 @@ class _$LoadCategoriesImpl implements LoadCategories {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadCategories != null) {
@@ -672,6 +696,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return loadExpenses(tripId);
   }
@@ -690,6 +715,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return loadExpenses?.call(tripId);
   }
@@ -708,6 +734,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadExpenses != null) {
@@ -727,6 +754,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return loadExpenses(this);
   }
@@ -742,6 +770,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return loadExpenses?.call(this);
   }
@@ -757,6 +786,7 @@ class _$LoadExpensesImpl implements LoadExpenses {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (loadExpenses != null) {
@@ -909,6 +939,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return createExpense(
         tripId, categoryId, amount, description, location, receiptPath);
@@ -928,6 +959,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return createExpense?.call(
         tripId, categoryId, amount, description, location, receiptPath);
@@ -947,6 +979,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (createExpense != null) {
@@ -967,6 +1000,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return createExpense(this);
   }
@@ -982,6 +1016,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return createExpense?.call(this);
   }
@@ -997,6 +1032,7 @@ class _$CreateExpenseEventImpl implements CreateExpenseEvent {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (createExpense != null) {
@@ -1122,6 +1158,7 @@ class _$StartTripEventImpl implements StartTripEvent {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return startTrip(origin, destination, vehicleId);
   }
@@ -1140,6 +1177,7 @@ class _$StartTripEventImpl implements StartTripEvent {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return startTrip?.call(origin, destination, vehicleId);
   }
@@ -1158,6 +1196,7 @@ class _$StartTripEventImpl implements StartTripEvent {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (startTrip != null) {
@@ -1177,6 +1216,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return startTrip(this);
   }
@@ -1192,6 +1232,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return startTrip?.call(this);
   }
@@ -1207,6 +1248,7 @@ class _$StartTripEventImpl implements StartTripEvent {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (startTrip != null) {
@@ -1307,6 +1349,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return finishTrip(tripId);
   }
@@ -1325,6 +1368,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return finishTrip?.call(tripId);
   }
@@ -1343,6 +1387,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (finishTrip != null) {
@@ -1362,6 +1407,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return finishTrip(this);
   }
@@ -1377,6 +1423,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return finishTrip?.call(this);
   }
@@ -1392,6 +1439,7 @@ class _$FinishTripEventImpl implements FinishTripEvent {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (finishTrip != null) {
@@ -1461,6 +1509,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
         startTrip,
     required TResult Function(String tripId) finishTrip,
     required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
   }) {
     return refresh();
   }
@@ -1479,6 +1528,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
         startTrip,
     TResult? Function(String tripId)? finishTrip,
     TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
   }) {
     return refresh?.call();
   }
@@ -1497,6 +1547,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
         startTrip,
     TResult Function(String tripId)? finishTrip,
     TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (refresh != null) {
@@ -1516,6 +1567,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     required TResult Function(StartTripEvent value) startTrip,
     required TResult Function(FinishTripEvent value) finishTrip,
     required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
   }) {
     return refresh(this);
   }
@@ -1531,6 +1583,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     TResult? Function(StartTripEvent value)? startTrip,
     TResult? Function(FinishTripEvent value)? finishTrip,
     TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
   }) {
     return refresh?.call(this);
   }
@@ -1546,6 +1599,7 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
     TResult Function(StartTripEvent value)? startTrip,
     TResult Function(FinishTripEvent value)? finishTrip,
     TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
     required TResult orElse(),
   }) {
     if (refresh != null) {
@@ -1557,4 +1611,158 @@ class _$RefreshTripExpensesImpl implements RefreshTripExpenses {
 
 abstract class RefreshTripExpenses implements TripExpensesEvent {
   const factory RefreshTripExpenses() = _$RefreshTripExpensesImpl;
+}
+
+/// @nodoc
+abstract class _$$ClearSuccessFlagImplCopyWith<$Res> {
+  factory _$$ClearSuccessFlagImplCopyWith(_$ClearSuccessFlagImpl value,
+          $Res Function(_$ClearSuccessFlagImpl) then) =
+      __$$ClearSuccessFlagImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$ClearSuccessFlagImplCopyWithImpl<$Res>
+    extends _$TripExpensesEventCopyWithImpl<$Res, _$ClearSuccessFlagImpl>
+    implements _$$ClearSuccessFlagImplCopyWith<$Res> {
+  __$$ClearSuccessFlagImplCopyWithImpl(_$ClearSuccessFlagImpl _value,
+      $Res Function(_$ClearSuccessFlagImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$ClearSuccessFlagImpl implements ClearSuccessFlag {
+  const _$ClearSuccessFlagImpl();
+
+  @override
+  String toString() {
+    return 'TripExpensesEvent.clearSuccessFlag()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$ClearSuccessFlagImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() loadActiveTrip,
+    required TResult Function(String tripId) loadTripSummary,
+    required TResult Function() loadCategories,
+    required TResult Function(String tripId) loadExpenses,
+    required TResult Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)
+        createExpense,
+    required TResult Function(
+            String origin, String? destination, String vehicleId)
+        startTrip,
+    required TResult Function(String tripId) finishTrip,
+    required TResult Function() refresh,
+    required TResult Function() clearSuccessFlag,
+  }) {
+    return clearSuccessFlag();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? loadActiveTrip,
+    TResult? Function(String tripId)? loadTripSummary,
+    TResult? Function()? loadCategories,
+    TResult? Function(String tripId)? loadExpenses,
+    TResult? Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)?
+        createExpense,
+    TResult? Function(String origin, String? destination, String vehicleId)?
+        startTrip,
+    TResult? Function(String tripId)? finishTrip,
+    TResult? Function()? refresh,
+    TResult? Function()? clearSuccessFlag,
+  }) {
+    return clearSuccessFlag?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? loadActiveTrip,
+    TResult Function(String tripId)? loadTripSummary,
+    TResult Function()? loadCategories,
+    TResult Function(String tripId)? loadExpenses,
+    TResult Function(String tripId, String categoryId, double amount,
+            String? description, String? location, String? receiptPath)?
+        createExpense,
+    TResult Function(String origin, String? destination, String vehicleId)?
+        startTrip,
+    TResult Function(String tripId)? finishTrip,
+    TResult Function()? refresh,
+    TResult Function()? clearSuccessFlag,
+    required TResult orElse(),
+  }) {
+    if (clearSuccessFlag != null) {
+      return clearSuccessFlag();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LoadActiveTrip value) loadActiveTrip,
+    required TResult Function(LoadTripSummary value) loadTripSummary,
+    required TResult Function(LoadCategories value) loadCategories,
+    required TResult Function(LoadExpenses value) loadExpenses,
+    required TResult Function(CreateExpenseEvent value) createExpense,
+    required TResult Function(StartTripEvent value) startTrip,
+    required TResult Function(FinishTripEvent value) finishTrip,
+    required TResult Function(RefreshTripExpenses value) refresh,
+    required TResult Function(ClearSuccessFlag value) clearSuccessFlag,
+  }) {
+    return clearSuccessFlag(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LoadActiveTrip value)? loadActiveTrip,
+    TResult? Function(LoadTripSummary value)? loadTripSummary,
+    TResult? Function(LoadCategories value)? loadCategories,
+    TResult? Function(LoadExpenses value)? loadExpenses,
+    TResult? Function(CreateExpenseEvent value)? createExpense,
+    TResult? Function(StartTripEvent value)? startTrip,
+    TResult? Function(FinishTripEvent value)? finishTrip,
+    TResult? Function(RefreshTripExpenses value)? refresh,
+    TResult? Function(ClearSuccessFlag value)? clearSuccessFlag,
+  }) {
+    return clearSuccessFlag?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LoadActiveTrip value)? loadActiveTrip,
+    TResult Function(LoadTripSummary value)? loadTripSummary,
+    TResult Function(LoadCategories value)? loadCategories,
+    TResult Function(LoadExpenses value)? loadExpenses,
+    TResult Function(CreateExpenseEvent value)? createExpense,
+    TResult Function(StartTripEvent value)? startTrip,
+    TResult Function(FinishTripEvent value)? finishTrip,
+    TResult Function(RefreshTripExpenses value)? refresh,
+    TResult Function(ClearSuccessFlag value)? clearSuccessFlag,
+    required TResult orElse(),
+  }) {
+    if (clearSuccessFlag != null) {
+      return clearSuccessFlag(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class ClearSuccessFlag implements TripExpensesEvent {
+  const factory ClearSuccessFlag() = _$ClearSuccessFlagImpl;
 }

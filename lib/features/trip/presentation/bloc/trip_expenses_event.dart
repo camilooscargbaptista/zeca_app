@@ -39,4 +39,7 @@ class TripExpensesEvent with _$TripExpensesEvent {
 
   /// Refresh all data
   const factory TripExpensesEvent.refresh() = RefreshTripExpenses;
+
+  /// Clear success flag after navigation
+  const factory TripExpensesEvent.clearSuccessFlag() = ClearSuccessFlag;
 }

@@ -270,6 +270,7 @@ class _AddExpenseContentState extends State<_AddExpenseContent> {
     );
 
     if (mounted) {
+      context.read<TripExpensesBloc>().add(const TripExpensesEvent.clearSuccessFlag());
       context.pop(); // Go back to dashboard
     }
   }

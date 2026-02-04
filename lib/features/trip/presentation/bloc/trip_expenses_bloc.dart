@@ -40,6 +40,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     on<StartTripEvent>(_onStartTrip);
     on<FinishTripEvent>(_onFinishTrip);
     on<RefreshTripExpenses>(_onRefresh);
+    on<ClearSuccessFlag>(_onClearSuccessFlag);
   }
 
   Future<void> _onLoadActiveTrip(
@@ -233,5 +234,12 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
         ));
       },
     );
+  }
+
+  void _onClearSuccessFlag(
+    ClearSuccessFlag event,
+    Emitter<TripExpensesState> emit,
+  ) {
+    emit(state.copyWith(expenseCreatedSuccess: false));
   }
 }

@@ -6,10 +6,12 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../domain/entities/trip_summary.dart';
+import '../../domain/entities/expense.dart';
 import '../bloc/trip_expenses_bloc.dart';
 import '../bloc/trip_expenses_event.dart';
 import '../bloc/trip_expenses_state.dart';
 import '../widgets/trip_start_modal.dart';
+import 'expense_detail_page.dart';
 
 /// Trip Expenses Dashboard Page (US-003)
 /// Displays summary of trip expenses with categories breakdown
@@ -315,6 +317,7 @@ class _DashboardContentState extends State<_DashboardContent> {
 
   Widget _buildDashboard(BuildContext context, TripExpensesState state) {
     final summary = state.tripSummary ?? TripSummary.empty(state.activeTrip!.id);
+    final expenses = state.expenses;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -352,6 +355,22 @@ class _DashboardContentState extends State<_DashboardContent> {
                   _buildEmptyCategoryState()
                 else
                   ..._buildCategoryCards(summary.expensesByCategory),
+                
+                const SizedBox(height: 24),
+                
+                // Últimos Gastos Section
+                if (expenses.isNotEmpty) ...([
+                  const Text(
+                    'Últimos Gastos',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ..._buildExpensesList(context, expenses),
+                ]),
               ]),
             ),
           ),
@@ -674,5 +693,95 @@ class _DashboardContentState extends State<_DashboardContent> {
       symbol: 'R\$',
       decimalDigits: 2,
     ).format(value);
+  }
+
+  /// Builds individual expense cards with tap to view details
+  List<Widget> _buildExpensesList(BuildContext context, List<Expense> expenses) {
+    return expenses.map((expense) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ExpenseDetailPage(expense: expense),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE88C1F).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long,
+                    color: Color(0xFFE88C1F),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.categoryName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(expense.expenseDate),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _formatCurrency(expense.amount),
+                      style: const TextStyle(
+                        color: Color(0xFFE88C1F),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }).toList();
   }
 }
