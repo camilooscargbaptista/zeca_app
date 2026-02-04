@@ -15,6 +15,7 @@ abstract class RevenueRepository {
     String? destination,
     String? clientName,
     String status = 'PENDING',
+    String? vehicleId,
   });
 
   /// Mark revenue as paid

@@ -5,7 +5,8 @@ import '../../domain/usecases/get_active_trip.dart';
 import '../../domain/usecases/get_trip_summary.dart';
 import '../../domain/usecases/get_expense_categories.dart';
 import '../../domain/usecases/get_expenses_by_trip.dart';
-import '../../domain/usecases/create_expense.dart' as usecase;
+import '../../domain/usecases/create_expense.dart' as expense_usecase;
+import '../../domain/usecases/create_revenue.dart' as revenue_usecase;
 import '../../domain/usecases/start_trip.dart';
 import '../../domain/usecases/finish_trip.dart';
 import 'trip_expenses_event.dart';
@@ -19,7 +20,8 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
   final GetTripSummary getTripSummary;
   final GetExpenseCategories getExpenseCategories;
   final GetExpensesByTrip getExpensesByTrip;
-  final usecase.CreateExpense createExpense;
+  final expense_usecase.CreateExpense createExpense;
+  final revenue_usecase.CreateRevenue createRevenue;
   final StartTrip startTrip;
   final FinishTrip finishTrip;
 
@@ -29,6 +31,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     required this.getExpenseCategories,
     required this.getExpensesByTrip,
     required this.createExpense,
+    required this.createRevenue,
     required this.startTrip,
     required this.finishTrip,
   }) : super(TripExpensesState.initial()) {
@@ -37,6 +40,7 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     on<LoadCategories>(_onLoadCategories);
     on<LoadExpenses>(_onLoadExpenses);
     on<CreateExpenseEvent>(_onCreateExpense);
+    on<CreateRevenueEvent>(_onCreateRevenue);
     on<StartTripEvent>(_onStartTrip);
     on<FinishTripEvent>(_onFinishTrip);
     on<RefreshTripExpenses>(_onRefresh);
@@ -240,6 +244,43 @@ class TripExpensesBloc extends Bloc<TripExpensesEvent, TripExpensesState> {
     ClearSuccessFlag event,
     Emitter<TripExpensesState> emit,
   ) {
-    emit(state.copyWith(expenseCreatedSuccess: false));
+    emit(state.copyWith(
+      expenseCreatedSuccess: false,
+      revenueCreatedSuccess: false,
+    ));
+  }
+
+  Future<void> _onCreateRevenue(
+    CreateRevenueEvent event,
+    Emitter<TripExpensesState> emit,
+  ) async {
+    emit(state.copyWith(isCreatingRevenue: true, errorMessage: null));
+
+    final result = await createRevenue(revenue_usecase.CreateRevenueParams(
+      tripId: event.tripId,
+      vehicleId: event.vehicleId,
+      amount: event.amount,
+      origin: event.origin,
+      destination: event.destination,
+      clientName: event.clientName,
+    ));
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        isCreatingRevenue: false,
+        errorMessage: failure.message,
+      )),
+      (revenue) {
+        // Add to total and mark success
+        final newRevenue = state.totalRevenues + revenue.amount;
+
+        emit(state.copyWith(
+          isCreatingRevenue: false,
+          revenueCreatedSuccess: true,
+          totalRevenues: newRevenue,
+          netProfit: newRevenue - state.totalExpenses,
+        ));
+      },
+    );
   }
 }

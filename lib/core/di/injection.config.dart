@@ -124,18 +124,26 @@ import 'package:zeca_app/features/refueling/presentation/bloc/refueling_code_blo
     as _i651;
 import 'package:zeca_app/features/trip/data/datasources/expense_remote_datasource.dart'
     as _i41;
+import 'package:zeca_app/features/trip/data/datasources/revenue_remote_datasource.dart'
+    as _i261;
 import 'package:zeca_app/features/trip/data/datasources/trip_remote_datasource.dart'
     as _i105;
 import 'package:zeca_app/features/trip/data/repositories/expense_repository_impl.dart'
     as _i68;
+import 'package:zeca_app/features/trip/data/repositories/revenue_repository_impl.dart'
+    as _i437;
 import 'package:zeca_app/features/trip/data/repositories/trip_repository_impl.dart'
     as _i725;
 import 'package:zeca_app/features/trip/domain/repositories/expense_repository.dart'
     as _i589;
+import 'package:zeca_app/features/trip/domain/repositories/revenue_repository.dart'
+    as _i285;
 import 'package:zeca_app/features/trip/domain/repositories/trip_repository.dart'
     as _i139;
 import 'package:zeca_app/features/trip/domain/usecases/create_expense.dart'
     as _i427;
+import 'package:zeca_app/features/trip/domain/usecases/create_revenue.dart'
+    as _i911;
 import 'package:zeca_app/features/trip/domain/usecases/finish_trip.dart'
     as _i123;
 import 'package:zeca_app/features/trip/domain/usecases/get_active_trip.dart'
@@ -192,21 +200,14 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i653.GetRefuelingDetailsUseCase(gh<_i799.HistoryRepository>()));
     gh.lazySingleton<_i105.TripRemoteDataSource>(
         () => _i105.TripRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.lazySingleton<_i261.RevenueRemoteDatasource>(
+        () => _i261.RevenueRemoteDatasource(gh<_i241.DioClient>()));
     gh.lazySingleton<_i41.ExpenseRemoteDataSource>(
         () => _i41.ExpenseRemoteDataSourceImpl(gh<_i241.DioClient>()));
     gh.factory<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.factory<_i649.AutonomousRepository>(() =>
         _i649.AutonomousRepositoryImpl(gh<_i106.AutonomousRemoteDataSource>()));
-    gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
-          getActiveTrip: gh<_i948.GetActiveTrip>(),
-          getTripSummary: gh<_i780.GetTripSummary>(),
-          getExpenseCategories: gh<_i632.GetExpenseCategories>(),
-          getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
-          createExpense: gh<_i427.CreateExpense>(),
-          startTrip: gh<_i940.StartTrip>(),
-          finishTrip: gh<_i123.FinishTrip>(),
-        ));
     gh.factory<_i56.AutonomousVehiclesBloc>(
         () => _i56.AutonomousVehiclesBloc(gh<_i649.AutonomousRepository>()));
     gh.factory<_i545.AutonomousRegistrationBloc>(() =>
@@ -236,6 +237,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i472.NotificationRepository>(() =>
         _i61.NotificationRepositoryImpl(
             gh<_i218.NotificationRemoteDataSource>()));
+    gh.lazySingleton<_i285.RevenueRepository>(
+        () => _i437.RevenueRepositoryImpl(gh<_i261.RevenueRemoteDatasource>()));
     gh.factory<_i256.ValidateRefuelingCodeUseCase>(() =>
         _i256.ValidateRefuelingCodeUseCase(gh<_i724.RefuelingRepository>()));
     gh.factory<_i271.FinalizeRefuelingUseCase>(
@@ -273,6 +276,8 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i28.ChangePasswordUseCase>(),
           gh<_i589.AuthBloc>(),
         ));
+    gh.lazySingleton<_i911.CreateRevenue>(
+        () => _i911.CreateRevenue(gh<_i285.RevenueRepository>()));
     gh.factory<_i175.UpdateNotificationSettingsUseCase>(() =>
         _i175.UpdateNotificationSettingsUseCase(
             gh<_i472.NotificationRepository>()));
@@ -300,6 +305,16 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i434.NearbyStationsBloc>(
         () => _i434.NearbyStationsBloc(gh<_i85.GetNearbyStationsUseCase>()));
+    gh.factory<_i501.TripExpensesBloc>(() => _i501.TripExpensesBloc(
+          getActiveTrip: gh<_i948.GetActiveTrip>(),
+          getTripSummary: gh<_i780.GetTripSummary>(),
+          getExpenseCategories: gh<_i632.GetExpenseCategories>(),
+          getExpensesByTrip: gh<_i1051.GetExpensesByTrip>(),
+          createExpense: gh<_i427.CreateExpense>(),
+          createRevenue: gh<_i911.CreateRevenue>(),
+          startTrip: gh<_i940.StartTrip>(),
+          finishTrip: gh<_i123.FinishTrip>(),
+        ));
     return this;
   }
 }

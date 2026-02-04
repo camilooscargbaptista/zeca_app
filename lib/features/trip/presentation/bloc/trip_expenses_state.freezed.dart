@@ -19,14 +19,16 @@ mixin _$TripExpensesState {
 // Loading flags
   bool get isLoading => throw _privateConstructorUsedError;
   bool get isLoadingCategories => throw _privateConstructorUsedError;
-  bool get isCreatingExpense => throw _privateConstructorUsedError; // Data
+  bool get isCreatingExpense => throw _privateConstructorUsedError;
+  bool get isCreatingRevenue => throw _privateConstructorUsedError; // Data
   Trip? get activeTrip => throw _privateConstructorUsedError;
   TripSummary? get tripSummary => throw _privateConstructorUsedError;
   List<ExpenseCategoryEntity> get categories =>
       throw _privateConstructorUsedError;
   List<Expense> get expenses => throw _privateConstructorUsedError; // UI State
   String? get errorMessage => throw _privateConstructorUsedError;
-  bool get expenseCreatedSuccess =>
+  bool get expenseCreatedSuccess => throw _privateConstructorUsedError;
+  bool get revenueCreatedSuccess =>
       throw _privateConstructorUsedError; // Computed values
   double get totalExpenses => throw _privateConstructorUsedError;
   double get totalRevenues => throw _privateConstructorUsedError;
@@ -47,12 +49,14 @@ abstract class $TripExpensesStateCopyWith<$Res> {
       {bool isLoading,
       bool isLoadingCategories,
       bool isCreatingExpense,
+      bool isCreatingRevenue,
       Trip? activeTrip,
       TripSummary? tripSummary,
       List<ExpenseCategoryEntity> categories,
       List<Expense> expenses,
       String? errorMessage,
       bool expenseCreatedSuccess,
+      bool revenueCreatedSuccess,
       double totalExpenses,
       double totalRevenues,
       double netProfit});
@@ -74,12 +78,14 @@ class _$TripExpensesStateCopyWithImpl<$Res, $Val extends TripExpensesState>
     Object? isLoading = null,
     Object? isLoadingCategories = null,
     Object? isCreatingExpense = null,
+    Object? isCreatingRevenue = null,
     Object? activeTrip = freezed,
     Object? tripSummary = freezed,
     Object? categories = null,
     Object? expenses = null,
     Object? errorMessage = freezed,
     Object? expenseCreatedSuccess = null,
+    Object? revenueCreatedSuccess = null,
     Object? totalExpenses = null,
     Object? totalRevenues = null,
     Object? netProfit = null,
@@ -96,6 +102,10 @@ class _$TripExpensesStateCopyWithImpl<$Res, $Val extends TripExpensesState>
       isCreatingExpense: null == isCreatingExpense
           ? _value.isCreatingExpense
           : isCreatingExpense // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isCreatingRevenue: null == isCreatingRevenue
+          ? _value.isCreatingRevenue
+          : isCreatingRevenue // ignore: cast_nullable_to_non_nullable
               as bool,
       activeTrip: freezed == activeTrip
           ? _value.activeTrip
@@ -120,6 +130,10 @@ class _$TripExpensesStateCopyWithImpl<$Res, $Val extends TripExpensesState>
       expenseCreatedSuccess: null == expenseCreatedSuccess
           ? _value.expenseCreatedSuccess
           : expenseCreatedSuccess // ignore: cast_nullable_to_non_nullable
+              as bool,
+      revenueCreatedSuccess: null == revenueCreatedSuccess
+          ? _value.revenueCreatedSuccess
+          : revenueCreatedSuccess // ignore: cast_nullable_to_non_nullable
               as bool,
       totalExpenses: null == totalExpenses
           ? _value.totalExpenses
@@ -149,12 +163,14 @@ abstract class _$$TripExpensesStateImplCopyWith<$Res>
       {bool isLoading,
       bool isLoadingCategories,
       bool isCreatingExpense,
+      bool isCreatingRevenue,
       Trip? activeTrip,
       TripSummary? tripSummary,
       List<ExpenseCategoryEntity> categories,
       List<Expense> expenses,
       String? errorMessage,
       bool expenseCreatedSuccess,
+      bool revenueCreatedSuccess,
       double totalExpenses,
       double totalRevenues,
       double netProfit});
@@ -174,12 +190,14 @@ class __$$TripExpensesStateImplCopyWithImpl<$Res>
     Object? isLoading = null,
     Object? isLoadingCategories = null,
     Object? isCreatingExpense = null,
+    Object? isCreatingRevenue = null,
     Object? activeTrip = freezed,
     Object? tripSummary = freezed,
     Object? categories = null,
     Object? expenses = null,
     Object? errorMessage = freezed,
     Object? expenseCreatedSuccess = null,
+    Object? revenueCreatedSuccess = null,
     Object? totalExpenses = null,
     Object? totalRevenues = null,
     Object? netProfit = null,
@@ -196,6 +214,10 @@ class __$$TripExpensesStateImplCopyWithImpl<$Res>
       isCreatingExpense: null == isCreatingExpense
           ? _value.isCreatingExpense
           : isCreatingExpense // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isCreatingRevenue: null == isCreatingRevenue
+          ? _value.isCreatingRevenue
+          : isCreatingRevenue // ignore: cast_nullable_to_non_nullable
               as bool,
       activeTrip: freezed == activeTrip
           ? _value.activeTrip
@@ -221,6 +243,10 @@ class __$$TripExpensesStateImplCopyWithImpl<$Res>
           ? _value.expenseCreatedSuccess
           : expenseCreatedSuccess // ignore: cast_nullable_to_non_nullable
               as bool,
+      revenueCreatedSuccess: null == revenueCreatedSuccess
+          ? _value.revenueCreatedSuccess
+          : revenueCreatedSuccess // ignore: cast_nullable_to_non_nullable
+              as bool,
       totalExpenses: null == totalExpenses
           ? _value.totalExpenses
           : totalExpenses // ignore: cast_nullable_to_non_nullable
@@ -244,12 +270,14 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
       {this.isLoading = false,
       this.isLoadingCategories = false,
       this.isCreatingExpense = false,
+      this.isCreatingRevenue = false,
       this.activeTrip,
       this.tripSummary,
       final List<ExpenseCategoryEntity> categories = const [],
       final List<Expense> expenses = const [],
       this.errorMessage,
       this.expenseCreatedSuccess = false,
+      this.revenueCreatedSuccess = false,
       this.totalExpenses = 0.0,
       this.totalRevenues = 0.0,
       this.netProfit = 0.0})
@@ -266,6 +294,9 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
   @override
   @JsonKey()
   final bool isCreatingExpense;
+  @override
+  @JsonKey()
+  final bool isCreatingRevenue;
 // Data
   @override
   final Trip? activeTrip;
@@ -295,6 +326,9 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
   @override
   @JsonKey()
   final bool expenseCreatedSuccess;
+  @override
+  @JsonKey()
+  final bool revenueCreatedSuccess;
 // Computed values
   @override
   @JsonKey()
@@ -308,7 +342,7 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
 
   @override
   String toString() {
-    return 'TripExpensesState(isLoading: $isLoading, isLoadingCategories: $isLoadingCategories, isCreatingExpense: $isCreatingExpense, activeTrip: $activeTrip, tripSummary: $tripSummary, categories: $categories, expenses: $expenses, errorMessage: $errorMessage, expenseCreatedSuccess: $expenseCreatedSuccess, totalExpenses: $totalExpenses, totalRevenues: $totalRevenues, netProfit: $netProfit)';
+    return 'TripExpensesState(isLoading: $isLoading, isLoadingCategories: $isLoadingCategories, isCreatingExpense: $isCreatingExpense, isCreatingRevenue: $isCreatingRevenue, activeTrip: $activeTrip, tripSummary: $tripSummary, categories: $categories, expenses: $expenses, errorMessage: $errorMessage, expenseCreatedSuccess: $expenseCreatedSuccess, revenueCreatedSuccess: $revenueCreatedSuccess, totalExpenses: $totalExpenses, totalRevenues: $totalRevenues, netProfit: $netProfit)';
   }
 
   @override
@@ -322,6 +356,8 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
                 other.isLoadingCategories == isLoadingCategories) &&
             (identical(other.isCreatingExpense, isCreatingExpense) ||
                 other.isCreatingExpense == isCreatingExpense) &&
+            (identical(other.isCreatingRevenue, isCreatingRevenue) ||
+                other.isCreatingRevenue == isCreatingRevenue) &&
             (identical(other.activeTrip, activeTrip) ||
                 other.activeTrip == activeTrip) &&
             (identical(other.tripSummary, tripSummary) ||
@@ -333,6 +369,8 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
                 other.errorMessage == errorMessage) &&
             (identical(other.expenseCreatedSuccess, expenseCreatedSuccess) ||
                 other.expenseCreatedSuccess == expenseCreatedSuccess) &&
+            (identical(other.revenueCreatedSuccess, revenueCreatedSuccess) ||
+                other.revenueCreatedSuccess == revenueCreatedSuccess) &&
             (identical(other.totalExpenses, totalExpenses) ||
                 other.totalExpenses == totalExpenses) &&
             (identical(other.totalRevenues, totalRevenues) ||
@@ -347,12 +385,14 @@ class _$TripExpensesStateImpl implements _TripExpensesState {
       isLoading,
       isLoadingCategories,
       isCreatingExpense,
+      isCreatingRevenue,
       activeTrip,
       tripSummary,
       const DeepCollectionEquality().hash(_categories),
       const DeepCollectionEquality().hash(_expenses),
       errorMessage,
       expenseCreatedSuccess,
+      revenueCreatedSuccess,
       totalExpenses,
       totalRevenues,
       netProfit);
@@ -370,12 +410,14 @@ abstract class _TripExpensesState implements TripExpensesState {
       {final bool isLoading,
       final bool isLoadingCategories,
       final bool isCreatingExpense,
+      final bool isCreatingRevenue,
       final Trip? activeTrip,
       final TripSummary? tripSummary,
       final List<ExpenseCategoryEntity> categories,
       final List<Expense> expenses,
       final String? errorMessage,
       final bool expenseCreatedSuccess,
+      final bool revenueCreatedSuccess,
       final double totalExpenses,
       final double totalRevenues,
       final double netProfit}) = _$TripExpensesStateImpl;
@@ -386,6 +428,8 @@ abstract class _TripExpensesState implements TripExpensesState {
   bool get isLoadingCategories;
   @override
   bool get isCreatingExpense;
+  @override
+  bool get isCreatingRevenue;
   @override // Data
   Trip? get activeTrip;
   @override
@@ -398,6 +442,8 @@ abstract class _TripExpensesState implements TripExpensesState {
   String? get errorMessage;
   @override
   bool get expenseCreatedSuccess;
+  @override
+  bool get revenueCreatedSuccess;
   @override // Computed values
   double get totalExpenses;
   @override

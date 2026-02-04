@@ -14,6 +14,7 @@ class TripExpensesState with _$TripExpensesState {
     @Default(false) bool isLoading,
     @Default(false) bool isLoadingCategories,
     @Default(false) bool isCreatingExpense,
+    @Default(false) bool isCreatingRevenue,
 
     // Data
     Trip? activeTrip,
@@ -24,6 +25,7 @@ class TripExpensesState with _$TripExpensesState {
     // UI State
     String? errorMessage,
     @Default(false) bool expenseCreatedSuccess,
+    @Default(false) bool revenueCreatedSuccess,
 
     // Computed values
     @Default(0.0) double totalExpenses,

@@ -27,6 +27,16 @@ class TripExpensesEvent with _$TripExpensesEvent {
     String? receiptPath,
   }) = CreateExpenseEvent;
 
+  /// Create new revenue/freight
+  const factory TripExpensesEvent.createRevenue({
+    required String tripId,
+    required String vehicleId,
+    required double amount,
+    String? origin,
+    String? destination,
+    String? clientName,
+  }) = CreateRevenueEvent;
+
   /// Start a new trip
   const factory TripExpensesEvent.startTrip({
     required String origin,
@@ -43,3 +53,4 @@ class TripExpensesEvent with _$TripExpensesEvent {
   /// Clear success flag after navigation
   const factory TripExpensesEvent.clearSuccessFlag() = ClearSuccessFlag;
 }
+

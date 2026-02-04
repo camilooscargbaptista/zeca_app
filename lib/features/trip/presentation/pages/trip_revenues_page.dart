@@ -71,12 +71,17 @@ class _TripRevenuesContentState extends State<_TripRevenuesContent> {
       return;
     }
 
-    // TODO: Implement revenueBloc.add(CreateRevenue(...)) when revenue BLoC events are added
-    // For now, show success message and clear form
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Receita adicionada com sucesso!'),
-        backgroundColor: _primaryGreen,
+    final trip = state.activeTrip!;
+    
+    // Dispatch createRevenue event to BLoC
+    context.read<TripExpensesBloc>().add(
+      TripExpensesEvent.createRevenue(
+        tripId: trip.id,
+        vehicleId: trip.vehicleId,
+        amount: amount,
+        origin: _originController.text.isEmpty ? null : _originController.text,
+        destination: _destinationController.text.isEmpty ? null : _destinationController.text,
+        clientName: _descriptionController.text.isEmpty ? null : _descriptionController.text,
       ),
     );
 
@@ -112,10 +117,32 @@ class _TripRevenuesContentState extends State<_TripRevenuesContent> {
           ),
         ],
       ),
-      body: BlocBuilder<TripExpensesBloc, TripExpensesState>(
+      body: BlocListener<TripExpensesBloc, TripExpensesState>(
+        listenWhen: (prev, curr) =>
+            prev.revenueCreatedSuccess != curr.revenueCreatedSuccess ||
+            prev.errorMessage != curr.errorMessage,
+        listener: (context, state) {
+          if (state.revenueCreatedSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Receita adicionada com sucesso!'),
+                backgroundColor: _primaryGreen,
+              ),
+            );
+            context.read<TripExpensesBloc>().add(const TripExpensesEvent.clearSuccessFlag());
+          } else if (state.errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erro: ${state.errorMessage}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<TripExpensesBloc, TripExpensesState>(
         builder: (context, state) {
           // Loading
-          if (state.isLoading) {
+          if (state.isLoading || state.isCreatingRevenue) {
             return const Center(
               child: CircularProgressIndicator(color: _primaryGreen),
             );
@@ -134,6 +161,7 @@ class _TripRevenuesContentState extends State<_TripRevenuesContent> {
           // Content
           return _buildContent(state);
         },
+      ),
       ),
       floatingActionButton: BlocBuilder<TripExpensesBloc, TripExpensesState>(
         builder: (context, state) {
