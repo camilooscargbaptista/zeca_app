@@ -771,16 +771,11 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
               if (_isAutonomous) {
                 context.push('/autonomous/vehicles');
               } else {
-                // TODO: Implementar tela de gastos de viagem
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Gastos de Viagem - Em breve'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                context.push('/trip-expenses');
               }
             },
           ),
+
 
         ],
       ),
