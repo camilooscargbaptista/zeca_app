@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA App - Gestão de Gastos de Viagem - Mockup Completo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #2A70C0;
+            --zeca-blue-dark: #1E5A9A;
+            --zeca-green: #28A745;
+            --zeca-orange: #FF8C00;
+            --zeca-red: #DC3545;
+            --zeca-purple: #673AB7;
+            --grey-50: #FAFAFA;
+            --grey-100: #F5F5F5;
+            --grey-200: #EEEEEE;
+            --grey-300: #E0E0E0;
+            --grey-500: #9E9E9E;
+            --grey-600: #757575;
+            --grey-700: #616161;
+            --grey-900: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #888;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover,
+        .nav-tab.active {
+            background: var(--zeca-blue);
+            color: white;
+        }
+
+        .section-container {
+            display: none;
+        }
+
+        .section-container.active {
+            display: block;
+        }
+
+        .section-title-bar {
+            background: var(--zeca-blue);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .screens-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .screen-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen-label {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: var(--zeca-blue);
+            padding: 5px 14px;
+            border-radius: 14px;
+        }
+
+        .screen-label.error {
+            background: var(--zeca-red);
+        }
+
+        .screen-label.success {
+            background: var(--zeca-green);
+        }
+
+        .screen-label.warning {
+            background: var(--zeca-orange);
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 750px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            border: 10px solid #1a1a1a;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-blue);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-bar.orange {
+            background: var(--zeca-orange);
+        }
+
+        .status-bar.green {
+            background: var(--zeca-green);
+        }
+
+        .app-bar {
+            background: var(--zeca-blue);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .app-bar.orange {
+            background: var(--zeca-orange);
+        }
+
+        .app-bar-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .content {
+            background: var(--grey-50);
+            padding: 16px;
+            height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+
+        /* Cards e Botões */
+        .action-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .action-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .action-icon.blue {
+            background: #E3F2FD;
+            color: var(--zeca-blue);
+        }
+
+        .action-icon.green {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .action-icon.orange {
+            background: #FFF3E0;
+            color: var(--zeca-orange);
+        }
+
+        .action-icon.purple {
+            background: #EDE7F6;
+            color: var(--zeca-purple);
+        }
+
+        .action-icon.red {
+            background: #FFEBEE;
+            color: var(--zeca-red);
+        }
+
+        .action-text {
+            flex: 1;
+        }
+
+        .action-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--grey-900);
+        }
+
+        .action-subtitle {
+            font-size: 12px;
+            color: var(--grey-600);
+            margin-top: 2px;
+        }
+
+        .action-arrow {
+            color: var(--grey-500);
+        }
+
+        /* Botão Principal */
+        .btn-primary {
+            background: var(--zeca-green);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:disabled {
+            background: var(--grey-300);
+            cursor: not-allowed;
+        }
+
+        .btn-primary.blue {
+            background: var(--zeca-blue);
+        }
+
+        /* Input Field */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            font-size: 12px;
+            color: var(--grey-600);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--grey-300);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--zeca-blue);
+        }
+
+        .input-field.error {
+            border-color: var(--zeca-red);
+        }
+
+        .input-error {
+            font-size: 11px;
+            color: var(--zeca-red);
+            margin-top: 4px;
+        }
+
+        /* Categoria Grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .category-item {
+            background: white;
+            border: 2px solid var(--grey-200);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .category-item:hover {
+            border-color: var(--zeca-blue);
+        }
+
+        .category-item.selected {
+            border-color: var(--zeca-blue);
+            background: #E3F2FD;
+        }
+
+        .category-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .category-name {
+            font-size: 11px;
+            color: var(--grey-700);
+            font-weight: 500;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .summary-item-label {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* Fab Button */
+        .fab {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: var(--zeca-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .modal-icon.success {
+            color: var(--zeca-green);
+        }
+
+        .modal-icon.error {
+            color: var(--zeca-red);
+        }
+
+        .modal-icon.warning {
+            color: var(--zeca-orange);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .modal-message {
+            font-size: 14px;
+            color: var(--grey-600);
+            margin-bottom: 20px;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--grey-200);
+            border-top-color: var(--zeca-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toast */
+        .toast {
+            position: absolute;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            background: var(--grey-900);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.error {
+            background: var(--zeca-red);
+        }
+
+        .toast.success {
+            background: var(--zeca-green);
+        }
+
+        /* Viagem Ativa */
+        .trip-active-card {
+            background: linear-gradient(135deg, var(--zeca-green), #1E7E34);
+            color: white;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+
+        .trip-active-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .trip-active-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .trip-active-route {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .trip-active-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .trip-stat {}
+
+        .trip-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .trip-stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-top: 1px solid var(--grey-200);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: var(--grey-500);
+            font-size: 10px;
+        }
+
+        .nav-item.active {
+            color: var(--zeca-blue);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        /* Lista de Gastos */
+        .expense-list-item {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .expense-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .expense-info {
+            flex: 1;
+        }
+
+        .expense-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .expense-date {
+            font-size: 11px;
+            color: var(--grey-500);
+        }
+
+        .expense-value {
+            text-align: right;
+        }
+
+        .expense-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--zeca-red);
+        }
+
+        .expense-category {
+            font-size: 10px;
+            color: var(--grey-500);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚛 ZECA - Gestão de Gastos de Viagem</h1>
+    <p class="subtitle">Mockup Completo • Fases 7-12 • Mobile Flutter</p>
+
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showSection('fluxo')">📍 Fluxo Principal</button>
+        <button class="nav-tab" onclick="showSection('gastos')">💰 Registro de Gastos</button>
+        <button class="nav-tab" onclick="showSection('receitas')">📈 Receitas/Fretes</button>
+        <button class="nav-tab" onclick="showSection('resumo')">📊 Resumo/Dashboard</button>
+        <button class="nav-tab" onclick="showSection('erros')">⚠️ Estados de Erro</button>
+    </div>
+
+    <!-- SEÇÃO 1: FLUXO PRINCIPAL -->
+    <div id="fluxo" class="section-container active">
+        <div class="section-title-bar">
+            <i class="fas fa-route"></i>
+            <span>Fluxo Principal - Ponto de Entrada e Navegação</span>
+        </div>
+        <div class="screens-container">
+            <!-- Tela 1: Home com Viagem Ativa -->
+            <div class="screen-wrapper">
+                <div class="screen-label">1. Home - Viagem Ativa</div>
+                <div class="mobile-frame">
+                    <div class="status-bar orange">
+                        <span>9:41</span>
+                        <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                                class="fas fa-battery-full"></i></span>
+                    </div>
+                    <div class="app-bar orange">
+                        <i class="fas fa-bars"></i>
+                        <span class="app-bar-title">ZECA</span>
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="content">
+                        <!-- Viagem Ativa Card -->
+                        <div class="trip-active-card">
+                            <div class="trip-active-header">
+                                <i class="fas fa-route"></i>
+                                <span class="trip-active-badge">VIAGEM ATIVA</span>
+                            </div>
+                            <div class="trip-active-route">São Paulo → Curitiba</div>
+                            <div class="trip-active-stats">
+                                <div class="trip-stat">
+                                    <div class="trip-stat-value">247 km</div>
+                                    <div class="trip-stat-label">Percorridos</div>
+                                </div>
+                                <div class="trip-stat">
+                                    <div class="trip-stat-value">3h 12min</div>
+                                    <div class="trip-stat-label">Duração</div>
+                                </div>
+                                <div class="trip-stat">
+                                    <div class="trip-stat-value">R$ 156</div>
+                                    <div class="trip-stat-label">Gastos</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="font-size: 12px; font-weight: 600; color: var(--grey-600); margin-bottom: 12px; text-transform: uppercase;">
+                            Ações Rápidas</div>
+
+                        <div class="action-card">
+                            <div class="action-icon green"><i class="fas fa-plus-circle"></i></div>
+                            <div class="action-text">
+                                <div class="action-title">Registrar Gasto</div>
+                                <div class="action-subtitle">Alimentação, pedágio, manutenção...</div>
+                            </div>
+                            <div class="action-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon blue"><i class="fas fa-gas-pump"></i></div>
+                            <div class="action-text">
+                                <div class="action-title">Abastecimento Externo</div>
+                                <div class="action-subtitle">Fora da rede ZECA</div>
+                            </div>
+                            <div class="action-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon orange"><i class="fas fa-road"></i></div>
+                            <div class="action-text">
+                                <div class="action-title">Pedágio</div>
+                                <div class="action-subtitle">Manual ou Tag</div>
+                            </div>
+                            <div class="action-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+
+                        <div class="action-card">
+                            <div class="action-icon purple"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="action-text">
+                                <div class="action-title">Frete/Receita</div>
+                                <div class="action-subtitle">Registrar pagamento recebido</div>
+                            </div>
+                            <div class="action-arrow"><i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela 2: Drawer com Menu -->
+            <div class="screen-wrapper">
+                <div class="screen-label">2. Menu Lateral (Drawer)</div>
+                <div class="mobile-frame">
+                    <div class="status-bar orange">
+                        <span>9:41</span>
+                        <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                                class="fas fa-battery-full"></i></span>
+                    </div>
+                    <div
+                        style="position: absolute; top: 44px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4);">
+                        <div style="width: 280px; height: 100%; background: white; border-radius: 0 24px 24px 0;">
+                            <div
+                                style="background: linear-gradient(135deg, var(--zeca-orange), #E67E00); padding: 50px 20px 24px;">
+                                <div
+                                    style="width: 56px; height: 56px; background: var(--zeca-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 700; margin-bottom: 12px;">
+                                    JS</div>
+                                <div style="font-size: 18px; font-weight: 600; color: white;">João Silva</div>
+                                <div
+                                    style="display: inline-block; background: var(--zeca-blue); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; margin-top: 6px;">
+                                    Motorista</div>
+                            </div>
+                            <div style="padding: 16px 0;">
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--grey-700);">
+                                    <i class="fas fa-home" style="width: 24px;"></i> Início
+                                </div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--zeca-blue); font-weight: 600; background: #E3F2FD;">
+                                    <i class="fas fa-wallet" style="width: 24px;"></i> Gestão de Gastos
+                                    <span
+                                        style="background: var(--zeca-green); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; margin-left: auto;">NOVO</span>
+                                </div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--grey-700);">
+                                    <i class="fas fa-route" style="width: 24px;"></i> Minhas Viagens
+                                </div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--grey-700);">
+                                    <i class="fas fa-chart-line" style="width: 24px;"></i> Eficiência
+                                </div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--grey-700);">
+                                    <i class="fas fa-history" style="width: 24px;"></i> Histórico
+                                </div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--grey-700);">
+                                    <i class="fas fa-user" style="width: 24px;"></i> Perfil
+                                </div>
+                                <div style="border-top: 1px solid var(--grey-200); margin: 8px 0;"></div>
+                                <div
+                                    style="display: flex; align-items: center; gap: 16px; padding: 16px 24px; color: var(--zeca-red);">
+                                    <i class="fas fa-sign-out-alt" style="width: 24px;"></i> Sair
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela 3: Dashboard Gastos -->
+            <div class="screen-wrapper">
+                <div class="screen-label">3. Dashboard de Gastos</div>
+                <div class="mobile-frame">
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                                class="fas fa-battery-full"></i></span>
+                    </div>
+                    <div class="app-bar">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="app-bar-title">Gestão de Gastos</span>
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div class="content">
+                        <!-- Summary Card -->
+                        <div class="summary-card">
+                            <div class="summary-title">Viagem Atual</div>
+                            <div class="summary-value">R$ 1.247,50</div>
+                            <div class="summary-row">
+                                <div class="summary-item">
+                                    <div class="summary-item-value">R$ 856</div>
+                                    <div class="summary-item-label">Combustível</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-value">R$ 245</div>
+                                    <div class="summary-item-label">Pedágios</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-value">R$ 146</div>
+                                    <div class="summary-item-label">Outros</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 12px; font-weight: 600; color: var(--grey-600); margin-bottom: 12px;">
+                            ÚLTIMOS REGISTROS</div>
+
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #FFEBEE; color: var(--zeca-red);"><i
+                                    class="fas fa-road"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Pedágio Via Dutra</div>
+                                <div class="expense-date">Hoje, 14:32</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount">- R$ 45,80</div>
+                                <div class="expense-category">Pedágio</div>
+                            </div>
+                        </div>
+
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #FFF3E0; color: var(--zeca-orange);"><i
+                                    class="fas fa-utensils"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Almoço BR-116</div>
+                                <div class="expense-date">Hoje, 12:15</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount">- R$ 38,50</div>
+                                <div class="expense-category">Alimentação</div>
+                            </div>
+                        </div>
+
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #E3F2FD; color: var(--zeca-blue);"><i
+                                    class="fas fa-gas-pump"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Posto Shell KM 234</div>
+                                <div class="expense-date">Hoje, 09:45</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount">- R$ 420,00</div>
+                                <div class="expense-category">Combustível</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fab"><i class="fas fa-plus"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: REGISTRO DE GASTOS -->
+    <div id="gastos" class="section-container">
+        <div class="section-title-bar" style="background: var(--zeca-green);">
+            <i class="fas fa-plus-circle"></i>
+            <span>Registro de Gastos - Fluxo Completo com Estados</span>
+        </div>
+        <div class="screens-container">
+            <!-- Tela 4: Seleção de Categoria -->
+            <div class="screen-wrapper">
+                <div class="screen-label">4. Selecionar Categoria</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Novo Gasto</span>
+                    </div>
+                    <div class="content">
+                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 16px;">Selecione a categoria:
+                        </div>
+                        <div class="category-grid">
+                            <div class="category-item selected">
+                                <div class="category-icon">🍽️</div>
+                                <div class="category-name">Alimentação</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">⛽</div>
+                                <div class="category-name">Combustível</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🛣️</div>
+                                <div class="category-name">Pedágio</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🔧</div>
+                                <div class="category-name">Manutenção</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🛏️</div>
+                                <div class="category-name">Hospedagem</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🧹</div>
+                                <div class="category-name">Lavagem</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🅿️</div>
+                                <div class="category-name">Estac.</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">📝</div>
+                                <div class="category-name">Documentos</div>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">📦</div>
+                                <div class="category-name">Outros</div>
+                            </div>
+                        </div>
+                        <button class="btn-primary blue" style="margin-top: 20px;">Continuar <i
+                                class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 5: Formulário de Gasto -->
+            <div class="screen-wrapper">
+                <div class="screen-label">5. Preencher Dados</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Alimentação</span>
+                    </div>
+                    <div class="content">
+                        <div class="input-group"><label class="input-label">Descrição *</label><input
+                                class="input-field" placeholder="Ex: Almoço na BR-116"
+                                value="Almoço Restaurante Km 234"></div>
+                        <div class="input-group"><label class="input-label">Valor (R$) *</label><input
+                                class="input-field" placeholder="0,00" value="45,50"
+                                style="font-size: 24px; font-weight: 700;"></div>
+                        <div class="input-group"><label class="input-label">Data e Hora</label><input
+                                class="input-field" value="02/02/2026 12:35"></div>
+                        <div class="input-group"><label class="input-label">Localização (opcional)</label><input
+                                class="input-field" placeholder="Endereço ou KM" value="BR-116, Km 234"></div>
+                        <div class="action-card" style="margin-top: 16px; border: 2px dashed var(--grey-300);">
+                            <div class="action-icon blue"><i class="fas fa-camera"></i></div>
+                            <div class="action-text">
+                                <div class="action-title">Anexar Comprovante</div>
+                                <div class="action-subtitle">Foto ou PDF da nota fiscal</div>
+                            </div>
+                        </div>
+                        <button class="btn-primary" style="margin-top: 16px;"><i class="fas fa-check"></i> Salvar
+                            Gasto</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 6: Loading -->
+            <div class="screen-wrapper">
+                <div class="screen-label warning">6. Salvando...</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Alimentação</span>
+                    </div>
+                    <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div class="loading-spinner"></div>
+                            <div style="font-size: 16px; font-weight: 500; color: var(--grey-700);">Salvando gasto...
+                            </div>
+                            <div style="font-size: 13px; color: var(--grey-500); margin-top: 4px;">Aguarde um momento
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 7: Sucesso -->
+            <div class="screen-wrapper">
+                <div class="screen-label success">7. Sucesso</div>
+                <div class="mobile-frame">
+                    <div class="status-bar green"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar" style="background: var(--zeca-green);"><i class="fas fa-arrow-left"></i><span
+                            class="app-bar-title">Gasto Registrado</span></div>
+                    <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div
+                                style="width: 80px; height: 80px; background: #E8F5E9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                                <i class="fas fa-check" style="font-size: 36px; color: var(--zeca-green);"></i></div>
+                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Gasto Registrado!</div>
+                            <div style="font-size: 14px; color: var(--grey-600); margin-bottom: 24px;">R$ 45,50 -
+                                Alimentação</div><button class="btn-primary" style="margin-bottom: 12px;"><i
+                                    class="fas fa-plus"></i> Novo Gasto</button><button class="btn-primary blue">Ver
+                                Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 3: RECEITAS/FRETES -->
+    <div id="receitas" class="section-container">
+        <div class="section-title-bar" style="background: var(--zeca-purple);">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <span>Receitas e Fretes - Registro de Pagamentos</span>
+        </div>
+        <div class="screens-container">
+            <!-- Tela 8: Lista de Receitas -->
+            <div class="screen-wrapper">
+                <div class="screen-label">8. Minhas Receitas</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Receitas da
+                            Viagem</span><i class="fas fa-plus"></i></div>
+                    <div class="content">
+                        <div class="summary-card"
+                            style="background: linear-gradient(135deg, var(--zeca-purple), #512DA8);">
+                            <div class="summary-title">Total Receitas</div>
+                            <div class="summary-value">R$ 4.850,00</div>
+                            <div class="summary-row">
+                                <div class="summary-item">
+                                    <div class="summary-item-value" style="color: #81C784;">R$ 3.200</div>
+                                    <div class="summary-item-label">Recebido</div>
+                                </div>
+                                <div class="summary-item">
+                                    <div class="summary-item-value" style="color: #FFD54F;">R$ 1.650</div>
+                                    <div class="summary-item-label">Pendente</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #E8F5E9; color: var(--zeca-green);"><i
+                                    class="fas fa-check-circle"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Frete SP → Curitiba</div>
+                                <div class="expense-date">Recebido em 01/02</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount" style="color: var(--zeca-green);">+ R$ 2.500</div>
+                                <div class="expense-category">Pago</div>
+                            </div>
+                        </div>
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #FFF3E0; color: var(--zeca-orange);"><i
+                                    class="fas fa-clock"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Frete Curitiba → POA</div>
+                                <div class="expense-date">Vence em 05/02</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount" style="color: var(--zeca-orange);">R$ 1.650</div>
+                                <div class="expense-category">Pendente</div>
+                            </div>
+                        </div>
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #E8F5E9; color: var(--zeca-green);"><i
+                                    class="fas fa-check-circle"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Adiantamento</div>
+                                <div class="expense-date">Recebido em 30/01</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount" style="color: var(--zeca-green);">+ R$ 700</div>
+                                <div class="expense-category">Pago</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fab" style="background: var(--zeca-purple);"><i class="fas fa-plus"></i></div>
+                </div>
+            </div>
+            <!-- Tela 9: Nova Receita -->
+            <div class="screen-wrapper">
+                <div class="screen-label">9. Registrar Receita</div>
+                <div class="mobile-frame">
+                    <div class="status-bar" style="background: var(--zeca-purple);"><span>9:41</span><span><i
+                                class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                                class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar" style="background: var(--zeca-purple);"><i class="fas fa-arrow-left"></i><span
+                            class="app-bar-title">Nova Receita</span></div>
+                    <div class="content">
+                        <div class="input-group"><label class="input-label">Tipo de Receita *</label><select
+                                class="input-field">
+                                <option>Frete</option>
+                                <option>Adiantamento</option>
+                                <option>Diária</option>
+                                <option>Comissão</option>
+                            </select></div>
+                        <div class="input-group"><label class="input-label">Descrição *</label><input
+                                class="input-field" placeholder="Ex: Frete SP → Curitiba"
+                                value="Frete Curitiba → Porto Alegre"></div>
+                        <div class="input-group"><label class="input-label">Valor Total (R$) *</label><input
+                                class="input-field" value="3.200,00" style="font-size: 24px; font-weight: 700;"></div>
+                        <div class="input-group"><label class="input-label">Adiantamento Recebido (R$)</label><input
+                                class="input-field" placeholder="0,00" value="700,00"></div>
+                        <div class="input-group"><label class="input-label">Data Prevista Pagamento</label><input
+                                class="input-field" type="date" value="2026-02-10"></div>
+                        <div class="input-group"><label class="input-label">Cliente/Embarcador</label><input
+                                class="input-field" placeholder="Nome do cliente" value="Transportadora XYZ"></div>
+                        <button class="btn-primary" style="margin-top: 16px; background: var(--zeca-purple);"><i
+                                class="fas fa-check"></i> Registrar Receita</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 4: RESUMO/DASHBOARD -->
+    <div id="resumo" class="section-container">
+        <div class="section-title-bar" style="background: var(--zeca-blue-dark);">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard e Resumo Financeiro da Viagem</span>
+        </div>
+        <div class="screens-container">
+            <!-- Tela 10: Dashboard Completo -->
+            <div class="screen-wrapper">
+                <div class="screen-label">10. Resumo da Viagem</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Resumo
+                            Financeiro</span><i class="fas fa-share-alt"></i></div>
+                    <div class="content">
+                        <div
+                            style="background: linear-gradient(135deg, #1E7E34, #145523); color: white; padding: 20px; border-radius: 16px; margin-bottom: 16px;">
+                            <div style="font-size: 12px; opacity: 0.9;">LUCRO DA VIAGEM</div>
+                            <div style="font-size: 36px; font-weight: 700; margin: 8px 0;">R$ 2.156,50</div>
+                            <div style="display: flex; gap: 8px;"><span
+                                    style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px;"><i
+                                        class="fas fa-arrow-up"></i> Margem: 44,5%</span><span
+                                    style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 8px; font-size: 11px;">R$
+                                    2,87/km</span></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div style="background: white; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 11px; color: var(--grey-600);">RECEITAS</div>
+                                <div style="font-size: 22px; font-weight: 700; color: var(--zeca-green);">R$ 4.850</div>
+                            </div>
+                            <div style="background: white; border-radius: 12px; padding: 16px; text-align: center;">
+                                <div style="font-size: 11px; color: var(--grey-600);">GASTOS</div>
+                                <div style="font-size: 22px; font-weight: 700; color: var(--zeca-red);">R$ 2.693</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; font-weight: 600; color: var(--grey-600); margin-bottom: 10px;">
+                            GASTOS POR CATEGORIA</div>
+                        <div style="background: white; border-radius: 12px; padding: 14px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;"><span
+                                        style="font-size: 18px;">⛽</span><span
+                                        style="font-size: 14px;">Combustível</span></div>
+                                <div><span style="font-weight: 600;">R$ 1.420</span><span
+                                        style="font-size: 11px; color: var(--grey-500); margin-left: 6px;">53%</span>
+                                </div>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;"><span
+                                        style="font-size: 18px;">🛣️</span><span style="font-size: 14px;">Pedágio</span>
+                                </div>
+                                <div><span style="font-weight: 600;">R$ 485</span><span
+                                        style="font-size: 11px; color: var(--grey-500); margin-left: 6px;">18%</span>
+                                </div>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;"><span
+                                        style="font-size: 18px;">🍽️</span><span
+                                        style="font-size: 14px;">Alimentação</span></div>
+                                <div><span style="font-weight: 600;">R$ 312</span><span
+                                        style="font-size: 11px; color: var(--grey-500); margin-left: 6px;">12%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;"><span
+                                        style="font-size: 18px;">📦</span><span style="font-size: 14px;">Outros</span>
+                                </div>
+                                <div><span style="font-weight: 600;">R$ 476</span><span
+                                        style="font-size: 11px; color: var(--grey-500); margin-left: 6px;">17%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 11: Alertas -->
+            <div class="screen-wrapper">
+                <div class="screen-label warning">11. Alertas de Gastos</div>
+                <div class="mobile-frame">
+                    <div class="status-bar" style="background: var(--zeca-orange);"><span>9:41</span><span><i
+                                class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                                class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar" style="background: var(--zeca-orange);"><i class="fas fa-arrow-left"></i><span
+                            class="app-bar-title">Alertas</span><span
+                            style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 10px; font-size: 12px;">3</span>
+                    </div>
+                    <div class="content">
+                        <div
+                            style="background: #FFF3E0; border-left: 4px solid var(--zeca-orange); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><i
+                                    class="fas fa-exclamation-triangle" style="color: var(--zeca-orange);"></i><span
+                                    style="font-weight: 600; font-size: 14px;">Gasto Acima da Média</span></div>
+                            <div style="font-size: 13px; color: var(--grey-700);">Alimentação R$ 78,50 está 52% acima da
+                                sua média de R$ 51,60</div>
+                        </div>
+                        <div
+                            style="background: #FFEBEE; border-left: 4px solid var(--zeca-red); border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><i
+                                    class="fas fa-exclamation-circle" style="color: var(--zeca-red);"></i><span
+                                    style="font-weight: 600; font-size: 14px;">Limite Excedido</span></div>
+                            <div style="font-size: 13px; color: var(--grey-700);">Combustível atingiu 95% do limite
+                                mensal (R$ 4.750 de R$ 5.000)</div>
+                        </div>
+                        <div
+                            style="background: #E3F2FD; border-left: 4px solid var(--zeca-blue); border-radius: 8px; padding: 14px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><i
+                                    class="fas fa-info-circle" style="color: var(--zeca-blue);"></i><span
+                                    style="font-weight: 600; font-size: 14px;">Possível Duplicata</span></div>
+                            <div style="font-size: 13px; color: var(--grey-700);">2 pedágios de R$ 45,80 registrados
+                                hoje no mesmo local</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 5: ESTADOS DE ERRO -->
+    <div id="erros" class="section-container">
+        <div class="section-title-bar" style="background: var(--zeca-red);">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Estados de Erro e Feedback ao Usuário</span>
+        </div>
+        <div class="screens-container">
+            <!-- Tela 12: Erro de Validação -->
+            <div class="screen-wrapper">
+                <div class="screen-label error">12. Erro de Validação</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Novo Gasto</span>
+                    </div>
+                    <div class="content">
+                        <div class="input-group"><label class="input-label">Descrição *</label><input
+                                class="input-field" placeholder="Ex: Almoço na BR-116"></div>
+                        <div class="input-group"><label class="input-label">Valor (R$) *</label><input
+                                class="input-field error" value="abc">
+                            <div class="input-error"><i class="fas fa-exclamation-circle"></i> Digite um valor numérico
+                                válido</div>
+                        </div>
+                        <div class="input-group"><label class="input-label">Data e Hora *</label><input
+                                class="input-field error" value="">
+                            <div class="input-error"><i class="fas fa-exclamation-circle"></i> Campo obrigatório</div>
+                        </div>
+                        <button class="btn-primary" disabled><i class="fas fa-check"></i> Salvar Gasto</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 13: Erro de Rede -->
+            <div class="screen-wrapper">
+                <div class="screen-label error">13. Erro de Conexão</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Novo Gasto</span>
+                    </div>
+                    <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div
+                                style="width: 80px; height: 80px; background: #FFEBEE; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                                <i class="fas fa-wifi-slash" style="font-size: 32px; color: var(--zeca-red);"></i></div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Sem Conexão</div>
+                            <div style="font-size: 14px; color: var(--grey-600); margin-bottom: 24px;">Os dados serão
+                                salvos localmente e sincronizados quando a conexão voltar.</div><button
+                                class="btn-primary blue"><i class="fas fa-save"></i> Salvar Offline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 14: Toast de Erro API -->
+            <div class="screen-wrapper">
+                <div class="screen-label error">14. Toast de Erro</div>
+                <div class="mobile-frame">
+                    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar"><i class="fas fa-arrow-left"></i><span class="app-bar-title">Gestão de
+                            Gastos</span></div>
+                    <div class="content">
+                        <div class="summary-card">
+                            <div class="summary-title">Viagem Atual</div>
+                            <div class="summary-value">R$ 1.247,50</div>
+                        </div>
+                        <div class="expense-list-item">
+                            <div class="expense-icon" style="background: #FFEBEE; color: var(--zeca-red);"><i
+                                    class="fas fa-road"></i></div>
+                            <div class="expense-info">
+                                <div class="expense-name">Pedágio Via Dutra</div>
+                                <div class="expense-date">Hoje, 14:32</div>
+                            </div>
+                            <div class="expense-value">
+                                <div class="expense-amount">- R$ 45,80</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="toast error"><i class="fas fa-exclamation-circle"></i>
+                        <div style="flex: 1;">Erro ao carregar dados. Tente novamente.</div><span
+                            style="font-weight: 600;">TENTAR</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Tela 15: Sem Viagem Ativa -->
+            <div class="screen-wrapper">
+                <div class="screen-label warning">15. Sem Viagem Ativa</div>
+                <div class="mobile-frame">
+                    <div class="status-bar orange"><span>9:41</span><span><i class="fas fa-signal"></i> <i
+                                class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span></div>
+                    <div class="app-bar orange"><i class="fas fa-bars"></i><span class="app-bar-title">ZECA</span><i
+                            class="fas fa-bell"></i></div>
+                    <div class="content" style="display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div
+                                style="width: 100px; height: 100px; background: #FFF3E0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                                <i class="fas fa-route" style="font-size: 40px; color: var(--zeca-orange);"></i></div>
+                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Nenhuma Viagem Ativa
+                            </div>
+                            <div style="font-size: 14px; color: var(--grey-600); margin-bottom: 24px; padding: 0 20px;">
+                                Inicie uma viagem para começar a registrar seus gastos e receitas.</div><button
+                                class="btn-primary" style="background: var(--zeca-orange);"><i class="fas fa-play"></i>
+                                Iniciar Nova Viagem</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section-container').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>

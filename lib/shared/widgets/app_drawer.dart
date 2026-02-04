@@ -214,6 +214,53 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
                 
+                // Gestão de Gastos - US-002: Acesso via Drawer
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9800).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet,
+                      color: Color(0xFFFF9800),
+                    ),
+                  ),
+                  title: Row(
+                    children: [
+                      const Text(
+                        'Gestão de Gastos',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF9800),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'NOVO',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/trip-expenses');
+                  },
+                ),
+                
                 // Alterar Senha
                 _buildMenuItem(
                   icon: Icons.lock_reset,
