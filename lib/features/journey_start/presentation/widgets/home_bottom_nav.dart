@@ -62,11 +62,11 @@ class HomeBottomNav extends StatelessWidget {
               // FAB central (Abastecer)
               _buildCenterFAB(),
               
-              // Relatórios
+              // Eficiência
               _buildNavItem(
                 context,
-                icon: Icons.bar_chart_rounded,
-                label: 'Relatórios',
+                icon: Icons.speed,
+                label: 'Eficiência',
                 index: 2,
                 onTap: () => _navigateTo(context, 2),
               ),
@@ -177,13 +177,7 @@ class HomeBottomNav extends StatelessWidget {
         }
         break;
       case 2:
-        // TODO: Implementar tela de relatórios
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Relatórios - Em breve'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        context.push('/efficiency');
         break;
       case 3:
         context.push('/profile');
