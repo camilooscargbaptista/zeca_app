@@ -45,6 +45,14 @@ import '../features/change_password/presentation/bloc/change_password_bloc.dart'
 import '../features/change_password/data/repositories/change_password_repository.dart';
 import '../features/change_password/domain/usecases/change_password_usecase.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
+// Efficiency imports
+import '../features/efficiency/presentation/pages/efficiency_page.dart';
+import '../features/efficiency/presentation/pages/efficiency_history_page.dart';
+// Trip Expenses imports
+import '../features/trip/presentation/pages/trip_expenses_dashboard_page.dart';
+import '../features/trip/presentation/pages/add_expense_page.dart';
+import '../features/trip/presentation/pages/trip_revenues_page.dart';
+import '../features/trip/presentation/pages/trip_summary_page.dart';
 
 class AppRouter {
   static final GoRouter _router = GoRouter(
@@ -289,6 +297,41 @@ class AppRouter {
             create: (_) => ChangePasswordBloc(useCase, authBloc),
             child: const ChangePasswordPage(),
           );
+        },
+      ),
+      // Efficiency routes
+      GoRoute(
+        path: '/efficiency',
+        name: 'efficiency',
+        builder: (context, state) => const EfficiencyPage(),
+      ),
+      GoRoute(
+        path: '/efficiency/history',
+        name: 'efficiency-history',
+        builder: (context, state) => const EfficiencyHistoryPage(),
+      ),
+      // Trip Expenses routes (US-003)
+      GoRoute(
+        path: '/trip-expenses',
+        name: 'trip-expenses',
+        builder: (context, state) => const TripExpensesDashboardPage(),
+      ),
+      GoRoute(
+        path: '/trip-expenses/add',
+        name: 'trip-expenses-add',
+        builder: (context, state) => const AddExpensePage(),
+      ),
+      GoRoute(
+        path: '/trip-revenues',
+        name: 'trip-revenues',
+        builder: (context, state) => const TripRevenuesPage(),
+      ),
+      GoRoute(
+        path: '/trip-summary',
+        name: 'trip-summary',
+        builder: (context, state) {
+          final tripId = state.uri.queryParameters['tripId'];
+          return TripSummaryPage(tripId: tripId);
         },
       ),
     ],

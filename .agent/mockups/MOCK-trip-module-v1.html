@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1">
+    <title>ZECA - Módulo de Viagens v1</title>
+    <style>
+        :root {
+            --zeca-orange: #F5A623;
+            --zeca-green: #22C55E;
+            --zeca-blue: #3B82F6;
+            --zeca-red: #EF4444;
+            --bg-dark: #1A1A2E;
+            --bg-card: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .mockup-container {
+            width: 375px;
+            margin-bottom: 20px;
+        }
+
+        .mockup-label {
+            background: var(--bg-dark);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .mockup-label small {
+            display: block;
+            font-weight: normal;
+            font-size: 11px;
+            color: #9CA3AF;
+            margin-top: 4px;
+        }
+
+        .phone-frame {
+            background: #F3F4F6;
+            border: 2px solid #D1D5DB;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            min-height: 650px;
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* Header */
+        .header {
+            background: var(--zeca-orange);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-back {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .header-icon {
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+        }
+
+        /* Trip Card - No Trip */
+        .trip-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .trip-card-empty {
+            text-align: center;
+            padding: 32px 20px;
+        }
+
+        .trip-card-empty-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #F5A623 0%, #F5D087 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 40px;
+        }
+
+        .trip-card-empty h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .trip-card-empty p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: var(--zeca-orange);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--zeca-red);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--zeca-green);
+            color: white;
+        }
+
+        /* Trip Active Card */
+        .trip-active {
+            background: linear-gradient(135deg, var(--zeca-orange), #F5D087);
+        }
+
+        .trip-active-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .trip-active-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trip-active-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #22C55E;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .trip-route {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .route-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+        }
+
+        .route-point:first-child::after {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            width: 2px;
+            height: 20px;
+            background: #D1D5DB;
+        }
+
+        .route-point+.route-point {
+            margin-top: 20px;
+        }
+
+        .route-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .route-icon.origin {
+            background: #DCFCE7;
+            color: var(--zeca-green);
+        }
+
+        .route-icon.destination {
+            background: #FEE2E2;
+            color: var(--zeca-red);
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .route-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .route-value.placeholder {
+            color: var(--text-secondary);
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 22px;
+        }
+
+        .quick-action-label {
+            font-size: 11px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: flex-end;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background: #D1D5DB;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(245, 166, 35, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-input {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 15px;
+            background: #F9FAFB;
+            padding-left: 44px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--zeca-orange);
+            background: white;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .input-icon.origin {
+            color: var(--zeca-green);
+        }
+
+        .input-icon.destination {
+            color: var(--zeca-red);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #EFF6FF;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-icon {
+            color: var(--zeca-blue);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .info-box-text {
+            font-size: 12px;
+            color: #1E40AF;
+            line-height: 1.5;
+        }
+
+        /* Button Row */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        .btn-row .btn:last-child {
+            flex: 2;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .summary-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .summary-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--zeca-green), #86EFAC);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 32px;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-stat {
+            background: #F9FAFB;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 12px;
+            border-top: 1px solid var(--border-color);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--zeca-orange);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+        }
+
+        /* FAB */
+        .fab {
+            width: 56px;
+            height: 56px;
+            background: var(--zeca-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            margin-top: -20px;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        /* Checkbox option */
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #FEF3C7;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--zeca-orange);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            background: var(--zeca-orange);
+            color: white;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #92400E;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TELA 1: Home sem viagem ativa -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            1. Home - Sem Viagem Ativa
+            <small>Estado inicial - motorista pode iniciar jornada</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>17:58</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="header">
+                <span class="header-title">🔥 Olá, João!</span>
+                <span class="header-icon">🔔</span>
+            </div>
+
+            <div class="content">
+                <!-- Card para iniciar viagem -->
+                <div class="trip-card trip-card-empty">
+                    <div class="trip-card-empty-icon">🚗</div>
+                    <h3>Iniciar Jornada</h3>
+                    <p>Comece uma nova viagem para rastrear km, tempo e gastos automaticamente</p>
+                    <button class="btn btn-primary">
+                        ▶️ Iniciar Viagem
+                    </button>
+                </div>
+
+                <!-- Quick Actions -->
+                <p class="section-title">Ações Rápidas</p>
+                <div class="quick-actions">
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FEF3C7;">⛽</div>
+                        <span class="quick-action-label">Abastecer</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #DCFCE7;">💰</div>
+                        <span class="quick-action-label">Gastos</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #E0E7FF;">📊</div>
+                        <span class="quick-action-label">Eficiência</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FCE7F3;">📜</div>
+                        <span class="quick-action-label">Histórico</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Nav -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    Home
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📍</span>
+                    Postos
+                </div>
+                <div class="nav-item">
+                    <div class="fab">⛽</div>
+                    <span style="margin-top: 4px;">Abastecer</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">🚗</span>
+                    Viagens
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    Eficiência
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 2: Modal iniciar viagem com destino -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            2. Modal - Iniciar Viagem
+            <small>Origem e destino opcionais</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>17:58</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="header" style="opacity: 0.5;">
+                <span class="header-title">🔥 Olá, João!</span>
+            </div>
+
+            <div class="content" style="opacity: 0.3;">
+                <div class="trip-card trip-card-empty">...</div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-handle"></div>
+
+                    <div class="modal-header">
+                        <div class="modal-icon">🛣️</div>
+                        <div>
+                            <div class="modal-title">Iniciar Viagem</div>
+                            <div class="modal-subtitle">Veículo: ABC-1234</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <span class="input-icon origin">🟢</span>
+                            <input type="text" class="form-input" placeholder="Origem (opcional)" value="São Paulo, SP">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <span class="input-icon destination">📍</span>
+                            <input type="text" class="form-input" placeholder="Destino (opcional)" value="Curitiba, PR">
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">ℹ️</span>
+                        <span class="info-box-text">Você pode preencher depois. Deixe em branco para definir
+                            origem/destino durante a viagem.</span>
+                    </div>
+
+                    <div class="btn-row">
+                        <button class="btn btn-secondary">Cancelar</button>
+                        <button class="btn btn-primary">▶️ Iniciar Viagem</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 3: Modal para Uber/Autônomo (sem destino) -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            3. Modal - Modo Autônomo/Uber
+            <small>Sem destino definido</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>17:58</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="header" style="opacity: 0.5;">
+                <span class="header-title">🔥 Olá, João!</span>
+            </div>
+
+            <div class="content" style="opacity: 0.3;">...</div>
+
+            <!-- Modal -->
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-handle"></div>
+
+                    <div class="modal-header">
+                        <div class="modal-icon">🛣️</div>
+                        <div>
+                            <div class="modal-title">Iniciar Jornada</div>
+                            <div class="modal-subtitle">Veículo: XYZ-5678</div>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-option">
+                        <div class="checkbox checked">✓</div>
+                        <span class="checkbox-label">Jornada sem destino definido (Uber, App, etc)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <span class="input-icon origin">🟢</span>
+                            <input type="text" class="form-input" placeholder="Ponto de partida (opcional)" value="">
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">💡</span>
+                        <span class="info-box-text">Ideal para motoristas de app. Vamos rastrear km, tempo e localização
+                            automaticamente.</span>
+                    </div>
+
+                    <div class="btn-row">
+                        <button class="btn btn-secondary">Cancelar</button>
+                        <button class="btn btn-primary">▶️ Começar Jornada</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 4: Home com viagem ativa (com destino) -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            4. Home - Viagem Ativa
+            <small>GPS tracking, tempo e km em tempo real</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>18:45</span>
+                <div class="status-icons">📶 📍 🔋</div>
+            </div>
+
+            <div class="header">
+                <span class="header-title">🔥 Em Viagem!</span>
+                <span class="header-icon">🔔</span>
+            </div>
+
+            <div class="content">
+                <!-- Card de viagem ativa -->
+                <div class="trip-card trip-active">
+                    <div class="trip-active-header">
+                        <span style="color: white; font-weight: 600;">🚗 Viagem em Andamento</span>
+                        <div class="trip-active-badge">GPS Ativo</div>
+                    </div>
+
+                    <div class="trip-route">
+                        <div class="route-point">
+                            <div class="route-icon origin">🟢</div>
+                            <div class="route-info">
+                                <div class="route-label">Origem</div>
+                                <div class="route-value">São Paulo, SP</div>
+                            </div>
+                        </div>
+                        <div class="route-point">
+                            <div class="route-icon destination">📍</div>
+                            <div class="route-info">
+                                <div class="route-label">Destino</div>
+                                <div class="route-value">Curitiba, PR</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">01:47</div>
+                            <div class="stat-label">Tempo</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">127</div>
+                            <div class="stat-label">km rodados</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">~278</div>
+                            <div class="stat-label">km restantes</div>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background: rgba(255,255,255,0.95); color: #EF4444;">
+                        🏁 Finalizar Viagem
+                    </button>
+                </div>
+
+                <!-- Quick Actions -->
+                <p class="section-title">Durante a viagem</p>
+                <div class="quick-actions">
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FEF3C7;">⛽</div>
+                        <span class="quick-action-label">Abastecer</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FEE2E2;">💸</div>
+                        <span class="quick-action-label">+ Gasto</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #DCFCE7;">💰</div>
+                        <span class="quick-action-label">+ Receita</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #E0E7FF;">⏸️</div>
+                        <span class="quick-action-label">Pausar</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Nav -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    Home
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📍</span>
+                    Postos
+                </div>
+                <div class="nav-item">
+                    <div class="fab">⛽</div>
+                    <span style="margin-top: 4px;">Abastecer</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">🚗</span>
+                    Viagens
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    Eficiência
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 5: Home com viagem ativa (sem destino - Uber) -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            5. Home - Jornada Sem Destino
+            <small>Modo Uber/Autônomo</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>15:23</span>
+                <div class="status-icons">📶 📍 🔋</div>
+            </div>
+
+            <div class="header">
+                <span class="header-title">🔥 Jornada Ativa</span>
+                <span class="header-icon">🔔</span>
+            </div>
+
+            <div class="content">
+                <!-- Card de viagem ativa -->
+                <div class="trip-card trip-active">
+                    <div class="trip-active-header">
+                        <span style="color: white; font-weight: 600;">🚗 Jornada em Andamento</span>
+                        <div class="trip-active-badge">GPS Ativo</div>
+                    </div>
+
+                    <div class="trip-route">
+                        <div class="route-point" style="padding-bottom: 0;">
+                            <div class="route-icon origin">🟢</div>
+                            <div class="route-info">
+                                <div class="route-label">Iniciada em</div>
+                                <div class="route-value">Pinheiros, São Paulo</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                        <span style="font-size: 18px;">🚕</span>
+                        <span style="font-size: 13px; color: #92400E;">Modo Uber/App - Destino indefinido</span>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">03:28</div>
+                            <div class="stat-label">Tempo</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">87</div>
+                            <div class="stat-label">km rodados</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">corridas</div>
+                        </div>
+                    </div>
+
+                    <button class="btn" style="background: rgba(255,255,255,0.95); color: #EF4444;">
+                        🏁 Encerrar Jornada
+                    </button>
+                </div>
+
+                <!-- Quick Actions -->
+                <p class="section-title">Ações Rápidas</p>
+                <div class="quick-actions">
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FEF3C7;">⛽</div>
+                        <span class="quick-action-label">Abastecer</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #FEE2E2;">💸</div>
+                        <span class="quick-action-label">+ Gasto</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #DCFCE7;">💰</div>
+                        <span class="quick-action-label">+ Receita</span>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon" style="background: #E0E7FF;">📊</div>
+                        <span class="quick-action-label">Resumo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Nav -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    Home
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📍</span>
+                    Postos
+                </div>
+                <div class="nav-item">
+                    <div class="fab">⛽</div>
+                    <span style="margin-top: 4px;">Abastecer</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">🚗</span>
+                    Viagens
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    Eficiência
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 6: Modal de Finalizar Viagem -->
+    <div class="mockup-container">
+        <div class="mockup-label">
+            6. Resumo - Viagem Finalizada
+            <small>Tela de resumo após finalizar</small>
+        </div>
+        <div class="phone-frame" style="position: relative;">
+            <div class="status-bar">
+                <span>20:15</span>
+                <div class="status-icons">📶 🔋</div>
+            </div>
+
+            <div class="header">
+                <span class="header-back">←</span>
+                <span class="header-title">Resumo da Viagem</span>
+            </div>
+
+            <div class="content">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div class="summary-icon">✓</div>
+                        <div class="summary-title">Viagem Finalizada!</div>
+                        <div class="summary-subtitle">São Paulo → Curitiba</div>
+                    </div>
+
+                    <div class="trip-route" style="background: #F9FAFB; margin-bottom: 20px;">
+                        <div class="route-point">
+                            <div class="route-icon origin">🟢</div>
+                            <div class="route-info">
+                                <div class="route-label">Saída</div>
+                                <div class="route-value">São Paulo, SP • 08:30</div>
+                            </div>
+                        </div>
+                        <div class="route-point">
+                            <div class="route-icon destination">📍</div>
+                            <div class="route-info">
+                                <div class="route-label">Chegada</div>
+                                <div class="route-value">Curitiba, PR • 14:15</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="summary-stat-value">405 km</div>
+                            <div class="summary-stat-label">Distância Total</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="summary-stat-value">5h 45min</div>
+                            <div class="summary-stat-label">Tempo Total</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="summary-stat-value">R$ 180</div>
+                            <div class="summary-stat-label">Gastos</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="summary-stat-value">R$ 1.200</div>
+                            <div class="summary-stat-label">Frete</div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background: #DCFCE7; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 12px; color: #166534; margin-bottom: 4px;">💰 Lucro Líquido</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #166534;">R$ 1.020,00</div>
+                    </div>
+
+                    <button class="btn btn-primary">
+                        🏠 Voltar para Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

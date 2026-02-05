@@ -307,16 +307,18 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
       
       debugPrint('📊 Stats do veículo $cleanPlate: $response');
       
-      if (mounted && response != null) {
+      if (mounted && response['success'] == true && response['data'] != null) {
+        final data = response['data'];
         setState(() {
           _vehicleStats = {
-            'last_odometer': response['last_odometer'],
-            'average_consumption': response['average_consumption'],
-            'refuelings_this_month': response['refuelings_this_month'],
+            'last_odometer': data['last_odometer'],
+            'average_consumption': data['average_consumption'],
+            'refuelings_this_month': data['refuelings_this_month'],
           };
           _loadingStats = false;
         });
       } else {
+        debugPrint('⚠️ Stats retornou erro: ${response['error']}');
         setState(() {
           _loadingStats = false;
         });
@@ -388,6 +390,9 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
           _vehicleConfirmed = false;
           _isLoading = false;
         });
+        
+        // Buscar stats do veículo (Último KM, Km/L Médio, Abast. Mês)
+        _fetchVehicleStats(vehicle['plate']);
       } else {
         setState(() {
           _isLoading = false;

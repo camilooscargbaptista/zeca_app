@@ -1,6 +1,9 @@
 ---
-description: Corrigir bug com diagnóstico completo e testes de regressão
+antigravity:
+  trigger: "manual"
+  description: "Corrigir bug com diagnóstico completo e testes de regressão"
 ---
+
 
 # /fix-bug - Correção de Bug Flutter
 

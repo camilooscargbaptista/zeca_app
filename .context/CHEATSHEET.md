@@ -1,3 +1,10 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto CHEATSHEET.md"
+---
+
 # ⚡ Cheatsheet - ZECA App
 
 > **Referência rápida para comandos e padrões mais usados.**

@@ -1,3 +1,10 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto DIAGRAMS.md"
+---
+
 # 📊 Diagramas - ZECA App
 
 > **Visualização dos fluxos e arquitetura do aplicativo mobile.**

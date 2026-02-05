@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*.dart"]
+  description: "Guia Flutter - padrões obrigatórios do projeto"
+---
+
+
 # 📱 FLUTTER GUIDE - Guia Completo ZECA App
 
 > **"Código Flutter de qualidade espacial."**

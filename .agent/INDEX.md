@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Índice principal - SEMPRE ler antes de qualquer tarefa"
+---
+
+
 # 📱 ZECA App Elite Engineering System v2.0.0
 
 > **"Eu não sei nada. Eu consulto, aprendo, verifico, e só então executo."**

@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Erros passados - SEMPRE consultar antes de qualquer tarefa"
+---
+
+
 # 📚 LESSONS LEARNED - ZECA App
 
 > **"Quem não aprende com os erros está condenado a repeti-los."**

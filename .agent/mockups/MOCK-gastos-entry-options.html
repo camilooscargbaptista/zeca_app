@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA - Opções de Entrada para Gestão de Gastos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #1565C0;
+            --zeca-blue-dark: #0D47A1;
+            --zeca-green: #43A047;
+            --zeca-orange: #FF9800;
+            --zeca-purple: #7E57C2;
+            --zeca-red: #DC3545;
+            --bg-gray: #F5F5F5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .option-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .option-card:hover {
+            border-color: var(--zeca-blue);
+        }
+
+        .option-header {
+            background: var(--zeca-blue);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .option-header h2 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .option-header p {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .mobile-frame {
+            width: 280px;
+            height: 560px;
+            background: var(--bg-gray);
+            border-radius: 32px;
+            overflow: hidden;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .header {
+            background: var(--zeca-blue);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .header-icon {
+            color: white;
+            font-size: 18px;
+        }
+
+        .content {
+            padding: 12px;
+            height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+
+        /* Vehicle Card */
+        .vehicle-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            border-radius: 14px;
+            padding: 12px;
+            margin: -60px 12px 12px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vehicle-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .vehicle-info {
+            flex: 1;
+            color: white;
+        }
+
+        .vehicle-plate {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .vehicle-model {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .badge-ativa {
+            background: var(--zeca-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 8px;
+            font-weight: 600;
+        }
+
+        /* Cards */
+        .cta-card {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .cta-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .cta-text h3 {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .cta-text p {
+            font-size: 9px;
+            opacity: 0.9;
+        }
+
+        .cta-arrow {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .economy-card {
+            background: linear-gradient(135deg, var(--zeca-green), #2E7D32);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .economy-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .economy-info {
+            flex: 1;
+        }
+
+        .economy-label {
+            font-size: 9px;
+            opacity: 0.9;
+        }
+
+        .economy-value {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .economy-stats {
+            display: flex;
+            gap: 12px;
+        }
+
+        .economy-stat {
+            text-align: center;
+        }
+
+        .economy-stat-value {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .economy-stat-label {
+            font-size: 8px;
+            opacity: 0.8;
+        }
+
+        .section-title {
+            font-size: 10px;
+            color: #757575;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 12px 0 8px 0;
+            text-transform: uppercase;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .action-item {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 10px 6px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 4px;
+            font-size: 14px;
+        }
+
+        .action-label {
+            font-size: 8px;
+            font-weight: 500;
+            color: #212121;
+        }
+
+        .action-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: red;
+            color: white;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .club-card {
+            background: white;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .club-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .club-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--zeca-purple), #9C27B0);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .club-title {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .club-badge {
+            background: #F3E5F5;
+            color: var(--zeca-purple);
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .club-cta {
+            background: #F3E5F5;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            color: var(--zeca-purple);
+            font-size: 10px;
+        }
+
+        .efficiency-card {
+            background: white;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .efficiency-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .efficiency-icon {
+            width: 24px;
+            height: 24px;
+            background: #E3F2FD;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+            font-size: 12px;
+        }
+
+        .efficiency-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .efficiency-stats {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .efficiency-stat {
+            text-align: center;
+        }
+
+        .efficiency-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--zeca-blue);
+        }
+
+        .efficiency-label {
+            font-size: 8px;
+            color: #757575;
+        }
+
+        /* HIGHLIGHT - Novo item */
+        .highlight {
+            border: 2px solid var(--zeca-orange);
+            animation: pulse 2s infinite;
+            position: relative;
+        }
+
+        .highlight::after {
+            content: 'NOVO';
+            position: absolute;
+            top: -8px;
+            right: 8px;
+            background: var(--zeca-orange);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+            }
+        }
+
+        /* Drawer */
+        .drawer-overlay {
+            position: absolute;
+            top: 44px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .drawer {
+            width: 200px;
+            height: 100%;
+            background: white;
+            border-radius: 0 20px 20px 0;
+        }
+
+        .drawer-header {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            padding: 40px 16px 16px;
+            color: white;
+        }
+
+        .drawer-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .drawer-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .drawer-badge {
+            display: inline-block;
+            background: var(--zeca-green);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-top: 6px;
+        }
+
+        .drawer-menu {
+            padding: 12px 0;
+        }
+
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #212121;
+        }
+
+        .drawer-item i {
+            width: 20px;
+            color: var(--zeca-blue);
+        }
+
+        .drawer-item.logout {
+            color: var(--zeca-red);
+        }
+
+        .drawer-item.logout i {
+            color: var(--zeca-red);
+        }
+
+        .drawer-item-badge {
+            background: var(--zeca-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 700;
+            margin-left: auto;
+        }
+
+        .drawer-divider {
+            height: 1px;
+            background: #eee;
+            margin: 8px 0;
+        }
+
+        /* Gastos Card */
+        .gastos-card {
+            background: linear-gradient(135deg, var(--zeca-orange), #E67E00);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .gastos-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gastos-info {
+            flex: 1;
+        }
+
+        .gastos-title {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .gastos-subtitle {
+            font-size: 9px;
+            opacity: 0.9;
+        }
+
+        .gastos-stats {
+            display: flex;
+            gap: 10px;
+        }
+
+        .gastos-stat {
+            text-align: center;
+        }
+
+        .gastos-stat-value {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .gastos-stat-label {
+            font-size: 7px;
+            opacity: 0.8;
+        }
+
+        .pros-cons {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .pros-cons h4 {
+            color: #4CAF50;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .pros-cons h4.cons {
+            color: #F44336;
+        }
+
+        .pros-cons ul {
+            list-style: none;
+            margin-bottom: 10px;
+        }
+
+        .pros-cons li {
+            color: #ccc;
+            font-size: 10px;
+            margin-bottom: 4px;
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .pros-cons li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚛 ZECA - Opções de Entrada para Gestão de Gastos</h1>
+    <p class="subtitle">Compare as 3 opções e escolha a melhor para o fluxo do usuário</p>
+
+    <div class="options-grid">
+        <!-- OPÇÃO 1: Acesso Rápido -->
+        <div class="option-card">
+            <div class="option-header">
+                <h2>📱 Opção 1: Acesso Rápido</h2>
+                <p>Novo item na barra de ações rápidas</p>
+            </div>
+
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                            class="fas fa-battery-full"></i></span>
+                </div>
+                <div class="header">
+                    <i class="fas fa-bars header-icon"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off header-icon"></i>
+                </div>
+                <div style="background: var(--zeca-blue); height: 60px;"></div>
+                <div class="vehicle-card">
+                    <div class="vehicle-icon"><i class="fas fa-truck"></i></div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-plate">ABC-1234</div>
+                        <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                    </div>
+                    <span class="badge-ativa"><i class="fas fa-check-circle"></i> ATIVA</span>
+                </div>
+                <div class="content" style="margin-top: -48px;">
+                    <div class="cta-card">
+                        <div class="cta-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="cta-text" style="flex:1;">
+                            <h3>Abastecer Agora</h3>
+                            <p>Encontre um posto e abasteça</p>
+                        </div>
+                        <div class="cta-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="economy-card">
+                        <div class="economy-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="economy-info">
+                            <div class="economy-label">Sua Economia • Jan</div>
+                            <div class="economy-value">R$ 0,00</div>
+                        </div>
+                        <div class="economy-stats">
+                            <div class="economy-stat">
+                                <div class="economy-stat-value">0</div>
+                                <div class="economy-stat-label">Abast.</div>
+                            </div>
+                            <div class="economy-stat">
+                                <div class="economy-stat-value">-</div>
+                                <div class="economy-stat-label">Km/L</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Acesso Rápido</div>
+                    <div class="quick-actions">
+                        <div class="action-item" style="position:relative;">
+                            <div class="action-icon" style="background:#FFF3E0;color:var(--zeca-orange);"><i
+                                    class="fas fa-clipboard-check"></i></div>
+                            <div class="action-label">Checklist</div>
+                            <div class="action-badge">3</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#F3E5F5;color:var(--zeca-purple);"><i
+                                    class="fas fa-receipt"></i></div>
+                            <div class="action-label">Histórico</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon" style="background:#E8F5E9;color:var(--zeca-green);"><i
+                                    class="fas fa-map-marker-alt"></i></div>
+                            <div class="action-label">Postos</div>
+                        </div>
+                        <!-- NOVO: Gastos -->
+                        <div class="action-item highlight">
+                            <div class="action-icon" style="background:#FFF3E0;color:var(--zeca-orange);"><i
+                                    class="fas fa-wallet"></i></div>
+                            <div class="action-label">Gastos</div>
+                        </div>
+                    </div>
+
+                    <div class="club-card">
+                        <div class="club-header">
+                            <div class="club-icon"><i class="fas fa-crown"></i></div>
+                            <span class="club-title">ZECA Club</span>
+                            <span class="club-badge">EM BREVE</span>
+                        </div>
+                        <div class="club-cta"><i class="fas fa-star"></i> Acumule pontos e cashback!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <h4>✅ Prós</h4>
+                <ul>
+                    <li>Acesso direto na Home</li>
+                    <li>Visibilidade imediata</li>
+                    <li>Um toque para acessar</li>
+                </ul>
+                <h4 class="cons">❌ Contras</h4>
+                <ul>
+                    <li>Limita espaço no Acesso Rápido</li>
+                    <li>Pode ficar apertado em telas menores</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- OPÇÃO 2: Drawer -->
+        <div class="option-card">
+            <div class="option-header" style="background: var(--zeca-purple);">
+                <h2>📋 Opção 2: Menu Drawer</h2>
+                <p>Novo item no menu lateral</p>
+            </div>
+
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                            class="fas fa-battery-full"></i></span>
+                </div>
+                <div class="drawer-overlay">
+                    <div class="drawer">
+                        <div class="drawer-header">
+                            <div class="drawer-avatar">JM</div>
+                            <div class="drawer-name">João Motorista</div>
+                            <div class="drawer-badge">Frotista</div>
+                        </div>
+                        <div class="drawer-menu">
+                            <div class="drawer-item"><i class="fas fa-user"></i> Meu Perfil</div>
+                            <div class="drawer-item"><i class="fas fa-receipt"></i> Histórico</div>
+                            <div class="drawer-item"><i class="fas fa-chart-line"></i> Eficiência <span
+                                    class="drawer-item-badge">NOVO</span></div>
+                            <!-- NOVO: Gestão de Gastos -->
+                            <div class="drawer-item highlight"
+                                style="background:#FFF3E0;border-radius:8px;margin:0 8px;">
+                                <i class="fas fa-wallet" style="color:var(--zeca-orange);"></i>
+                                Gestão de Gastos
+                                <span class="drawer-item-badge" style="background:var(--zeca-orange);">NOVO</span>
+                            </div>
+                            <div class="drawer-item"><i class="fas fa-lock"></i> Alterar Senha</div>
+                            <div class="drawer-divider"></div>
+                            <div class="drawer-item logout"><i class="fas fa-sign-out-alt"></i> Sair</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <h4>✅ Prós</h4>
+                <ul>
+                    <li>Não altera layout da Home</li>
+                    <li>Espaço ilimitado no menu</li>
+                    <li>Organização clara de funcionalidades</li>
+                </ul>
+                <h4 class="cons">❌ Contras</h4>
+                <ul>
+                    <li>Menos visível (2 toques)</li>
+                    <li>Usuário pode não descobrir</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- OPÇÃO 3: Card na Home -->
+        <div class="option-card">
+            <div class="option-header" style="background: var(--zeca-orange);">
+                <h2>📊 Opção 3: Card na Home</h2>
+                <p>Card com resumo após Eficiência</p>
+            </div>
+
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i
+                            class="fas fa-battery-full"></i></span>
+                </div>
+                <div class="header">
+                    <i class="fas fa-bars header-icon"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off header-icon"></i>
+                </div>
+                <div style="background: var(--zeca-blue); height: 60px;"></div>
+                <div class="vehicle-card">
+                    <div class="vehicle-icon"><i class="fas fa-truck"></i></div>
+                    <div class="vehicle-info">
+                        <div class="vehicle-plate">ABC-1234</div>
+                        <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                    </div>
+                    <span class="badge-ativa"><i class="fas fa-check-circle"></i> ATIVA</span>
+                </div>
+                <div class="content" style="margin-top: -48px;">
+                    <div class="cta-card">
+                        <div class="cta-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="cta-text" style="flex:1;">
+                            <h3>Abastecer Agora</h3>
+                            <p>Encontre um posto e abasteça</p>
+                        </div>
+                        <div class="cta-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+
+                    <div class="economy-card">
+                        <div class="economy-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="economy-info">
+                            <div class="economy-label">Sua Economia • Jan</div>
+                            <div class="economy-value">R$ 0,00</div>
+                        </div>
+                        <div class="economy-stats">
+                            <div class="economy-stat">
+                                <div class="economy-stat-value">0</div>
+                                <div class="economy-stat-label">Abast.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-icon"><i class="fas fa-chart-line"></i></div>
+                            <span class="efficiency-title">Eficiência de Combustível</span>
+                        </div>
+                        <div class="efficiency-stats">
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">2.9</div>
+                                <div class="efficiency-label">km/L último</div>
+                            </div>
+                            <div class="efficiency-stat">
+                                <div class="efficiency-value">1.7</div>
+                                <div class="efficiency-label">km/L média</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOVO: Card Gastos da Viagem -->
+                    <div class="gastos-card highlight">
+                        <div class="gastos-icon"><i class="fas fa-wallet"></i></div>
+                        <div class="gastos-info">
+                            <div class="gastos-title">Gastos da Viagem</div>
+                            <div class="gastos-subtitle">São Paulo → Curitiba</div>
+                        </div>
+                        <div class="gastos-stats">
+                            <div class="gastos-stat">
+                                <div class="gastos-stat-value">R$ 156</div>
+                                <div class="gastos-stat-label">Gastos</div>
+                            </div>
+                            <div class="gastos-stat">
+                                <div class="gastos-stat-value">R$ 800</div>
+                                <div class="gastos-stat-label">Receitas</div>
+                            </div>
+                            <div class="gastos-stat">
+                                <div class="gastos-stat-value" style="color:#4CAF50;">R$ 644</div>
+                                <div class="gastos-stat-label">Lucro</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <h4>✅ Prós</h4>
+                <ul>
+                    <li>Resumo visível na Home</li>
+                    <li>Mostra dados em tempo real</li>
+                    <li>Um toque para detalhes</li>
+                    <li>Alto engajamento</li>
+                </ul>
+                <h4 class="cons">❌ Contras</h4>
+                <ul>
+                    <li>Home fica mais longa</li>
+                    <li>Precisa scroll para ver</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div
+        style="text-align:center;margin-top:30px;padding:20px;background:rgba(255,255,255,0.1);border-radius:12px;max-width:800px;margin-left:auto;margin-right:auto;">
+        <h3 style="color:white;margin-bottom:12px;">💡 Recomendação: Combinar Opção 2 + Opção 3</h3>
+        <p style="color:#ccc;font-size:14px;">
+            <strong>Drawer:</strong> Item "Gestão de Gastos" para acesso completo ao módulo<br>
+            <strong>Home:</strong> Card resumo "Gastos da Viagem" (só aparece quando há viagem ativa)
+        </p>
+    </div>
+</body>
+
+</html>

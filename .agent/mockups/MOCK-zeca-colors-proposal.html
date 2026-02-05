@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA - Proposta de Cores</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* NOVAS CORES baseadas no logo ZECA */
+            --zeca-blue-dark: #1E3A5F;
+            --zeca-blue-primary: #2A70C0;
+            --zeca-blue-medium: #5B9BD5;
+            --zeca-blue-light: #87CEEB;
+            --zeca-green-cap: #3DAA5C;
+
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-light: #F8FAFC;
+            --white: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #E5E7EB;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 40px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            width: 100%;
+            text-align: center;
+            color: var(--zeca-blue-dark);
+            margin-bottom: 20px;
+        }
+
+        .phone {
+            width: 375px;
+            height: 700px;
+            background: #F8FAFC;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .comparison-label {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .label-old {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .label-new {
+            background: #DCFCE7;
+            color: #16A34A;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-blue-dark);
+        }
+
+        .status-bar.old {
+            background: #F59E0B;
+        }
+
+        .env-banner {
+            background: #DC2626;
+            color: white;
+            text-align: center;
+            padding: 4px;
+            font-size: 11px;
+        }
+
+        .header {
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--zeca-blue-dark);
+        }
+
+        .content {
+            padding: 16px;
+        }
+
+        /* Card da Placa */
+        .plate-card {
+            background: linear-gradient(135deg, var(--zeca-blue-primary) 0%, var(--zeca-blue-dark) 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(42, 112, 192, 0.3);
+        }
+
+        .plate-card.old {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .plate-number {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .plate-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ADE80;
+            border-radius: 50%;
+        }
+
+        .btn-finish {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        /* Card de Viagem */
+        .trip-card {
+            background: linear-gradient(135deg, var(--zeca-blue-medium) 0%, var(--zeca-blue-primary) 100%);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .trip-card.old {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .trip-route {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .trip-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .trip-info {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Card de Economia - VERSÃO ANTIGA (grande) */
+        .economy-card.old {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .economy-card.old .economy-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .economy-card.old .economy-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .economy-card.old .economy-title {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .economy-card.old .economy-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .economy-card.old .economy-stats {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 12px;
+        }
+
+        .economy-card.old .economy-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .economy-card.old .economy-stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* Card de Economia - NOVA VERSÃO COMPACTA */
+        .economy-card.new {
+            background: linear-gradient(135deg, var(--zeca-green-cap) 0%, #2E8B47 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .economy-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .economy-icon-new {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .economy-main .economy-title {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+
+        .economy-main .economy-value {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .economy-right {
+            display: flex;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .economy-right .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .economy-right .stat-label {
+            font-size: 9px;
+            opacity: 0.75;
+        }
+
+        .legend {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .legend h3 {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎨 Proposta de Cores ZECA</h1>
+
+    <!-- ANTES -->
+    <div>
+        <div class="comparison-label label-old">❌ ANTES (Laranja + Card Grande)</div>
+        <div class="phone">
+            <div class="status-bar old"></div>
+            <div class="env-banner">⚠ STAGING - stg.abastecacomzeca.com.br</div>
+            <div class="header">
+                <span>☰</span>
+                <span class="logo">zeca</span>
+                <span>🔔</span>
+            </div>
+            <div class="content">
+                <div class="plate-card old">
+                    <div>
+                        <span class="plate-number">ABC-1234</span>
+                        <span class="plate-status"><span class="status-dot"></span> Ativo</span>
+                    </div>
+                    <button class="btn-finish">⏱ Finalizar</button>
+                </div>
+
+                <div class="trip-card old">
+                    <div class="trip-route">
+                        <span class="status-dot"></span>
+                        <div>
+                            <div class="trip-text">São Paulo → Ribeirão Preto</div>
+                            <div class="trip-info">00:15:32 • 315 km</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="economy-card old">
+                    <div class="economy-header">
+                        <div class="economy-icon">🐷</div>
+                        <div class="economy-title">Sua Economia • Fevereiro</div>
+                    </div>
+                    <div class="economy-value">R$ 1.250,00</div>
+                    <div class="economy-stats">
+                        <div class="economy-stat">
+                            <div class="economy-stat-value">12</div>
+                            <div class="economy-stat-label">Abastecimentos</div>
+                        </div>
+                        <div class="economy-stat">
+                            <div class="economy-stat-value">2.8</div>
+                            <div class="economy-stat-label">Km/L Média</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEPOIS -->
+    <div>
+        <div class="comparison-label label-new">✅ DEPOIS (Azul + Card Compacto)</div>
+        <div class="phone">
+            <div class="status-bar"></div>
+            <div class="env-banner">⚠ STAGING - stg.abastecacomzeca.com.br</div>
+            <div class="header">
+                <span>☰</span>
+                <span class="logo">zeca</span>
+                <span>🔔</span>
+            </div>
+            <div class="content">
+                <div class="plate-card">
+                    <div>
+                        <span class="plate-number">ABC-1234</span>
+                        <span class="plate-status"><span class="status-dot"></span> Ativo</span>
+                    </div>
+                    <button class="btn-finish">⏱ Finalizar</button>
+                </div>
+
+                <div class="trip-card">
+                    <div class="trip-route">
+                        <span class="status-dot"></span>
+                        <div>
+                            <div class="trip-text">São Paulo → Ribeirão Preto</div>
+                            <div class="trip-info">00:15:32 • 315 km</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Economia COMPACTO -->
+                <div class="economy-card new">
+                    <div class="economy-left">
+                        <div class="economy-icon-new">🐷</div>
+                        <div class="economy-main">
+                            <div class="economy-title">Sua Economia • Fev</div>
+                            <div class="economy-value">R$ 1.250</div>
+                        </div>
+                    </div>
+                    <div class="economy-right">
+                        <div>
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Abast.</div>
+                        </div>
+                        <div>
+                            <div class="stat-value">2.8</div>
+                            <div class="stat-label">Km/L</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>📋 Resumo das Mudanças</h3>
+        <div class="legend-item">
+            <span style="color: #F59E0B;">■</span> Laranja → <span style="color: #2A70C0;">■</span> Azul ZECA (Cards
+            Placa/Viagem)
+        </div>
+        <div class="legend-item">
+            <span style="color: #10B981;">■</span> Verde Genérico → <span style="color: #3DAA5C;">■</span> Verde Boné
+            (Card Economia)
+        </div>
+        <div class="legend-item">
+            📐 Card Economia: Layout horizontal compacto, ~50% menos altura
+        </div>
+    </div>
+</body>
+
+</html>

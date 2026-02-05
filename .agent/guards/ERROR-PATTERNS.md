@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Anti-patterns e erros comuns - EVITAR sempre"
+---
+
+
 # ❌ Error Patterns - Anti-patterns Flutter
 
 > **Catálogo de erros comuns. Consulte ANTES de implementar para não repetir.**

@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA App - Eficiência de Combustível</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #2A70C0;
+            --zeca-blue-dark: #1E4A7A;
+            --zeca-green: #28A745;
+            --zeca-orange: #F5A623;
+            --zeca-red: #DC3545;
+            --grey-50: #FAFAFA;
+            --grey-100: #F5F5F5;
+            --grey-200: #EEEEEE;
+            --grey-300: #E0E0E0;
+            --grey-500: #9E9E9E;
+            --grey-600: #757575;
+            --grey-700: #616161;
+            --grey-900: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #888;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .screens-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .screen-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen-label {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: var(--zeca-blue);
+            padding: 6px 16px;
+            border-radius: 16px;
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            position: relative;
+            border: 12px solid #1a1a1a;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: var(--zeca-orange);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .staging-banner {
+            background: #FFD700;
+            color: #333;
+            text-align: center;
+            font-size: 10px;
+            padding: 3px;
+            font-weight: 600;
+        }
+
+        .header-orange {
+            background: var(--zeca-orange);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .vehicle-header {
+            background: var(--zeca-blue-dark);
+            padding: 16px;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .vehicle-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .vehicle-icon-circle {
+            width: 48px;
+            height: 48px;
+            background: var(--zeca-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .vehicle-info-header {
+            color: white;
+        }
+
+        .vehicle-plate {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .vehicle-model {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .badge-ativa {
+            background: var(--zeca-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .content {
+            background: #F5F5F5;
+            padding: 16px;
+            height: calc(100% - 180px);
+            overflow-y: auto;
+        }
+
+        .content.full {
+            height: calc(100% - 100px);
+        }
+
+        /* Button Abastecer */
+        .btn-abastecer {
+            background: var(--zeca-green);
+            color: white;
+            padding: 16px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .btn-abastecer-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .btn-abastecer-text {
+            flex: 1;
+        }
+
+        .btn-abastecer-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn-abastecer-sub {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .btn-abastecer-arrow {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Economia Card */
+        .economia-card {
+            background: linear-gradient(135deg, #5B7FFF, #4A6FEF);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .economia-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .economia-text {
+            flex: 1;
+        }
+
+        .economia-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .economia-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .economia-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .economia-stat {
+            text-align: center;
+        }
+
+        .economia-stat-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .economia-stat-label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        /* Section */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--grey-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        /* Quick Access */
+        .quick-access {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .quick-item {
+            flex: 1;
+            background: white;
+            border-radius: 14px;
+            padding: 16px 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+
+        .quick-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 18px;
+        }
+
+        .quick-icon.blue {
+            background: #E3F2FD;
+            color: var(--zeca-blue);
+        }
+
+        .quick-icon.green {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .quick-icon.orange {
+            background: #FFF3E0;
+            color: #F57C00;
+        }
+
+        .quick-label {
+            font-size: 12px;
+            color: var(--grey-700);
+            font-weight: 500;
+        }
+
+        .quick-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--zeca-red);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Card ZECA Club */
+        .club-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .club-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .club-icon {
+            width: 40px;
+            height: 40px;
+            background: #E3F2FD;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+            font-size: 18px;
+        }
+
+        .club-title {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .club-badge {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .club-promo {
+            background: #FFF8E1;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .club-promo-text {
+            font-size: 13px;
+            color: #F57C00;
+            font-weight: 500;
+        }
+
+        /* Último Abastecimento */
+        .last-refuel {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .last-refuel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--grey-600);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .last-refuel-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .last-refuel-icon {
+            width: 44px;
+            height: 44px;
+            background: #E3F2FD;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+            font-size: 18px;
+        }
+
+        .last-refuel-info {
+            flex: 1;
+        }
+
+        .last-refuel-station {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .last-refuel-details {
+            font-size: 12px;
+            color: var(--grey-500);
+        }
+
+        .last-refuel-value {
+            text-align: right;
+        }
+
+        .last-refuel-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--grey-900);
+        }
+
+        .last-refuel-liters {
+            font-size: 12px;
+            color: var(--grey-500);
+        }
+
+        /* === EFICIÊNCIA CARD (Novo) === */
+        .efficiency-access-card {
+            background: linear-gradient(135deg, #2A70C0, #1E5A9A);
+            color: white;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .efficiency-access-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .efficiency-access-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .efficiency-access-title {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .efficiency-access-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .efficiency-access-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .efficiency-access-unit {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .efficiency-access-label {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .efficiency-access-avg {
+            text-align: right;
+        }
+
+        .efficiency-access-avg .val {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .efficiency-access-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            margin-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .trend {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .trend.improving {
+            color: #81C784;
+        }
+
+        .comparison {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 10px;
+            background: rgba(129, 199, 132, 0.3);
+            color: #81C784;
+            font-weight: 500;
+        }
+
+        .see-more {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* === DRAWER === */
+        .drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .drawer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100%;
+            background: white;
+            border-radius: 0 24px 24px 0;
+        }
+
+        .drawer-header {
+            background: var(--zeca-orange);
+            padding: 60px 20px 24px;
+        }
+
+        .drawer-avatar {
+            width: 56px;
+            height: 56px;
+            background: var(--zeca-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .drawer-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .drawer-role {
+            display: inline-block;
+            background: var(--zeca-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .drawer-menu {
+            padding: 16px 0;
+        }
+
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            color: var(--grey-700);
+            font-size: 15px;
+        }
+
+        .drawer-item.new {
+            color: var(--zeca-blue);
+            font-weight: 600;
+        }
+
+        .drawer-item i {
+            width: 24px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .drawer-item.logout {
+            color: var(--zeca-red);
+        }
+
+        .drawer-version {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: var(--grey-400);
+        }
+
+        .new-badge {
+            background: var(--zeca-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* === TELA ABASTECIMENTO === */
+        .refuel-status-bar {
+            background: var(--zeca-blue);
+        }
+
+        .refuel-app-bar {
+            background: var(--zeca-blue);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+        }
+
+        .refuel-app-bar-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .refuel-content {
+            background: var(--grey-50);
+            padding: 16px;
+            height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+
+        .refuel-vehicle-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .refuel-vehicle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plate-badge {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .refuel-vehicle-info {
+            flex: 1;
+        }
+
+        .refuel-fuel-type {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .refuel-stat {
+            font-size: 12px;
+            color: var(--grey-600);
+            margin-top: 2px;
+        }
+
+        .refuel-stat strong {
+            color: var(--zeca-blue);
+        }
+
+        .placeholder-card {
+            background: var(--grey-100);
+            border: 2px dashed var(--grey-300);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            color: var(--grey-500);
+            font-size: 13px;
+        }
+
+        .placeholder-card i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* === EFICIÊNCIA SCREEN === */
+        .efficiency-app-bar {
+            background: var(--zeca-blue);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .efficiency-app-bar-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            margin-left: 16px;
+        }
+
+        .toggle-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .toggle-option {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+        }
+
+        .toggle-option.active {
+            background: white;
+            color: var(--zeca-blue);
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-value {
+            font-size: 56px;
+            font-weight: 700;
+            color: var(--zeca-blue);
+        }
+
+        .summary-unit {
+            font-size: 16px;
+            color: var(--grey-600);
+        }
+
+        .summary-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 16px;
+            margin-top: 16px;
+            border-top: 1px solid var(--grey-200);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--grey-900);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--grey-500);
+            margin-top: 2px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: #E3F2FD;
+            color: var(--zeca-blue);
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--grey-600);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--grey-100);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--grey-600);
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--grey-900);
+        }
+
+        .metric-value.ideal {
+            color: var(--zeca-green);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 12px;
+        }
+
+        .section-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--grey-900);
+        }
+
+        .section-action {
+            font-size: 13px;
+            color: var(--zeca-blue);
+            font-weight: 500;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: white;
+            border-bottom: 1px solid var(--grey-100);
+        }
+
+        .history-date {
+            width: 48px;
+            text-align: center;
+        }
+
+        .history-day {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--grey-900);
+        }
+
+        .history-month {
+            font-size: 10px;
+            color: var(--grey-500);
+            text-transform: uppercase;
+        }
+
+        .history-content {
+            flex: 1;
+            margin-left: 14px;
+        }
+
+        .history-consumption {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--grey-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-details {
+            font-size: 12px;
+            color: var(--grey-500);
+            margin-top: 2px;
+        }
+
+        .history-status {
+            width: 32px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .history-status.ok {
+            color: var(--zeca-green);
+        }
+
+        .history-status.anomaly {
+            color: var(--zeca-red);
+        }
+
+        .anomaly-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #FFEBEE;
+            color: var(--zeca-red);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            padding: 16px;
+            background: white;
+            border-bottom: 1px solid var(--grey-100);
+        }
+
+        .notification-item.unread {
+            background: #F0F7FF;
+        }
+
+        .notification-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .notification-icon-wrapper.efficiency {
+            background: #FFF3E0;
+            color: #F57C00;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--grey-900);
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: var(--grey-600);
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: var(--grey-500);
+            margin-top: 6px;
+        }
+
+        .unread-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--zeca-blue);
+            border-radius: 50%;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--grey-100);
+            color: var(--grey-600);
+        }
+
+        .filter-chip.active {
+            background: var(--zeca-blue);
+            color: white;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state i {
+            font-size: 72px;
+            color: var(--grey-300);
+            margin-bottom: 24px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--grey-700);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--grey-500);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📱 ZECA App - Eficiência de Combustível</h1>
+    <p class="subtitle">Fase 4 - Mockups Completos (6 Telas)</p>
+
+    <div class="screens-container">
+        <!-- TELA 1: DASHBOARD COM CARD EFICIÊNCIA -->
+        <div class="screen-wrapper">
+            <div class="screen-label">1. Dashboard (Card Eficiência)</div>
+            <div class="mobile-frame">
+                <div class="status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="staging-banner">▲ STAGING - stg.abasteçacomzeca.com.br</div>
+                <div class="header-orange">
+                    <i class="fas fa-bars" style="font-size: 20px;"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off" style="font-size: 18px;"></i>
+                </div>
+                <div class="vehicle-header">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-icon-circle"><i class="fas fa-truck"></i></div>
+                        <div class="vehicle-info-header">
+                            <div class="vehicle-plate">ABC-1234</div>
+                            <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                        </div>
+                        <span class="badge-ativa">✓ ATIVA</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="btn-abastecer">
+                        <div class="btn-abastecer-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="btn-abastecer-text">
+                            <div class="btn-abastecer-title">Abastecer Agora</div>
+                            <div class="btn-abastecer-sub">Encontre um posto e abasteça</div>
+                        </div>
+                        <div class="btn-abastecer-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                    <div class="economia-card">
+                        <div class="economia-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="economia-text">
+                            <div class="economia-label">Sua Economia • Jan</div>
+                            <div class="economia-value">R$ 0,00</div>
+                        </div>
+                        <div class="economia-stats">
+                            <div class="economia-stat">
+                                <div class="economia-stat-value">0</div>
+                                <div class="economia-stat-label">Abast.</div>
+                            </div>
+                            <div class="economia-stat">
+                                <div class="economia-stat-value">-</div>
+                                <div class="economia-stat-label">Km/L</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-title">ACESSO RÁPIDO</div>
+                    <div class="quick-access">
+                        <div class="quick-item">
+                            <div class="quick-badge">3</div>
+                            <div class="quick-icon blue"><i class="fas fa-clipboard-check"></i></div>
+                            <div class="quick-label">Checklist</div>
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-icon blue"><i class="fas fa-history"></i></div>
+                            <div class="quick-label">Histórico</div>
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-icon green"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="quick-label">Postos</div>
+                        </div>
+                    </div>
+                    <!-- NOVO: Card Eficiência (Antes de ZECA Club) -->
+                    <div class="efficiency-access-card">
+                        <div class="efficiency-access-header">
+                            <div class="efficiency-access-icon"><i class="fas fa-chart-line"></i></div>
+                            <span class="efficiency-access-title">EFICIÊNCIA DE COMBUSTÍVEL</span>
+                        </div>
+                        <div class="efficiency-access-main">
+                            <div>
+                                <div class="efficiency-access-value">8.5 <span
+                                        class="efficiency-access-unit">km/L</span></div>
+                                <div class="efficiency-access-label">Último abastecimento</div>
+                            </div>
+                            <div class="efficiency-access-avg">
+                                <div class="val">8.2 km/L</div>
+                                <div class="efficiency-access-label">Sua média</div>
+                            </div>
+                        </div>
+                        <div class="efficiency-access-footer">
+                            <div class="trend improving"><i class="fas fa-arrow-up"></i> Melhorando</div>
+                            <div class="comparison">+3% da frota</div>
+                            <div class="see-more">Ver mais <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </div>
+                    <div class="club-card">
+                        <div class="club-header">
+                            <div class="club-icon"><i class="fas fa-award"></i></div>
+                            <span class="club-title">ZECA Club</span>
+                            <span class="club-badge">EM BREVE</span>
+                        </div>
+                        <div class="club-promo">
+                            <i class="fas fa-star" style="color: #F5A623;"></i>
+                            <span class="club-promo-text">Acumule pontos e cashback!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 2: DRAWER COM EFICIÊNCIA -->
+        <div class="screen-wrapper">
+            <div class="screen-label">2. Menu (Item Eficiência)</div>
+            <div class="mobile-frame">
+                <div class="drawer-overlay"></div>
+                <div class="drawer">
+                    <div class="drawer-header">
+                        <div class="drawer-avatar">PO</div>
+                        <div class="drawer-name">Pedro Oliveira</div>
+                        <span class="drawer-role">Frotista</span>
+                    </div>
+                    <div class="drawer-menu">
+                        <div class="drawer-item"><i class="fas fa-user"></i> Meu Perfil</div>
+                        <div class="drawer-item new"><i class="fas fa-chart-line"></i> Eficiência <span
+                                class="new-badge">NOVO</span></div>
+                        <div class="drawer-item"><i class="fas fa-history"></i> Histórico</div>
+                        <div class="drawer-item"><i class="fas fa-key"></i> Alterar Senha</div>
+                        <div class="drawer-item logout"><i class="fas fa-sign-out-alt"></i> Sair</div>
+                    </div>
+                    <div class="drawer-version">Versão 1.0.4+82</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 3: TELA ABASTECIMENTO (Consumo no card veículo) -->
+        <div class="screen-wrapper">
+            <div class="screen-label">3. Abastecimento (Consumo no veículo)</div>
+            <div class="mobile-frame">
+                <div class="status-bar refuel-status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="refuel-app-bar">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="refuel-app-bar-title">Abastecimento</span>
+                    <i class="fas fa-bell" style="font-size: 18px; position: relative;"></i>
+                </div>
+                <div class="refuel-content">
+                    <div class="refuel-vehicle-card">
+                        <div class="refuel-vehicle-row">
+                            <span class="plate-badge">ABC-1234</span>
+                            <div class="refuel-vehicle-info">
+                                <div class="refuel-fuel-type">Diesel S10</div>
+                                <div class="refuel-stat">Consumo: <strong>8.2 km/L</strong></div>
+                                <div class="refuel-stat">Último: 124.321 km</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="placeholder-card">
+                        <i class="fas fa-building"></i>
+                        Card CNPJ do Posto (existente)
+                    </div>
+                    <div class="placeholder-card" style="margin-top: 12px;">
+                        <i class="fas fa-gas-pump"></i>
+                        Form de Abastecimento (existente)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 4: EFICIÊNCIA PRINCIPAL -->
+        <div class="screen-wrapper">
+            <div class="screen-label">4. Eficiência (Principal)</div>
+            <div class="mobile-frame">
+                <div class="status-bar refuel-status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="efficiency-app-bar">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="efficiency-app-bar-title">Eficiência</span>
+                    <div class="toggle-container">
+                        <span class="toggle-option active">km/L</span>
+                        <span class="toggle-option">L/100</span>
+                    </div>
+                </div>
+                <div class="refuel-content">
+                    <div class="summary-card">
+                        <div class="summary-value">8.2</div>
+                        <div class="summary-unit">km/L (Sua média)</div>
+                        <div class="summary-trend"><i class="fas fa-arrow-up"></i> Melhorando</div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-value">+3%</div>
+                                <div class="stat-label">vs. Frota</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5°</div>
+                                <div class="stat-label">Ranking</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">47</div>
+                                <div class="stat-label">Motoristas</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon"><i class="fas fa-truck"></i></div>
+                            <span class="card-title">Veículo Atual</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span class="plate-badge">ABC-1234</span>
+                            <span style="font-size: 14px; color: var(--grey-600);">Scania R450</span>
+                        </div>
+                        <div class="metric-row"><span class="metric-label">Último consumo</span><span
+                                class="metric-value">8.5 km/L</span></div>
+                        <div class="metric-row"><span class="metric-label">Média do veículo</span><span
+                                class="metric-value">8.1 km/L</span></div>
+                        <div class="metric-row"><span class="metric-label">Consumo ideal</span><span
+                                class="metric-value ideal">9.0 km/L</span></div>
+                    </div>
+                    <div class="section-header">
+                        <span class="section-header-title">Histórico Recente</span>
+                        <span class="section-action">Ver todos →</span>
+                    </div>
+                    <div style="background: white; border-radius: 14px; overflow: hidden;">
+                        <div class="history-item">
+                            <div class="history-date">
+                                <div class="history-day">31</div>
+                                <div class="history-month">Jan</div>
+                            </div>
+                            <div class="history-content">
+                                <div class="history-consumption">8.5 km/L</div>
+                                <div class="history-details">ABC-1234 • 349 L • 2.968 km</div>
+                            </div>
+                            <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-date">
+                                <div class="history-day">30</div>
+                                <div class="history-month">Jan</div>
+                            </div>
+                            <div class="history-content">
+                                <div class="history-consumption">5.2 km/L <span class="anomaly-badge"><i
+                                            class="fas fa-exclamation"></i> -35%</span></div>
+                                <div class="history-details">ABC-1234 • 412 L • 2.142 km</div>
+                            </div>
+                            <div class="history-status anomaly"><i class="fas fa-exclamation-circle"></i></div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-date">
+                                <div class="history-day">29</div>
+                                <div class="history-month">Jan</div>
+                            </div>
+                            <div class="history-content">
+                                <div class="history-consumption">8.0 km/L</div>
+                                <div class="history-details">ABC-1234 • 375 L • 3.000 km</div>
+                            </div>
+                            <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 5: HISTÓRICO COMPLETO -->
+        <div class="screen-wrapper">
+            <div class="screen-label">5. Histórico Completo</div>
+            <div class="mobile-frame">
+                <div class="status-bar refuel-status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="efficiency-app-bar">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="efficiency-app-bar-title">Histórico</span>
+                </div>
+                <div class="refuel-content" style="padding: 0;">
+                    <div class="filter-bar">
+                        <span class="filter-chip">Semana</span>
+                        <span class="filter-chip active">Mês</span>
+                        <span class="filter-chip">Trimestre</span>
+                        <span class="filter-chip">Ano</span>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">31</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">8.5 km/L</div>
+                            <div class="history-details">ABC-1234 • 349.67 L • 124.321 km</div>
+                        </div>
+                        <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">30</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">5.2 km/L <span class="anomaly-badge"><i
+                                        class="fas fa-exclamation"></i> -35%</span></div>
+                            <div class="history-details">ABC-1234 • 412.35 L • 123.972 km</div>
+                        </div>
+                        <div class="history-status anomaly"><i class="fas fa-exclamation-circle"></i></div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">29</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">8.0 km/L</div>
+                            <div class="history-details">ABC-1234 • 375.00 L • 121.830 km</div>
+                        </div>
+                        <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">28</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">8.3 km/L</div>
+                            <div class="history-details">ABC-1234 • 361.20 L • 118.830 km</div>
+                        </div>
+                        <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">27</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">7.9 km/L</div>
+                            <div class="history-details">ABC-1234 • 380.00 L • 115.833 km</div>
+                        </div>
+                        <div class="history-status ok"><i class="fas fa-check-circle"></i></div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-date">
+                            <div class="history-day">26</div>
+                            <div class="history-month">Jan</div>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-consumption">6.1 km/L <span class="anomaly-badge"><i
+                                        class="fas fa-exclamation"></i> -22%</span></div>
+                            <div class="history-details">ABC-1234 • 405.00 L • 112.833 km</div>
+                        </div>
+                        <div class="history-status anomaly"><i class="fas fa-exclamation-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 6: NOTIFICAÇÕES -->
+        <div class="screen-wrapper">
+            <div class="screen-label">6. Notificações</div>
+            <div class="mobile-frame">
+                <div class="status-bar refuel-status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="efficiency-app-bar">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="efficiency-app-bar-title">Notificações</span>
+                    <span style="font-size: 13px; font-weight: 500;">Marcar todas ✓</span>
+                </div>
+                <div class="refuel-content" style="padding: 0;">
+                    <div class="notification-item unread">
+                        <div class="notification-icon-wrapper efficiency"><i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Consumo anormal detectado</div>
+                            <div class="notification-message">Veículo ABC-1234 registrou 5.2 km/L, 35% abaixo da média
+                                esperada.</div>
+                            <div class="notification-time">há 2 horas</div>
+                        </div>
+                        <div class="unread-dot"></div>
+                    </div>
+                    <div class="notification-item unread">
+                        <div class="notification-icon-wrapper efficiency"><i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Consumo anormal detectado</div>
+                            <div class="notification-message">Veículo ABC-1234 registrou 6.1 km/L, 22% abaixo da média.
+                            </div>
+                            <div class="notification-time">há 5 horas</div>
+                        </div>
+                        <div class="unread-dot"></div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notification-icon-wrapper efficiency"><i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Consumo anormal detectado</div>
+                            <div class="notification-message">Veículo ABC-1234 registrou 4.8 km/L, 40% abaixo da média.
+                            </div>
+                            <div class="notification-time">há 3 dias</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA 7: DASHBOARD SEM DADOS DE EFICIÊNCIA -->
+        <div class="screen-wrapper">
+            <div class="screen-label">7. Dashboard (Sem Dados)</div>
+            <div class="mobile-frame">
+                <div class="status-bar"><span>22:09</span><span><i class="fas fa-signal"></i> <i
+                            class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+                <div class="staging-banner">▲ STAGING - stg.abasteçacomzeca.com.br</div>
+                <div class="header-orange">
+                    <i class="fas fa-bars" style="font-size: 20px;"></i>
+                    <span class="header-title">ZECA - Jornada Ativa</span>
+                    <i class="fas fa-power-off" style="font-size: 18px;"></i>
+                </div>
+                <div class="vehicle-header">
+                    <div class="vehicle-badge">
+                        <div class="vehicle-icon-circle"><i class="fas fa-truck"></i></div>
+                        <div class="vehicle-info-header">
+                            <div class="vehicle-plate">XYZ-9876</div>
+                            <div class="vehicle-model">Scania R450 • Diesel S10</div>
+                        </div>
+                        <span class="badge-ativa">✓ ATIVA</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="btn-abastecer">
+                        <div class="btn-abastecer-icon"><i class="fas fa-gas-pump"></i></div>
+                        <div class="btn-abastecer-text">
+                            <div class="btn-abastecer-title">Abastecer Agora</div>
+                            <div class="btn-abastecer-sub">Encontre um posto e abasteça</div>
+                        </div>
+                        <div class="btn-abastecer-arrow"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                    <div class="economia-card">
+                        <div class="economia-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="economia-text">
+                            <div class="economia-label">Sua Economia • Jan</div>
+                            <div class="economia-value">R$ 0,00</div>
+                        </div>
+                        <div class="economia-stats">
+                            <div class="economia-stat">
+                                <div class="economia-stat-value">0</div>
+                                <div class="economia-stat-label">Abast.</div>
+                            </div>
+                            <div class="economia-stat">
+                                <div class="economia-stat-value">-</div>
+                                <div class="economia-stat-label">Km/L</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-title">ACESSO RÁPIDO</div>
+                    <div class="quick-access">
+                        <div class="quick-item">
+                            <div class="quick-icon blue"><i class="fas fa-clipboard-check"></i></div>
+                            <div class="quick-label">Checklist</div>
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-icon blue"><i class="fas fa-history"></i></div>
+                            <div class="quick-label">Histórico</div>
+                        </div>
+                        <div class="quick-item">
+                            <div class="quick-icon green"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="quick-label">Postos</div>
+                        </div>
+                    </div>
+                    <!-- Card Eficiência VAZIO -->
+                    <div
+                        style="background: #E8EEF5; border: 2px dashed #B0C4DE; border-radius: 14px; padding: 20px; margin-bottom: 12px; text-align: center;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+                            <div
+                                style="width: 32px; height: 32px; background: #B0C4DE; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6B8299;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <span
+                                style="font-size: 12px; font-weight: 600; color: #6B8299; text-transform: uppercase;">Eficiência
+                                de Combustível</span>
+                        </div>
+                        <div style="color: #6B8299; margin-bottom: 8px;">
+                            <i class="fas fa-hourglass-half"
+                                style="font-size: 28px; margin-bottom: 8px; display: block;"></i>
+                            <div style="font-size: 14px; font-weight: 500;">Aguardando abastecimentos</div>
+                        </div>
+                        <div style="font-size: 12px; color: #8CA0B3;">
+                            Após 2 abastecimentos com KM,<br>seus dados aparecerão aqui
+                        </div>
+                    </div>
+                    <div class="club-card">
+                        <div class="club-header">
+                            <div class="club-icon"><i class="fas fa-award"></i></div>
+                            <span class="club-title">ZECA Club</span>
+                            <span class="club-badge">EM BREVE</span>
+                        </div>
+                        <div class="club-promo">
+                            <i class="fas fa-star" style="color: #F5A623;"></i>
+                            <span class="club-promo-text">Acumule pontos e cashback!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

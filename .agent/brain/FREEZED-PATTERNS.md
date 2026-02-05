@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*.freezed.dart", "**/models/**", "**/entities/**"]
+  description: "Padrões Freezed para modelos imutáveis"
+---
+
+
 # 🧊 Freezed Patterns - ZECA App
 
 > **"Imutabilidade é a chave para estados previsíveis."**

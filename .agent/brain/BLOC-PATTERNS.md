@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*_bloc.dart", "**/*_event.dart", "**/*_state.dart", "**/bloc/**"]
+  description: "Padrões BLoC obrigatórios para state management"
+---
+
+
 # 🔄 BLOC PATTERNS - ZECA App
 
 > **"Estado previsível, código testável."**

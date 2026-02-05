@@ -7,11 +7,13 @@ class RouteResult {
   final double distanceKm;
   final int durationMinutes;
   final String? polyline; // Para desenhar no mapa (opcional)
+  final String? summary; // Nome da via principal (ex: "Via Dutra")
 
   RouteResult({
     required this.distanceKm,
     required this.durationMinutes,
     this.polyline,
+    this.summary,
   });
 
   /// Formata o tempo em horas e minutos (ex: "3h 43min")
@@ -119,10 +121,14 @@ class DirectionsService {
         final overviewPolyline = route['overview_polyline'] as Map<String, dynamic>?;
         final polyline = overviewPolyline?['points'] as String?;
 
+        // Obter nome da via principal (summary)
+        final summary = route['summary'] as String?;
+
         final result = RouteResult(
           distanceKm: distanceKm,
           durationMinutes: durationMinutes,
           polyline: polyline,
+          summary: summary,
         );
 
         debugPrint('✅ [Directions] Rota calculada: ${result.distanceKm.toStringAsFixed(1)} km, ${result.durationMinutes} min');
