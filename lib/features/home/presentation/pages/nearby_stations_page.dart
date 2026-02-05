@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/location_service.dart';
 import '../bloc/nearby_stations/nearby_stations_bloc.dart';
 import '../widgets/nearby_stations/filter_pill.dart';
 import '../widgets/nearby_stations/nearby_station_card.dart';
@@ -13,13 +16,8 @@ class NearbyStationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => GetIt.I<NearbyStationsBloc>()
-        ..add(const LoadNearbyStations(
-          // TODO: Pegar localização real do device
-          latitude: -23.5505,
-          longitude: -46.6333,
-          radius: 20000,
-        )),
+      // Não carrega postos imediatamente - a View buscará a localização real
+      create: (context) => GetIt.I<NearbyStationsBloc>(),
       child: const NearbyStationsView(),
     );
   }
@@ -34,21 +32,143 @@ class NearbyStationsView extends StatefulWidget {
 
 class _NearbyStationsViewState extends State<NearbyStationsView> {
   String _activeFilter = 'Todos';
-  String _userLocation = 'Sua localização atual';
+  String _userLocation = 'Carregando localização...';
+  
+  // Coordenadas reais do usuário (atualizadas pelo GPS)
+  double _userLatitude = -23.5505; // Fallback São Paulo
+  double _userLongitude = -46.6333;
+  bool _locationLoaded = false;
+  
+  // Controlador de busca
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  String _searchQuery = '';
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadUserLocation();
+    _loadUserLocationFromGPS();
+  }
+  
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+  
+  /// Dispara busca no backend com debounce
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+    
+    // Cancela timer anterior para debounce
+    _debounceTimer?.cancel();
+    
+    // Aguarda 500ms antes de buscar (debounce)
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      // Só busca se tiver 3+ caracteres ou se limpar a busca
+      if (value.isEmpty || value.length >= 3) {
+        _triggerSearch(value.isEmpty ? null : value);
+      }
+    });
+  }
+  
+  /// Dispara evento de busca no bloc
+  void _triggerSearch(String? searchTerm) {
+    if (!_locationLoaded) return;
+    
+    context.read<NearbyStationsBloc>().add(
+      LoadNearbyStations(
+        latitude: _userLatitude,
+        longitude: _userLongitude,
+        radius: 20000,
+        search: searchTerm,
+        conveniado: _activeFilter == 'Parceiros' ? true : null,
+      ),
+    );
   }
 
-  Future<void> _loadUserLocation() async {
+  /// Carregar localização real do GPS e buscar postos próximos
+  Future<void> _loadUserLocationFromGPS() async {
     try {
-      // Coordenadas hardcoded (TODO: pegar localização real do GPS)
-      const latitude = -23.5505;
-      const longitude = -46.6333;
+      final locationService = LocationService();
       
-      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+      // Verificar permissões
+      final hasPermission = await locationService.checkPermission();
+      if (!hasPermission) {
+        final permissionGranted = await locationService.requestPermission();
+        if (!permissionGranted) {
+          debugPrint('⚠️ [NearbyStations] Permissão de localização negada');
+          // Usar localização padrão e continuar
+          _loadStationsWithFallback();
+          return;
+        }
+      }
+      
+      // Obter posição atual do GPS
+      final position = await locationService.getCurrentPosition();
+      
+      // Verificar se posição foi obtida com sucesso
+      if (position == null) {
+        debugPrint('⚠️ [NearbyStations] Não foi possível obter posição GPS');
+        _loadStationsWithFallback();
+        return;
+      }
+      
+      if (mounted) {
+        setState(() {
+          _userLatitude = position.latitude;
+          _userLongitude = position.longitude;
+          _locationLoaded = true;
+        });
+        
+        debugPrint('📍 [NearbyStations] GPS: lat=${position.latitude}, lng=${position.longitude}');
+        
+        // Buscar nome da localização
+        _updateLocationName(position.latitude, position.longitude);
+        
+        // Carregar postos com localização real
+        context.read<NearbyStationsBloc>().add(
+          LoadNearbyStations(
+            latitude: position.latitude,
+            longitude: position.longitude,
+            radius: 20000,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ [NearbyStations] Erro ao obter GPS: $e');
+      // Fallback para localização padrão
+      _loadStationsWithFallback();
+    }
+  }
+  
+  /// Fallback quando GPS não está disponível
+  void _loadStationsWithFallback() {
+    if (mounted) {
+      setState(() {
+        _userLocation = 'Localização indisponível';
+      });
+      
+      // Carregar postos com coordenadas padrão
+      context.read<NearbyStationsBloc>().add(
+        LoadNearbyStations(
+          latitude: _userLatitude,
+          longitude: _userLongitude,
+          radius: 20000,
+        ),
+      );
+    }
+  }
+  
+  /// Atualizar nome da localização via geocoding
+  Future<void> _updateLocationName(double lat, double lng) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty && mounted) {
         final placemark = placemarks.first;
         setState(() {
@@ -56,7 +176,7 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
         });
       }
     } catch (e) {
-      print('Erro ao obter localização: $e');
+      debugPrint('⚠️ [NearbyStations] Erro geocoding: $e');
     }
   }
 
@@ -98,9 +218,9 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
                               ElevatedButton(
                                 onPressed: () {
                                   context.read<NearbyStationsBloc>().add(
-                                    const LoadNearbyStations(
-                                      latitude: -23.5505,
-                                      longitude: -46.6333,
+                                    LoadNearbyStations(
+                                      latitude: _userLatitude,
+                                      longitude: _userLongitude,
                                       radius: 20000,
                                     ),
                                   );
@@ -127,6 +247,22 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
                     }
                     
                     if (state is NearbyStationsLoaded) {
+                      // Busca já filtrada pelo backend
+                      if (state.stations.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                              const SizedBox(height: 16),
+                              Text(_searchQuery.isNotEmpty 
+                                  ? 'Nenhum posto encontrado para "$_searchQuery"'
+                                  : 'Nenhum posto encontrado na região'),
+                            ],
+                          ),
+                        );
+                      }
+                      
                       return ListView.builder(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 100), // Bottom padding para scroll
                         itemCount: state.stations.length,
@@ -135,7 +271,11 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
                           return NearbyStationCard(
                             station: station,
                             onTap: () {
-                              // TODO: Navegar para detalhes ou iniciar abastecimento
+                              // Navegar para tela de abastecimento com CNPJ do posto
+                              context.go('/home', extra: {
+                                'station_cnpj': station.cnpj,
+                                'station_name': station.nomeFantasia,
+                              });
                             },
                             onNavigate: () {
                               // TODO: Abrir maps
@@ -219,7 +359,7 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
                   offset: const Offset(0, -10),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -232,18 +372,56 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
                       ],
                     ),
                     child: Row(
-                      children: const [
-                        Icon(Icons.search, color: Color(0xFF999999), size: 18),
-                        SizedBox(width: 12),
+                      children: [
+                        const Icon(Icons.search, color: Color(0xFF999999), size: 18),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            'Buscar por nome ou endereço...',
-                            style: TextStyle(
-                              color: Color(0xFF999999),
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            decoration: InputDecoration(
+                              hintText: _searchQuery.isNotEmpty && _searchQuery.length < 3
+                                  ? 'Digite mais ${3 - _searchQuery.length} caractere(s)...'
+                                  : 'Buscar por nome ou endereço...',
+                              hintStyle: const TextStyle(
+                                color: Color(0xFF999999),
+                                fontSize: 15,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                              isDense: true,
+                            ),
+                            style: const TextStyle(
+                              color: Color(0xFF333333),
                               fontSize: 15,
                             ),
+                            onChanged: _onSearchChanged,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: (value) {
+                              _searchFocusNode.unfocus();
+                              // Busca imediata se tiver 3+ caracteres
+                              if (value.length >= 3) {
+                                _debounceTimer?.cancel();
+                                _triggerSearch(value);
+                              }
+                            },
                           ),
                         ),
+                        if (_searchQuery.isNotEmpty)
+                          GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+                              _debounceTimer?.cancel();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                              // Recarrega postos sem filtro de busca
+                              _triggerSearch(null);
+                            },
+                            child: const Icon(Icons.close, color: Color(0xFF999999), size: 18),
+                          ),
                       ],
                     ),
                   ),
@@ -296,18 +474,18 @@ class _NearbyStationsViewState extends State<NearbyStationsView> {
         setState(() => _activeFilter = label);
         if (label == 'Parceiros') {
           context.read<NearbyStationsBloc>().add(
-            const LoadNearbyStations(
-              latitude: -23.5505,
-              longitude: -46.6333,
+            LoadNearbyStations(
+              latitude: _userLatitude,
+              longitude: _userLongitude,
               conveniado: true,
               radius: 20000,
             ),
           );
         } else if (label == 'Todos') {
            context.read<NearbyStationsBloc>().add(
-            const LoadNearbyStations(
-              latitude: -23.5505,
-              longitude: -46.6333,
+            LoadNearbyStations(
+              latitude: _userLatitude,
+              longitude: _userLongitude,
               radius: 20000,
             ),
           );

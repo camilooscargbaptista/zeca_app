@@ -9,6 +9,7 @@ abstract class FuelStationRepository {
     int radius = 10000,
     String? combustivel,
     bool? conveniado,
+    String? search,
   });
   Future<Either<Failure, FuelStationEntity>> validateStationByCnpj(String cnpj);
   Future<Either<Failure, Map<String, double>>> getStationPrices(String stationId);
