@@ -19,12 +19,14 @@ class FuelStationRepositoryImpl implements FuelStationRepository {
     int radius = 10000,
     String? combustivel,
     bool? conveniado,
+    String? search,
   }) async {
     try {
       final stationModels = await _remoteDataSource.getNearbyStations(
         latitude,
         longitude,
         radius.toDouble(),
+        search: search,
       );
       
       final stationEntities = stationModels.map((model) {
