@@ -10,7 +10,7 @@ abstract class FuelStationRemoteDataSource {
   Future<FuelStationModel> validateStation(String cnpj);
   Future<FuelStationModel> validateStationByCnpj(String cnpj);
   Future<FuelStationModel> getStationById(String id);
-  Future<List<NearbyStationModel>> getNearbyStations(double latitude, double longitude, double radiusKm);
+  Future<List<NearbyStationModel>> getNearbyStations(double latitude, double longitude, double radiusKm, {String? search});
   Future<Map<String, double>> getStationPrices(String stationId);
   Future<List<FuelPriceModel>> getFuelPrices();
   Future<List<FuelTypeModel>> getFuelTypes();
@@ -57,15 +57,23 @@ class FuelStationRemoteDataSourceImpl implements FuelStationRemoteDataSource {
   Future<List<NearbyStationModel>> getNearbyStations(
     double latitude,
     double longitude,
-    double radiusKm,
-  ) async {
+    double radiusKm, {
+    String? search,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'lat': latitude,
+      'lng': longitude,
+      'radius': radiusKm.toInt(),
+    };
+    
+    // Adiciona busca se fornecida (mínimo 3 caracteres)
+    if (search != null && search.length >= 3) {
+      queryParams['search'] = search;
+    }
+    
     final response = await _client.get(
       ApiConstants.nearbyStations,
-      queryParameters: {
-        'lat': latitude,
-        'lng': longitude,
-        'radius': radiusKm.toInt(),
-      },
+      queryParameters: queryParams,
     );
     
     // O backend novo retorna { success: true, data: [...], meta: {...} }

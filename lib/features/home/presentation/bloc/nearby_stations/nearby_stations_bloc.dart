@@ -27,6 +27,7 @@ class NearbyStationsBloc extends Bloc<NearbyStationsEvent, NearbyStationsState> 
       radius: event.radius,
       combustivel: event.combustivel,
       conveniado: event.conveniado,
+      search: event.search,
     );
 
     result.fold(

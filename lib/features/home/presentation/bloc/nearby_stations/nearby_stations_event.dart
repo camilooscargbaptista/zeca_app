@@ -13,6 +13,7 @@ class LoadNearbyStations extends NearbyStationsEvent {
   final int radius;
   final String? combustivel;
   final bool? conveniado;
+  final String? search;
 
   const LoadNearbyStations({
     required this.latitude,
@@ -20,8 +21,9 @@ class LoadNearbyStations extends NearbyStationsEvent {
     this.radius = 50,
     this.combustivel,
     this.conveniado,
+    this.search,
   });
 
   @override
-  List<Object?> get props => [latitude, longitude, radius, combustivel, conveniado];
+  List<Object?> get props => [latitude, longitude, radius, combustivel, conveniado, search];
 }

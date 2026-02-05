@@ -16,6 +16,7 @@ class GetNearbyStationsUseCase {
     int radius = 10000,
     String? combustivel,
     bool? conveniado,
+    String? search,
   }) async {
     return await repository.getNearbyStations(
       latitude: latitude,
@@ -23,6 +24,7 @@ class GetNearbyStationsUseCase {
       radius: radius,
       combustivel: combustivel,
       conveniado: conveniado,
+      search: search,
     );
   }
 }
