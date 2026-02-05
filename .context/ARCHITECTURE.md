@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto ARCHITECTURE.md"
+---
+
+
 # ZECA App - Arquitetura Flutter
 
 ## Visão Geral

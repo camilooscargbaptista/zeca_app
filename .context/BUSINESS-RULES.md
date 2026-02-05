@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto BUSINESS-RULES.md"
+---
+
+
 # 📋 Regras de Negócio - ZECA App
 
 > **IMPORTANTE:** Este arquivo contém as regras de negócio do aplicativo mobile ZECA.

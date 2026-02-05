@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:convert';
 import '../../../../firebase_options.dart';
 import '../../../../core/services/api_service.dart';
@@ -16,6 +17,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/odometer_formatter.dart';
 import '../../../../shared/widgets/dialogs/error_dialog.dart';
 import '../../../odometer/presentation/pages/odometer_camera_page.dart';
+// Efficiency imports
+import '../../../efficiency/presentation/bloc/efficiency_bloc.dart';
+import '../../../efficiency/presentation/bloc/efficiency_event.dart';
+import '../../../efficiency/presentation/bloc/efficiency_state.dart';
+import '../../../efficiency/presentation/widgets/efficiency_dashboard_card.dart';
+import '../../../efficiency/data/repositories/efficiency_repository.dart';
 
 class HomePageSimple extends StatefulWidget {
   const HomePageSimple({Key? key}) : super(key: key);
@@ -1033,6 +1040,7 @@ class _HomePageSimpleState extends State<HomePageSimple> {
                 ),
               ),
             ],
+            
             // ===== CARD: VEÍCULO (Sem header - Design Mockup) =====
             Card(
               elevation: 2,

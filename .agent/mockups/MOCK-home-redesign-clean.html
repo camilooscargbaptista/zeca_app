@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZECA App - Home Redesign - Clean & Professional</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --zeca-blue: #2A70C0;
+            --zeca-blue-dark: #1E5A9A;
+            --zeca-blue-light: #E8F4FD;
+            --zeca-green: #28A745;
+            --zeca-green-dark: #1E7E34;
+            --zeca-orange: #FF8C00;
+            --zeca-orange-light: #FFF4E5;
+            --zeca-red: #DC3545;
+            --zeca-purple: #673AB7;
+            --grey-50: #FAFAFA;
+            --grey-100: #F5F5F5;
+            --grey-200: #EEEEEE;
+            --grey-300: #E0E0E0;
+            --grey-400: #BDBDBD;
+            --grey-500: #9E9E9E;
+            --grey-600: #757575;
+            --grey-700: #616161;
+            --grey-800: #424242;
+            --grey-900: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .screens-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .screen-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .screen-label {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(42, 112, 192, 0.3);
+        }
+
+        .screen-label.alt {
+            background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 812px;
+            background: var(--grey-50);
+            border-radius: 50px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            border: 12px solid #1a1a1a;
+        }
+
+        .status-bar {
+            height: 54px;
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 24px 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        /* ============== HEADER HERO ============== */
+        .header-hero {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            padding: 0 16px 20px;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '2';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: var(--zeca-red);
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--zeca-blue);
+        }
+
+        /* Vehicle Card - Floating */
+        .vehicle-card-floating {
+            background: white;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            margin-top: 4px;
+        }
+
+        .vehicle-icon-container {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--zeca-orange), #E67E00);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vehicle-icon-container i {
+            color: white;
+            font-size: 22px;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-plate {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--grey-900);
+            letter-spacing: 1px;
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+        }
+
+        .vehicle-model {
+            font-size: 12px;
+            color: var(--grey-600);
+            margin-top: 2px;
+        }
+
+        .vehicle-badge {
+            background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============== CONTENT ============== */
+        .content {
+            padding: 20px 16px;
+            height: calc(100% - 180px);
+            overflow-y: auto;
+        }
+
+        /* KPI Cards Row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .kpi-card.economy::before {
+            background: linear-gradient(90deg, var(--zeca-green), #4CAF50);
+        }
+
+        .kpi-card.efficiency::before {
+            background: linear-gradient(90deg, var(--zeca-blue), #42A5F5);
+        }
+
+        .kpi-card.trips::before {
+            background: linear-gradient(90deg, var(--zeca-purple), #9575CD);
+        }
+
+        .kpi-card.refueling::before {
+            background: linear-gradient(90deg, var(--zeca-orange), #FFB74D);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .kpi-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .kpi-icon.green {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .kpi-icon.blue {
+            background: #E3F2FD;
+            color: var(--zeca-blue);
+        }
+
+        .kpi-icon.purple {
+            background: #EDE7F6;
+            color: var(--zeca-purple);
+        }
+
+        .kpi-icon.orange {
+            background: #FFF3E0;
+            color: var(--zeca-orange);
+        }
+
+        .kpi-trend {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+        .kpi-trend.up {
+            background: #E8F5E9;
+            color: var(--zeca-green);
+        }
+
+        .kpi-trend.neutral {
+            background: var(--grey-100);
+            color: var(--grey-600);
+        }
+
+        .kpi-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--grey-900);
+            letter-spacing: -0.5px;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: var(--grey-500);
+            margin-top: 2px;
+        }
+
+        /* Primary CTA */
+        .primary-cta {
+            background: linear-gradient(135deg, var(--zeca-blue), var(--zeca-blue-dark));
+            border-radius: 20px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(42, 112, 192, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .primary-cta::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .primary-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(42, 112, 192, 0.35);
+        }
+
+        .cta-icon {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .cta-content {
+            flex: 1;
+        }
+
+        .cta-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .cta-subtitle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .cta-arrow {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Quick Actions Grid */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--grey-700);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: white;
+            border-radius: 16px;
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .quick-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin: 0 auto 8px;
+        }
+
+        .quick-action-icon.green {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            color: var(--zeca-green);
+        }
+
+        .quick-action-icon.blue {
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            color: var(--zeca-blue);
+        }
+
+        .quick-action-icon.orange {
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            color: var(--zeca-orange);
+        }
+
+        .quick-action-icon.purple {
+            background: linear-gradient(135deg, #EDE7F6, #D1C4E9);
+            color: var(--zeca-purple);
+        }
+
+        .quick-action-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--grey-700);
+        }
+
+        .badge-count {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 18px;
+            height: 18px;
+            background: var(--zeca-red);
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Efficiency Card */
+        .efficiency-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+
+        .efficiency-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .efficiency-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .efficiency-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--zeca-blue-light), #D1E8FF);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--zeca-blue);
+            font-size: 16px;
+        }
+
+        .efficiency-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--grey-900);
+        }
+
+        .efficiency-badge {
+            font-size: 10px;
+            font-weight: 600;
+            background: #E8F5E9;
+            color: var(--zeca-green);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .efficiency-metrics {
+            display: flex;
+            gap: 16px;
+        }
+
+        .efficiency-metric {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: var(--grey-50);
+            border-radius: 12px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--grey-900);
+        }
+
+        .metric-unit {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--grey-500);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--grey-500);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ZECA Club Banner */
+        .club-banner {
+            background: linear-gradient(135deg, var(--zeca-purple), #512DA8);
+            border-radius: 18px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .club-banner::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .club-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .club-content {
+            flex: 1;
+        }
+
+        .club-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .club-badge {
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 3px 8px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .club-subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 2px;
+        }
+
+        /* ============== ALTERNATE VERSION: VIAGEM ATIVA ============== */
+        .trip-active-banner {
+            background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.25);
+        }
+
+        .trip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .trip-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trip-icon {
+            color: white;
+            font-size: 16px;
+        }
+
+        .trip-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .trip-stop-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .trip-route {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .trip-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .trip-stat {
+            text-align: center;
+            padding: 10px 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+        }
+
+        .trip-stat-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .trip-stat-label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+        }
+
+        /* Financial Summary Dual Cards */
+        .dual-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            border-radius: 16px;
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card.expenses {
+            background: white;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .summary-card.profit {
+            background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));
+            box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
+        }
+
+        .summary-card.profit::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -20%;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .summary-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .summary-icon.orange {
+            background: #FFF3E0;
+            color: var(--zeca-orange);
+        }
+
+        .summary-icon.white {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        .summary-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--grey-600);
+        }
+
+        .summary-card.profit .summary-title {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--grey-900);
+        }
+
+        .summary-card.profit .summary-value {
+            color: white;
+        }
+
+        .summary-sub {
+            font-size: 10px;
+            color: var(--grey-500);
+            margin-top: 4px;
+        }
+
+        .summary-card.profit .summary-sub {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Scrollable content adjustment */
+        .content-trip {
+            padding: 16px;
+            height: calc(100% - 180px);
+            overflow-y: auto;
+        }
+
+        /* Bottom safe area spacer */
+        .bottom-spacer {
+            height: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚛 ZECA App - Home Redesign</h1>
+    <p class="subtitle">Clean & Professional • Fevereiro 2026 • Versão Otimizada</p>
+
+    <div class="screens-container">
+
+        <!-- ============== SCREEN 1: HOME PADRÃO ============== -->
+        <div class="screen-wrapper">
+            <div class="screen-label">Home - Jornada Ativa</div>
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>14:13</span>
+                    <div class="status-icons">
+                        <i class="fas fa-signal"></i>
+                        <i class="fas fa-wifi"></i>
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                </div>
+
+                <div class="header-hero">
+                    <div class="header-top">
+                        <div class="header-icon">
+                            <i class="fas fa-bars"></i>
+                        </div>
+                        <span class="header-title">ZECA</span>
+                        <div class="header-icon notification-badge">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                    </div>
+
+                    <div class="vehicle-card-floating">
+                        <div class="vehicle-icon-container">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-plate">ABC-1234</div>
+                            <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                        </div>
+                        <div class="vehicle-badge">ATIVA</div>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <!-- KPI Row -->
+                    <div class="kpi-row">
+                        <div class="kpi-card economy">
+                            <div class="kpi-header">
+                                <div class="kpi-icon green">
+                                    <i class="fas fa-piggy-bank"></i>
+                                </div>
+                                <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> 12%</span>
+                            </div>
+                            <div class="kpi-value">R$ 847</div>
+                            <div class="kpi-label">Economia Fev</div>
+                        </div>
+                        <div class="kpi-card efficiency">
+                            <div class="kpi-header">
+                                <div class="kpi-icon blue">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> 8%</span>
+                            </div>
+                            <div class="kpi-value">2.9 <span style="font-size: 14px; font-weight: 500;">km/L</span>
+                            </div>
+                            <div class="kpi-label">Eficiência</div>
+                        </div>
+                    </div>
+
+                    <!-- Primary CTA -->
+                    <div class="primary-cta">
+                        <div class="cta-icon">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+                        <div class="cta-content">
+                            <div class="cta-title">Abastecer Agora</div>
+                            <div class="cta-subtitle">Encontre um posto parceiro</div>
+                        </div>
+                        <div class="cta-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="section-title">Acesso Rápido</div>
+                    <div class="quick-actions">
+                        <div class="quick-action">
+                            <div class="badge-count">3</div>
+                            <div class="quick-action-icon orange">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="quick-action-label">Checklist</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon purple">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="quick-action-label">Histórico</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon green">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="quick-action-label">Postos</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon blue">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="quick-action-label">Gastos</div>
+                        </div>
+                    </div>
+
+                    <!-- Efficiency Card -->
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-title-row">
+                                <div class="efficiency-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <span class="efficiency-title">Eficiência de Combustível</span>
+                            </div>
+                            <span class="efficiency-badge">Bom</span>
+                        </div>
+                        <div class="efficiency-metrics">
+                            <div class="efficiency-metric">
+                                <div class="metric-value">2.9<span class="metric-unit"> km/L</span></div>
+                                <div class="metric-label">Último Abast.</div>
+                            </div>
+                            <div class="efficiency-metric">
+                                <div class="metric-value">1.7<span class="metric-unit"> km/L</span></div>
+                                <div class="metric-label">Sua Média</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ZECA Club Banner -->
+                    <div class="club-banner">
+                        <div class="club-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="club-content">
+                            <div class="club-title">
+                                ZECA Club
+                                <span class="club-badge">EM BREVE</span>
+                            </div>
+                            <div class="club-subtitle">Acumule pontos e cashback!</div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-spacer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== SCREEN 2: COM VIAGEM ATIVA ============== -->
+        <div class="screen-wrapper">
+            <div class="screen-label alt">Home - Com Viagem Ativa</div>
+            <div class="mobile-frame">
+                <div class="status-bar" style="background: linear-gradient(135deg, #1E7E34, #145523);">
+                    <span>14:13</span>
+                    <div class="status-icons">
+                        <i class="fas fa-signal"></i>
+                        <i class="fas fa-wifi"></i>
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                </div>
+
+                <div class="header-hero"
+                    style="background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));">
+                    <div class="header-top">
+                        <div class="header-icon">
+                            <i class="fas fa-bars"></i>
+                        </div>
+                        <span class="header-title">ZECA - Viagem Ativa</span>
+                        <div class="header-icon">
+                            <i class="fas fa-power-off"></i>
+                        </div>
+                    </div>
+
+                    <div class="vehicle-card-floating">
+                        <div class="vehicle-icon-container"
+                            style="background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark));">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-plate">ABC-1234</div>
+                            <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                        </div>
+                        <div class="vehicle-badge">ATIVA</div>
+                    </div>
+                </div>
+
+                <div class="content-trip">
+                    <!-- Trip Active Banner -->
+                    <div class="trip-active-banner">
+                        <div class="trip-header">
+                            <div class="trip-badge-row">
+                                <i class="fas fa-route trip-icon"></i>
+                                <span class="trip-badge">VIAGEM #247</span>
+                            </div>
+                            <div class="trip-stop-btn">
+                                <i class="fas fa-stop"></i>
+                            </div>
+                        </div>
+                        <div class="trip-route">São Paulo → Curitiba</div>
+                        <div class="trip-stats">
+                            <div class="trip-stat">
+                                <div class="trip-stat-value">247 km</div>
+                                <div class="trip-stat-label">Percorrido</div>
+                            </div>
+                            <div class="trip-stat">
+                                <div class="trip-stat-value">3h 12m</div>
+                                <div class="trip-stat-label">Duração</div>
+                            </div>
+                            <div class="trip-stat">
+                                <div class="trip-stat-value">2.8</div>
+                                <div class="trip-stat-label">km/L Atual</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dual Summary Cards -->
+                    <div class="dual-summary">
+                        <div class="summary-card expenses">
+                            <div class="summary-header">
+                                <div class="summary-icon orange">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <span class="summary-title">Despesas</span>
+                            </div>
+                            <div class="summary-value">R$ 456</div>
+                            <div class="summary-sub">5 registros • R$ 1,85/km</div>
+                        </div>
+                        <div class="summary-card profit">
+                            <div class="summary-header">
+                                <div class="summary-icon white">
+                                    <i class="fas fa-trending-up"></i>
+                                </div>
+                                <span class="summary-title">Lucro</span>
+                            </div>
+                            <div class="summary-value">R$ 1.244</div>
+                            <div class="summary-sub">Margem: 73%</div>
+                        </div>
+                    </div>
+
+                    <!-- Primary CTA -->
+                    <div class="primary-cta">
+                        <div class="cta-icon">
+                            <i class="fas fa-gas-pump"></i>
+                        </div>
+                        <div class="cta-content">
+                            <div class="cta-title">Abastecer Agora</div>
+                            <div class="cta-subtitle">Encontre um posto parceiro</div>
+                        </div>
+                        <div class="cta-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="section-title">Ações da Viagem</div>
+                    <div class="quick-actions">
+                        <div class="quick-action">
+                            <div class="quick-action-icon orange">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="quick-action-label">Gasto</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon green">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="quick-action-label">Frete</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon purple">
+                                <i class="fas fa-road"></i>
+                            </div>
+                            <div class="quick-action-label">Pedágio</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="badge-count">3</div>
+                            <div class="quick-action-icon blue">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="quick-action-label">Checklist</div>
+                        </div>
+                    </div>
+
+                    <!-- Efficiency Card Compact -->
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-title-row">
+                                <div class="efficiency-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <span class="efficiency-title">Eficiência</span>
+                            </div>
+                            <span class="efficiency-badge">Acima da Média</span>
+                        </div>
+                        <div class="efficiency-metrics">
+                            <div class="efficiency-metric">
+                                <div class="metric-value">2.8<span class="metric-unit"> km/L</span></div>
+                                <div class="metric-label">Esta Viagem</div>
+                            </div>
+                            <div class="efficiency-metric">
+                                <div class="metric-value">1.7<span class="metric-unit"> km/L</span></div>
+                                <div class="metric-label">Sua Média</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-spacer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============== SCREEN 3: AUTÔNOMO SEM JORNADA ============== -->
+        <div class="screen-wrapper">
+            <div class="screen-label">Home - Iniciar Jornada</div>
+            <div class="mobile-frame">
+                <div class="status-bar">
+                    <span>14:13</span>
+                    <div class="status-icons">
+                        <i class="fas fa-signal"></i>
+                        <i class="fas fa-wifi"></i>
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                </div>
+
+                <div class="header-hero">
+                    <div class="header-top">
+                        <div class="header-icon">
+                            <i class="fas fa-bars"></i>
+                        </div>
+                        <span class="header-title">ZECA</span>
+                        <div class="header-icon notification-badge">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                    </div>
+
+                    <div class="vehicle-card-floating">
+                        <div class="vehicle-icon-container">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-plate">ABC-1234</div>
+                            <div class="vehicle-model">Volvo FH 540 • Diesel S10</div>
+                        </div>
+                        <div class="vehicle-badge" style="background: var(--grey-400);">PARADO</div>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <!-- Start Journey CTA -->
+                    <div class="primary-cta"
+                        style="background: linear-gradient(135deg, var(--zeca-green), var(--zeca-green-dark)); box-shadow: 0 8px 24px rgba(40, 167, 69, 0.25);">
+                        <div class="cta-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <div class="cta-content">
+                            <div class="cta-title">Iniciar Jornada</div>
+                            <div class="cta-subtitle">Comece a registrar sua viagem</div>
+                        </div>
+                        <div class="cta-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- KPI Row -->
+                    <div class="kpi-row">
+                        <div class="kpi-card economy">
+                            <div class="kpi-header">
+                                <div class="kpi-icon green">
+                                    <i class="fas fa-piggy-bank"></i>
+                                </div>
+                                <span class="kpi-trend up"><i class="fas fa-arrow-up"></i> 12%</span>
+                            </div>
+                            <div class="kpi-value">R$ 2.450</div>
+                            <div class="kpi-label">Economia Total</div>
+                        </div>
+                        <div class="kpi-card trips">
+                            <div class="kpi-header">
+                                <div class="kpi-icon purple">
+                                    <i class="fas fa-route"></i>
+                                </div>
+                                <span class="kpi-trend neutral">Este mês</span>
+                            </div>
+                            <div class="kpi-value">18</div>
+                            <div class="kpi-label">Viagens Feitas</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="section-title">Acesso Rápido</div>
+                    <div class="quick-actions">
+                        <div class="quick-action">
+                            <div class="quick-action-icon blue">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="quick-action-label">Veículos</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon purple">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="quick-action-label">Histórico</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon green">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="quick-action-label">Postos</div>
+                        </div>
+                        <div class="quick-action">
+                            <div class="quick-action-icon orange">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="quick-action-label">Relatórios</div>
+                        </div>
+                    </div>
+
+                    <!-- Efficiency Card -->
+                    <div class="efficiency-card">
+                        <div class="efficiency-header">
+                            <div class="efficiency-title-row">
+                                <div class="efficiency-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <span class="efficiency-title">Sua Eficiência</span>
+                            </div>
+                            <span class="efficiency-badge">Bom</span>
+                        </div>
+                        <div class="efficiency-metrics">
+                            <div class="efficiency-metric">
+                                <div class="metric-value">1.7<span class="metric-unit"> km/L</span></div>
+                                <div class="metric-label">Média Geral</div>
+                            </div>
+                            <div class="efficiency-metric">
+                                <div class="metric-value">45.2k<span class="metric-unit"> km</span></div>
+                                <div class="metric-label">Total Rodado</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ZECA Club Banner -->
+                    <div class="club-banner">
+                        <div class="club-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="club-content">
+                            <div class="club-title">
+                                ZECA Club
+                                <span class="club-badge">EM BREVE</span>
+                            </div>
+                            <div class="club-subtitle">Acumule pontos e cashback!</div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-spacer"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["lib/**/*.dart"]
+  description: "Regras de Clean Architecture - SEMPRE aplicar"
+---
+
+
 # 🏗️ CLEAN ARCHITECTURE - ZECA App
 
 > **"Separação de responsabilidades é a chave."**

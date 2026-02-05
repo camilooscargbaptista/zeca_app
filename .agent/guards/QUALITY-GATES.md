@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Critérios de qualidade - verificar antes de finalizar"
+---
+
+
 # 🚦 Quality Gates - ZECA App Flutter
 
 > **Nenhum código passa para produção sem passar por TODOS os gates críticos.**

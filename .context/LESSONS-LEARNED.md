@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["**/*"]
+  description: "Contexto LESSONS-LEARNED.md"
+---
+
+
 # ZECA App - Lessons Learned
 
 > **LEIA ESTE ARQUIVO ANTES DE QUALQUER TAREFA**
@@ -38,6 +46,7 @@
 | LESSON-023 | DESEJÁVEL | Imports organizados por tipo |
 | LESSON-024 | DESEJÁVEL | Commits convencionais |
 | LESSON-025 | DESEJÁVEL | Feature flags para código experimental |
+| **LESSON-046** | **CRÍTICO** | **Verificar core dependencies ANTES de criar arquivos** |
 
 ---
 

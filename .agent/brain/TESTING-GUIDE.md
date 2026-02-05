@@ -1,3 +1,11 @@
+---
+antigravity:
+  trigger: "always_on"
+  globs: ["test/**/*.dart", "**/*_test.dart"]
+  description: "Guia de testes - padrões obrigatórios"
+---
+
+
 # 🧪 TESTING GUIDE - Flutter
 
 > **"Código sem teste é código quebrado esperando acontecer."**

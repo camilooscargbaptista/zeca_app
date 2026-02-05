@@ -1,6 +1,9 @@
 ---
-description: Gerar testes unitários, de BLoC e widget tests para Flutter
+antigravity:
+  trigger: "manual"
+  description: "Gerar testes unitários, de BLoC e widget tests para Flutter"
 ---
+
 
 # /generate-tests - Geração de Testes Flutter
 

@@ -1,6 +1,9 @@
 ---
-description: Revisar código Flutter e sugerir melhorias de qualidade, performance e padrões
+antigravity:
+  trigger: "manual"
+  description: "Revisar código Flutter e sugerir melhorias"
 ---
+
 
 # /code-review - Revisão de Código Flutter
 

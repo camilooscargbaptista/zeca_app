@@ -188,54 +188,28 @@ class NearbyStationCard extends StatelessWidget {
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF22C55E),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.local_gas_station, size: 16),
-                          SizedBox(width: 8),
-                          Text('Abastecer Aqui'),
-                        ],
-                      ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onTap,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF22C55E),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: onNavigate,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF666666),
-                        side: const BorderSide(color: Colors.transparent),
-                        backgroundColor: const Color(0xFFF0F0F0),
-                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.directions, size: 16),
-                          SizedBox(width: 8),
-                          Text('Navegar'),
-                        ],
-                      ),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.local_gas_station, size: 16),
+                      SizedBox(width: 8),
+                      Text('Abastecer Aqui'),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ],
