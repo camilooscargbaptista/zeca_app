@@ -390,6 +390,9 @@ class _JourneyStartPageState extends State<JourneyStartPage> {
           _vehicleConfirmed = false;
           _isLoading = false;
         });
+        
+        // Buscar stats do veículo (Último KM, Km/L Médio, Abast. Mês)
+        _fetchVehicleStats(vehicle['plate']);
       } else {
         setState(() {
           _isLoading = false;

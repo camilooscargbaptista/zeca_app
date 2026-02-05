@@ -15,6 +15,9 @@ import '../../../efficiency/presentation/bloc/efficiency_state.dart';
 import '../../../efficiency/data/repositories/efficiency_repository.dart';
 // Bottom Nav
 import '../widgets/home_bottom_nav.dart';
+// Trip Module
+import '../../../home/presentation/bloc/trip_home_bloc.dart';
+import '../../../home/presentation/widgets/trip_status_card.dart';
 
 
 /// Home V3 Redesign - JourneyDashboardPage
@@ -46,12 +49,11 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
   String? _error;
   bool _isAutonomous = false; // RN-VEIC-001: Veículos só para autônomos
 
-  // Colors from design V3
-  static const Color _primaryBlue = Color(0xFF2B6CB0);
-  static const Color _primaryBlueDark = Color(0xFF1D4ED8);
-  static const Color _successGreen = Color(0xFF48BB78);
-  static const Color _successGreenDark = Color(0xFF2E7D32);
-  static const Color _warningOrange = Color(0xFFF59E0B);
+  // Colors from design V3 - ZECA Brand Colors
+  static const Color _primaryBlue = Color(0xFF2A70C0);    // Azul ZECA (logo)
+  static const Color _primaryBlueDark = Color(0xFF1E3A5F); // Azul escuro
+  static const Color _zecaGreenCap = Color(0xFF3DAA5C);   // Verde do boné
+  static const Color _zecaGreenDark = Color(0xFF2E8B47);  // Verde escuro
   static const Color _accentPurple = Color(0xFF7C3AED);
   static const Color _bgLight = Color(0xFFF8FAFC);
   static const Color _textPrimary = Color(0xFF111827);
@@ -184,7 +186,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Jornada finalizada com sucesso!'),
-              backgroundColor: _successGreen,
+              backgroundColor: _zecaGreenCap,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -246,9 +248,16 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                   ),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      // CTA Abastecer
-                      _buildRefuelCTA(),
-                      const SizedBox(height: 16),
+                      // Trip Status Card (Iniciar Viagem / Em Andamento)
+                      BlocProvider(
+                        create: (_) => getIt<TripHomeBloc>()..add(const LoadActiveTrip()),
+                        child: TripStatusCard(
+                          vehicleId: _vehicleData?['id']?.toString() ?? '',
+                          vehiclePlate: _vehicleData?['placa']?.toString() ?? _vehicleData?['plate']?.toString() ?? '',
+                          vehicleModel: _vehicleData?['modelo']?.toString() ?? _vehicleData?['model']?.toString(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       
                       // Economy Card (Green full-width)
                       _buildEconomyCard(),
@@ -264,10 +273,6 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                       
                       // Last Refueling
                       _buildLastRefuelingCard(),
-                      const SizedBox(height: 16),
-                      
-                      // ZECA Club
-                      _buildZecaClubCard(),
                     ]),
                   ),
                 ),
@@ -312,7 +317,9 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                     ),
                   ),
                   
-                  // Notifications
+                  // TODO: Descomentar quando implementar notificações
+                  // Notifications - OMITIDO (não implementado)
+                  /*
                   Stack(
                     children: [
                       IconButton(
@@ -345,6 +352,8 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                       ),
                     ],
                   ),
+                  */
+                  const SizedBox(width: 48), // Placeholder
                 ],
               ),
             ),
@@ -365,7 +374,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _successGreen,
+        color: _primaryBlue,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -478,7 +487,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     );
   }
 
-  /// Economy Card - Green full-width with stats
+  /// Economy Card - COMPACT horizontal layout with ZECA green
   Widget _buildEconomyCard() {
     final economy = _dashboardData?['economy'];
     final savings = economy?['savings_this_month'] ?? 0;
@@ -486,78 +495,88 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     final avgConsumption = economy?['avg_consumption'];
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [_successGreen, _successGreenDark],
+          colors: [_zecaGreenCap, _zecaGreenDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.savings, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sua Economia • ${_getMonthName()}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    _formatCurrency(savings),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          // Left: Icon + Value
           Container(
-            padding: const EdgeInsets.only(top: 12),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.white.withOpacity(0.2)),
-              ),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: const Icon(Icons.savings, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _buildEconomyStat(
-                    totalRefuelings.toString(),
-                    'Abastecimentos',
+                Text(
+                  'Sua Economia • ${_getMonthName()}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 11,
                   ),
                 ),
-                Expanded(
-                  child: _buildEconomyStat(
-                    avgConsumption != null ? '${avgConsumption.toStringAsFixed(1)}' : '-',
-                    'Km/L Média',
+                Text(
+                  _formatCurrency(savings),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
           ),
+          // Right: Stats
+          Row(
+            children: [
+              _buildCompactStat(
+                totalRefuelings.toString(),
+                'Abast.',
+              ),
+              const SizedBox(width: 16),
+              _buildCompactStat(
+                avgConsumption != null ? avgConsumption.toStringAsFixed(1) : '-',
+                'Km/L',
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCompactStat(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.75),
+            fontSize: 9,
+          ),
+        ),
+      ],
     );
   }
 
@@ -617,18 +636,9 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                 ),
               ),
               const SizedBox(width: 12),
+              // ZECA Club Card (substitui Tendência)
               Expanded(
-                child: _buildStatCard(
-                  icon: Icons.trending_up,
-                  iconColor: _successGreen,
-                  iconBgColor: const Color(0xFFD1FAE5),
-                  label: 'Tendência',
-                  value: trend != null 
-                      ? '${trend >= 0 ? '+' : ''}${trend.toStringAsFixed(0)}%' 
-                      : '-',
-                  valueColor: trend != null && trend >= 0 ? _successGreen : Colors.red,
-                  meta: 'vs. média da frota',
-                ),
+                child: _buildZecaClubCompact(),
               ),
             ],
           );
@@ -720,6 +730,71 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
     );
   }
 
+  /// ZECA Club Card - Compact version to fit in grid
+  Widget _buildZecaClubCompact() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 16),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'EM BREVE',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'ZECA Club',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            'Benefícios exclusivos',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Quick Actions - Horizontal bar with icons
   Widget _buildQuickActions() {
     return Container(
@@ -738,16 +813,20 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
       ),
       child: Row(
         children: [
+          // TODO: Descomentar quando implementar checklist
+          // Checklist - OMITIDO (não implementado)
+          /*
           _buildQuickActionItem(
             icon: Icons.assignment,
             label: 'Checklist',
-            color: _warningOrange,
-            bgColor: const Color(0xFFFEF3C7),
+            color: _primaryBlue,
+            bgColor: const Color(0xFFDBEAFE),
             badge: 3,
             onTap: () {
               // TODO: Navigate to checklist
             },
           ),
+          */
           _buildQuickActionItem(
             icon: Icons.history,
             label: 'Histórico',
@@ -758,7 +837,7 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
           _buildQuickActionItem(
             icon: Icons.location_on,
             label: 'Postos',
-            color: _successGreen,
+            color: _zecaGreenCap,
             bgColor: const Color(0xFFD1FAE5),
             onTap: () => context.push('/nearby-stations'),
           ),
@@ -970,72 +1049,6 @@ class _JourneyDashboardPageState extends State<JourneyDashboardPage> {
                 ],
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ZECA Club Card - Coming Soon
-  Widget _buildZecaClubCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_accentPurple, const Color(0xFF5B21B6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.star, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'ZECA Club',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  'Benefícios exclusivos para você',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'EM BREVE',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
           ),
         ],
       ),

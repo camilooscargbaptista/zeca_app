@@ -78,6 +78,8 @@ import 'package:zeca_app/features/home/presentation/bloc/nearby_stations/nearby_
     as _i434;
 import 'package:zeca_app/features/home/presentation/bloc/refueling_form_bloc.dart'
     as _i23;
+import 'package:zeca_app/features/home/presentation/bloc/trip_home_bloc.dart'
+    as _i314;
 import 'package:zeca_app/features/home/presentation/bloc/vehicle_bloc.dart'
     as _i948;
 import 'package:zeca_app/features/notifications/data/datasources/notification_remote_datasource.dart'
@@ -204,6 +206,11 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i261.RevenueRemoteDatasource(gh<_i241.DioClient>()));
     gh.lazySingleton<_i41.ExpenseRemoteDataSource>(
         () => _i41.ExpenseRemoteDataSourceImpl(gh<_i241.DioClient>()));
+    gh.factory<_i314.TripHomeBloc>(() => _i314.TripHomeBloc(
+          getActiveTrip: gh<_i948.GetActiveTrip>(),
+          startTrip: gh<_i940.StartTrip>(),
+          finishTrip: gh<_i123.FinishTrip>(),
+        ));
     gh.factory<_i414.AuthLocalDataSource>(
         () => _i414.AuthLocalDataSourceImpl(gh<_i852.StorageService>()));
     gh.factory<_i649.AutonomousRepository>(() =>
